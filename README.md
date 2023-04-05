@@ -1,5 +1,5 @@
 # Lobby-Platform
-The Backend of the Game as a Service platform.
+The Backend of the Game as a Lobby platform.
 
 # Contributor
 
