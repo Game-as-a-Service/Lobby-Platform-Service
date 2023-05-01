@@ -5,7 +5,7 @@
     <artifactId>Lobby-Platform-Domain</artifactId>
 
     <parent>
-        <groupId>waterballsa.gaas</groupId>
+        <groupId>tw.waterballsa.gaas</groupId>
         <artifactId>Lobby-Platform-Root</artifactId>
         <version>${revision}</version>
     </parent>
