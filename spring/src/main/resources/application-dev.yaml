@@ -1,0 +1,13 @@
+spring:
+  mongodb:
+    embedded:
+      version: 4.0.2
+  data:
+    mongodb:
+      port: 27017
+      database: test
+      username: root
+      host: localhost
+      authentication-database: admin
+
+
