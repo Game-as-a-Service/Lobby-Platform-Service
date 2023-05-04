@@ -21,4 +21,5 @@ class SpringGameRegistrationRepository(
     }
 
     override fun getNumberOfTotalGameRegistrations(): Long = gameRegistrationDAO.count()
+    override fun existsByUniqueName(uniqueName: String): Boolean = gameRegistrationDAO.existsByUniqueName(uniqueName)
 }

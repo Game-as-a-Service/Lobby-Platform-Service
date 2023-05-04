@@ -6,19 +6,21 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
-import tw.waterballsa.gaas.domain.GameRegistration
+import tw.waterballsa.gaas.spring.model.TestGameRegistrationRequest
 import java.util.UUID.randomUUID
 
 @SpringBootTest
-@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles(profiles = ["dev"])
+@AutoConfigureMockMvc(addFilters = false)
 class GameRegistrationControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
@@ -26,48 +28,34 @@ class GameRegistrationControllerTest {
     @Autowired
     lateinit var gameRegistrationRepository: GameRegistrationRepository
 
+    @MockBean
+    lateinit var eventBus: EventBus
+
     @BeforeEach
     fun cleanUp() {
         gameRegistrationRepository.deleteAll()
     }
 
     @Test
-    fun registerGame() {
-        mockMvc.perform(
-            post("/games")
-                .contentType(APPLICATION_JSON)
-                .content(
-                    """
-                        {
-                            "uniqueName": "big2-java",
-                            "displayName": "大老二-Java",
-                            "shortDescription": "A simple game.",
-                            "rule": "Follow the rules to win.",
-                            "imageUrl": "https://example.com/game01.jpg",
-                            "minPlayers": 2,
-                            "maxPlayers": 4,
-                            "frontEndUrl": "https://example.com/play/game01",
-                            "backEndUrl": "https://example.com/api/game01"
-                        }
-                    """.trimIndent()
-                )
+    fun givenThereAreNoGames_WhenRegisteringANewGame_ThenItShouldBeSuccessfullyRegistered() {
+        val request = TestGameRegistrationRequest(
+            uniqueName = "big2-java",
+            displayName = "大老二-Java",
+            shortDescription = "A simple game.",
+            rule = "Follow the rules to win.",
+            imageUrl = "https://example.com/game01.jpg",
+            minPlayers = 2,
+            maxPlayers = 4,
+            frontEndUrl = "https://example.com/play/game01",
+            backEndUrl = "https://example.com/api/game01"
         )
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.id").exists())
-            .andExpect(jsonPath("$.uniqueName").value("big2-java"))
-            .andExpect(jsonPath("$.displayName").value("大老二-Java"))
-            .andExpect(jsonPath("$.shortDescription").value("A simple game."))
-            .andExpect(jsonPath("$.rule").value("Follow the rules to win."))
-            .andExpect(jsonPath("$.imageUrl").value("https://example.com/game01.jpg"))
-            .andExpect(jsonPath("$.minPlayers").value(2))
-            .andExpect(jsonPath("$.maxPlayers").value(4))
-            .andExpect(jsonPath("$.frontEndUrl").value("https://example.com/play/game01"))
-            .andExpect(jsonPath("$.backEndUrl").value("https://example.com/api/game01"))
+
+        registerGameSuccessfully(request)
     }
 
     @Test
-    fun registerRedundantGame() {
-        gameRegistrationRepository.registerGame(GameRegistration(
+    fun givenUnoIsAlreadyRegistered_WhenRegisteringUnoAgain_ThenRejectTheRegistration() {
+        val request = TestGameRegistrationRequest(
             uniqueName = "uno-java",
             displayName = "UNO-Java",
             shortDescription = "經典的友情破壞遊戲",
@@ -77,72 +65,39 @@ class GameRegistrationControllerTest {
             maxPlayers = 4,
             frontEndUrl = "https://example.com/play/game01",
             backEndUrl = "https://example.com/api/game01"
-        ))
-
-        mockMvc.perform(
-            post("/games")
-                .contentType(APPLICATION_JSON)
-                .content(
-                    """
-                        {
-                            "uniqueName": "uno-java",
-                            "displayName": "UNO-Java 改",
-                            "shortDescription": "A simple game.",
-                            "rule": "Follow the rules to win.",
-                            "imageUrl": "https://example.com/game01.jpg",
-                            "minPlayers": 2,
-                            "maxPlayers": 4,
-                            "frontEndUrl": "https://example.com/play/game01",
-                            "backEndUrl": "https://example.com/api/game01"
-                        }
-                    """.trimIndent()
-                )
         )
+
+        registerGameSuccessfully(request)
+
+        registerGame(request)
             .andExpect(status().isBadRequest)
+            .andExpect(content().string("${request.uniqueName} already exists"))
     }
 
     @Test
-    fun registerDifferentGame() {
+    fun givenTheRandomGameHasBeenRegistered_WhenRegisteringMahjong_ThenTheGameListShouldShowTwoGames() {
         registerRandomGame()
-        val originalNumbersOfGameRegistration = gameRegistrationRepository.getNumberOfTotalGameRegistrations()
-
-        mockMvc.perform(
-            post("/games")
-                .contentType(APPLICATION_JSON)
-                .content(
-                    """
-                        {
-                            "uniqueName": "Mahjong-python",
-                            "displayName": "麻將-Python",
-                            "shortDescription": "A simple game.",
-                            "rule": "Follow the rules to win.",
-                            "imageUrl": "https://example.com/game01.jpg",
-                            "minPlayers": 2,
-                            "maxPlayers": 4,
-                            "frontEndUrl": "https://example.com/play/game01",
-                            "backEndUrl": "https://example.com/api/game01"
-                        }
-                    """.trimIndent()
-                )
+        val request = TestGameRegistrationRequest(
+            uniqueName = "Mahjong-python",
+            displayName = "麻將-Python",
+            shortDescription = "A simple game.",
+            rule = "Follow the rules to win.",
+            imageUrl = "https://example.com/game01.jpg",
+            minPlayers = 2,
+            maxPlayers = 4,
+            frontEndUrl = "https://example.com/play/game01",
+            backEndUrl = "https://example.com/api/game01"
         )
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.id").exists())
-            .andExpect(jsonPath("$.uniqueName").value("Mahjong-python"))
-            .andExpect(jsonPath("$.displayName").value("麻將-Python"))
-            .andExpect(jsonPath("$.shortDescription").value("A simple game."))
-            .andExpect(jsonPath("$.rule").value("Follow the rules to win."))
-            .andExpect(jsonPath("$.imageUrl").value("https://example.com/game01.jpg"))
-            .andExpect(jsonPath("$.minPlayers").value(2))
-            .andExpect(jsonPath("$.maxPlayers").value(4))
-            .andExpect(jsonPath("$.frontEndUrl").value("https://example.com/play/game01"))
-            .andExpect(jsonPath("$.backEndUrl").value("https://example.com/api/game01"))
 
-        assertThat(gameRegistrationRepository.getNumberOfTotalGameRegistrations()).isEqualTo(originalNumbersOfGameRegistration + 1)
+        registerGameSuccessfully(request)
+
+        val numberOfTotalGameRegistrations = gameRegistrationRepository.getNumberOfTotalGameRegistrations()
+        assertThat(numberOfTotalGameRegistrations).isEqualTo(2)
     }
 
     private fun registerRandomGame() {
-        gameRegistrationRepository.registerGame(
-            GameRegistration(
+        registerGameSuccessfully(
+            TestGameRegistrationRequest(
                 uniqueName = randomUUID().toString(),
                 displayName = "Dummy Game",
                 shortDescription = "A random game.",
@@ -155,4 +110,43 @@ class GameRegistrationControllerTest {
             )
         )
     }
+
+    private fun registerGameSuccessfully(testGameRegistrationRequest: TestGameRegistrationRequest): ResultActions =
+        with(testGameRegistrationRequest) {
+            registerGame(this)
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.uniqueName").value(uniqueName))
+                .andExpect(jsonPath("$.displayName").value(displayName))
+                .andExpect(jsonPath("$.shortDescription").value(shortDescription))
+                .andExpect(jsonPath("$.rule").value(rule))
+                .andExpect(jsonPath("$.imageUrl").value(imageUrl))
+                .andExpect(jsonPath("$.minPlayers").value(minPlayers))
+                .andExpect(jsonPath("$.maxPlayers").value(maxPlayers))
+                .andExpect(jsonPath("$.frontEndUrl").value(frontEndUrl))
+                .andExpect(jsonPath("$.backEndUrl").value(backEndUrl))
+        }
+
+    private fun registerGame(testGameRegistrationRequest: TestGameRegistrationRequest): ResultActions =
+        with(testGameRegistrationRequest) {
+            mockMvc.perform(
+                post("/games")
+                    .contentType(APPLICATION_JSON)
+                    .content(
+                        """
+                            {
+                                "uniqueName": "$uniqueName",
+                                "displayName": "$displayName",
+                                "shortDescription": "$shortDescription",
+                                "rule": "$rule",
+                                "imageUrl": "$imageUrl",
+                                "minPlayers": $minPlayers,
+                                "maxPlayers": $maxPlayers,
+                                "frontEndUrl": "$frontEndUrl",
+                                "backEndUrl": "$backEndUrl"
+                            }
+                        """.trimIndent()
+                    )
+            )
+        }
 }

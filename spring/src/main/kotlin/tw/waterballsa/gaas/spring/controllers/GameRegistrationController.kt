@@ -9,7 +9,7 @@ import tw.waterballsa.gaas.application.usecases.RegisterGameUsecase
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.events.DomainEvent
 import tw.waterballsa.gaas.events.RegisteredGameEvent
-import kotlin.reflect.KClass
+import tw.waterballsa.gaas.spring.extensions.getEvent
 
 @RestController
 @RequestMapping("/games")
@@ -55,33 +55,25 @@ class GameRegistrationController(
 class RegisterGamePresenter : RegisterGameUsecase.Presenter {
     private var viewModel: RegisterGameViewModel? = null
 
-    companion object {
-        fun <T : DomainEvent> getEvent(events: List<DomainEvent>, type: KClass<T>): T? {
-            return events.filter { type.isInstance(it) }
-                .map { it as T }
-                .firstOrNull()
-        }
-    }
-
-    override fun present(events: List<DomainEvent>) {
-        viewModel = getEvent(events, RegisteredGameEvent::class)
-            ?.let {
-                RegisterGameViewModel(
-                    it.id,
-                    it.uniqueName,
-                    it.displayName,
-                    it.shortDescription,
-                    it.rule,
-                    it.imageUrl,
-                    it.minPlayers,
-                    it.maxPlayers,
-                    it.frontEndUrl,
-                    it.backEndUrl
-                )
-            }
+    override fun present(vararg events: DomainEvent) {
+        viewModel = events.getEvent(RegisteredGameEvent::class)?.toViewModel()
     }
 
     fun getViewModel(): RegisterGameViewModel? = viewModel
+
+    private fun RegisteredGameEvent.toViewModel() =
+        RegisterGameViewModel(
+            id,
+            uniqueName,
+            displayName,
+            shortDescription,
+            rule,
+            imageUrl,
+            minPlayers,
+            maxPlayers,
+            frontEndUrl,
+            backEndUrl
+        )
 
     data class RegisterGameViewModel(
         val id: GameRegistration.GameRegistrationId,

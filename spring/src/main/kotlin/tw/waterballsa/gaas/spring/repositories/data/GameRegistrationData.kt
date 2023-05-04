@@ -21,9 +21,10 @@ class GameRegistrationData(
     var backEndUrl: String?
 ) {
     companion object {
-        fun toData(gameRegistration: GameRegistration): GameRegistrationData {
-            val gameRegistrationData = with(gameRegistration) {
+        fun toData(gameRegistration: GameRegistration): GameRegistrationData =
+            with(gameRegistration) {
                 GameRegistrationData(
+                    id = id?.value,
                     uniqueName = uniqueName,
                     displayName = displayName,
                     shortDescription = shortDescription,
@@ -35,9 +36,6 @@ class GameRegistrationData(
                     backEndUrl = backEndUrl
                 )
             }
-            gameRegistration.id?.let { gameRegistrationData.id = it.value }
-            return gameRegistrationData
-        }
     }
 
     fun toDomain(): GameRegistration =

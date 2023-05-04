@@ -1,5 +1,7 @@
 package tw.waterballsa.gaas.application.usecases
 
+import tw.waterballsa.gaas.application.eventbus.EventBus
+import tw.waterballsa.gaas.application.exceptions.GameAlreadyExistsException
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.events.DomainEvent
@@ -8,41 +10,21 @@ import javax.inject.Named
 
 @Named
 class RegisterGameUsecase(
-    private val gameRegistrationRepository: GameRegistrationRepository
+    private val gameRegistrationRepository: GameRegistrationRepository,
+    private val eventBus: EventBus
 ) {
     fun execute(request: Request, presenter: Presenter) {
-        val newGameRegistration = gameRegistrationRepository.run {
-            with(request) {
-                findGameRegistrationByUniqueName(uniqueName)?.let { throw IllegalArgumentException("Game already exists") }
-                registerGame(GameRegistration(
-                    uniqueName = uniqueName,
-                    displayName = displayName,
-                    shortDescription = shortDescription,
-                    rule = rule,
-                    imageUrl = imageUrl,
-                    minPlayers = minPlayers,
-                    maxPlayers = maxPlayers,
-                    frontEndUrl = frontEndUrl,
-                    backEndUrl = backEndUrl
-                ))
+        gameRegistrationRepository.run {
+            val uniqueName = request.uniqueName
+            val gameRegistration = when {
+                existsByUniqueName(uniqueName) -> throw GameAlreadyExistsException(uniqueName)
+                else -> registerGame(request.toGameRegistration())
             }
+            gameRegistration.toRegisteredGameEvent()
+        }.also { event ->
+            presenter.present(event)
+            eventBus.broadcast(event)
         }
-
-        with(newGameRegistration) {
-            RegisteredGameEvent(
-                id!!,
-                uniqueName,
-                displayName,
-                shortDescription,
-                rule,
-                imageUrl,
-                minPlayers,
-                maxPlayers,
-                frontEndUrl,
-                backEndUrl
-            )
-        }
-            .also { presenter.present(listOf(it)) }
     }
 
     data class Request(
@@ -58,6 +40,33 @@ class RegisterGameUsecase(
     )
 
     interface Presenter {
-        fun present(events: List<DomainEvent>)
+        fun present(vararg events: DomainEvent)
     }
 }
+
+private fun RegisterGameUsecase.Request.toGameRegistration(): GameRegistration =
+    GameRegistration(
+        uniqueName = uniqueName,
+        displayName = displayName,
+        shortDescription = shortDescription,
+        rule = rule,
+        imageUrl = imageUrl,
+        minPlayers = minPlayers,
+        maxPlayers = maxPlayers,
+        frontEndUrl = frontEndUrl,
+        backEndUrl = backEndUrl
+    )
+
+private fun GameRegistration.toRegisteredGameEvent(): RegisteredGameEvent =
+    RegisteredGameEvent(
+        id!!,
+        uniqueName,
+        displayName,
+        shortDescription,
+        rule,
+        imageUrl,
+        minPlayers,
+        maxPlayers,
+        frontEndUrl,
+        backEndUrl
+    )

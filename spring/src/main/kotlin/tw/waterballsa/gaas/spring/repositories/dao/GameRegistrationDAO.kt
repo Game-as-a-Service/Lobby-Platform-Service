@@ -7,4 +7,5 @@ import tw.waterballsa.gaas.spring.repositories.data.GameRegistrationData
 @Repository
 interface GameRegistrationDAO : MongoRepository<GameRegistrationData, String> {
     fun findByUniqueName(uniqueName: String): GameRegistrationData?
+    fun existsByUniqueName(uniqueName: String): Boolean
 }
