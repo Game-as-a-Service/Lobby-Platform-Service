@@ -16,7 +16,11 @@ class SecurityConfig {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http.authorizeHttpRequests()
-            .antMatchers("/walking-skeleton").permitAll()
+            .antMatchers("/walking-skeleton",
+                "/v3/api-docs",
+                "/v3/api-docs/swagger-config",
+                "/swagger-ui/**"
+            ).permitAll()
             .anyRequest().authenticated()
             .and()
             .oauth2Login().userInfoEndpoint().oidcUserService(oidcUserService())

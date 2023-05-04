@@ -1,3 +1,7 @@
 spring:
   profiles:
     active: ${ENV:dev}
+
+spring-doc:
+  swagger-ui:
+    enabled: true
