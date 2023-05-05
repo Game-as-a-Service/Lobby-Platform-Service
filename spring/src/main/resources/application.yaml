@@ -1,3 +1,21 @@
 spring:
+  data:
+    mongodb:
+      uri: ${MONGO_URI}
   profiles:
     active: ${ENV:dev}
+  security:
+    oauth2:
+      client:
+        registration:
+          auth0:
+            client-id: ${CLIENT_ID}
+            client-secret: ${CLIENT_SECRET}
+            scope:
+              - openid
+              - profile
+              - email
+        provider:
+          auth0:
+            # trailing slash is important!
+            issuer-uri: https://dev-1l0ixjw8yohsluoi.us.auth0.com/
