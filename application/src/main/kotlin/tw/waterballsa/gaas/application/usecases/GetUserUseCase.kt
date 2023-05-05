@@ -8,6 +8,6 @@ import javax.inject.Named
 class GetUserUseCase(
     private val userRepository: UserRepository
 ) {
-    fun execute(id: String): User? = userRepository.findUserById(id)
+    fun execute(id: String): User? = userRepository.findUserById(User.UserId(id))
 }
 
