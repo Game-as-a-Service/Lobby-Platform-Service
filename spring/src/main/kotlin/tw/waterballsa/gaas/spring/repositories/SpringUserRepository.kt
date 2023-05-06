@@ -10,7 +10,9 @@ import tw.waterballsa.gaas.spring.repositories.data.UserData
 class SpringUserRepository(
     private val userDAO: UserDAO
 ) : UserRepository {
-    override fun findUserById(id: User.UserId): User? = userDAO.findById(id.value).orElse(null)?.toDomain()
+    override fun findUserById(id: User.UserId): User? =
+        userDAO.findById(id.value).map(UserData::toDomain).orElse(null)
+
     override fun createUser(user: User): User = userDAO.save(UserData.toData(user)).toDomain()
 
     override fun deleteAll() {
