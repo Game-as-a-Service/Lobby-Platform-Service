@@ -11,17 +11,6 @@ class UserData(
     private var email: String? = null,
     private var nickname: String? = null
 ) {
-    companion object {
-        fun User.toData(): UserData =
-            with(this) {
-                UserData(
-                    id = id?.value,
-                    email = email,
-                    nickname = nickname
-                )
-            }
-    }
-
     fun toDomain(): User =
         User(
             User.UserId(id!!),
@@ -29,3 +18,10 @@ class UserData(
             nickname!!
         )
 }
+
+fun User.toData(): UserData =
+    UserData(
+        id = id?.value,
+        email = email,
+        nickname = nickname
+    )
