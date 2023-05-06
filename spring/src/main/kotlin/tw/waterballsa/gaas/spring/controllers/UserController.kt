@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 import tw.waterballsa.gaas.application.usecases.GetUserUseCase
 import tw.waterballsa.gaas.domain.User
-import tw.waterballsa.gaas.exceptions.UserNotFoundException
+import tw.waterballsa.gaas.exceptions.NotFoundException
 
 @RestController
 class UserController(
@@ -18,6 +18,6 @@ class UserController(
     fun getUser(@PathVariable id: String): User = getUserUseCase.execute(id)
 
     @ExceptionHandler
-    fun handleUserNotFoundException(exception: UserNotFoundException): ResponseEntity<String> =
+    fun handleUserNotFoundException(exception: NotFoundException): ResponseEntity<String> =
         ResponseEntity(exception.message, HttpStatus.NOT_FOUND)
 }

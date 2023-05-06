@@ -2,7 +2,7 @@ package tw.waterballsa.gaas.application.usecases
 
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.User
-import tw.waterballsa.gaas.exceptions.UserNotFoundException
+import tw.waterballsa.gaas.exceptions.NotFoundException
 import javax.inject.Named
 
 @Named
@@ -12,7 +12,7 @@ class GetUserUseCase(
     fun execute(id: String): User {
         val userId = User.UserId(id)
         return userRepository.findUserById(userId)
-            ?: throw UserNotFoundException(userId)
+            ?: throw NotFoundException("User not found: $id")
     }
 }
 
