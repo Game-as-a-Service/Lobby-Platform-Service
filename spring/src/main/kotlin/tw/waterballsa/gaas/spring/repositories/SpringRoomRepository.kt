@@ -8,8 +8,8 @@ import tw.waterballsa.gaas.spring.repositories.dao.RoomDAO
 class SpringRoomRepository(
     private val roomDAO : RoomDAO
 ) : RoomRepository {
-    override fun findByRoomId(roomId: String) : Room? =
-        roomDAO.findByRoomId(roomId)?.toDomain()
+    override fun findByRoomId(roomId: Room.RoomId) : Room? =
+        roomDAO.findByRoomId(roomId.value)?.toDomain()
 
     override fun deleteAll() {
         roomDAO.deleteAll()

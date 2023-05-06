@@ -18,21 +18,17 @@ class RoomData(
     var description: String?,
 ) {
     companion object {
-        fun toData(room: Room): RoomData {
-            val roomData = with(room) {
-                RoomData(
-                    roomId = roomId?.value,
-                    gameId = gameId,
-                    hostId = hostId,
-                    playerIds = playerIds,
-                    maxPlayer = maxPlayer,
-                    minPlayer = minPlayer,
-                    name = name,
-                    description = description
-                )
-            }
-            room.roomId?.let { roomData.roomId = it.value }
-            return roomData
+        fun Room.toData(): RoomData {
+            return RoomData(
+                roomId = roomId?.value,
+                gameId = gameId,
+                hostId = hostId,
+                playerIds = playerIds,
+                maxPlayer = maxPlayer,
+                minPlayer = minPlayer,
+                name = name,
+                description = description
+            )
         }
     }
 
