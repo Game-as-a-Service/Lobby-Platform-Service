@@ -38,33 +38,29 @@ class UserControllerTest {
     fun givenUserCreated_whenGetUser_thenGetUserSuccessfully() {
         val user = User(User.UserId("1"), "test@mail.com", "winner5566")
         givenUserCreated(user)
-        val resultActions = whenGetUser("1")
-        thenGetUserSuccessfully(resultActions, user)
+        findUserById("1").thenGetUserSuccessfully(user)
     }
 
     @Test
     fun givenUserNotCreated_whenGetUser_thenUserNotFound() {
-        val resultActions = whenGetUser("0")
-        thenUserNotFound(resultActions)
+        findUserById("0").thenUserNotFound()
     }
 
     private fun givenUserCreated(user: User) {
         userRepository.createUser(user)
     }
 
-    private fun whenGetUser(id: String): ResultActions = mockMvc.perform(get("/users/$id"))
+    private fun findUserById(id: String): ResultActions = mockMvc.perform(get("/users/$id"))
 
-    private fun thenGetUserSuccessfully(resultActions: ResultActions, user: User) {
-        resultActions
-            .andExpect(status().isOk)
+    private fun ResultActions.thenGetUserSuccessfully(user: User) {
+        this.andExpect(status().isOk)
             .andExpect(jsonPath("$.id").value(user.id!!.value))
             .andExpect(jsonPath("$.email").value(user.email))
             .andExpect(jsonPath("$.nickname").value(user.nickname))
     }
 
-    private fun thenUserNotFound(resultActions: ResultActions) {
-        resultActions
-            .andExpect(status().isNotFound)
+    private fun ResultActions.thenUserNotFound() {
+        this.andExpect(status().isNotFound)
             .andExpect(jsonPath("$.id").doesNotExist())
             .andExpect(jsonPath("$.email").doesNotExist())
             .andExpect(jsonPath("$.nickname").doesNotExist())

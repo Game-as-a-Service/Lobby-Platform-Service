@@ -12,8 +12,8 @@ class UserData(
     private var nickname: String? = null
 ) {
     companion object {
-        fun toData(user: User): UserData =
-            with(user) {
+        fun User.toData(): UserData =
+            with(this) {
                 UserData(
                     id = id?.value,
                     email = email,
