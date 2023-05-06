@@ -5,11 +5,13 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.User
 
@@ -23,6 +25,9 @@ class UserControllerTest {
 
     @Autowired
     lateinit var userRepository: UserRepository
+
+    @MockBean
+    lateinit var eventBus: EventBus
 
     @BeforeEach
     fun cleanUp() {
@@ -59,7 +64,7 @@ class UserControllerTest {
 
     private fun thenUserNotFound(resultActions: ResultActions) {
         resultActions
-            .andExpect(status().isOk)
+            .andExpect(status().isNotFound)
             .andExpect(jsonPath("$.id").doesNotExist())
             .andExpect(jsonPath("$.email").doesNotExist())
             .andExpect(jsonPath("$.nickname").doesNotExist())
