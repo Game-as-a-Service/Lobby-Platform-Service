@@ -9,9 +9,8 @@ import javax.inject.Named
 class GetUserUseCase(
     private val userRepository: UserRepository
 ) {
-    fun execute(id: String): User {
-        val userId = User.UserId(id)
-        return userRepository.findUserById(userId)
+    fun execute(id: User.UserId): User {
+        return userRepository.findUserById(id)
             ?: throw NotFoundException("User not found: $id")
     }
 }

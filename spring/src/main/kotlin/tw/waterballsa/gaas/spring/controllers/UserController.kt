@@ -15,7 +15,7 @@ class UserController(
     private val getUserUseCase: GetUserUseCase
 ) {
     @GetMapping("/users/{id}")
-    fun getUser(@PathVariable id: String): User = getUserUseCase.execute(id)
+    fun getUser(@PathVariable id: String): User = getUserUseCase.execute(User.UserId(id))
 
     @ExceptionHandler
     fun handleUserNotFoundException(exception: NotFoundException): ResponseEntity<String> =
