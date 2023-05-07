@@ -5,5 +5,4 @@ import org.springframework.stereotype.Repository
 import tw.waterballsa.gaas.spring.repositories.data.UserData
 
 @Repository
-interface UserDAO: MongoRepository<UserData, String> {
-}
+interface UserDAO: MongoRepository<UserData, String>

@@ -3,44 +3,53 @@ package tw.waterballsa.gaas.spring.repositories.data
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
+import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
+import tw.waterballsa.gaas.domain.Room.*
 
 @Document
 class RoomData(
     @Id
     var roomId: String? = null,
-    var gameId: String?,
+    var gameRegistrationId: String?,
+    @Indexed(unique = true)
     var hostId: String?,
     var playerIds: List<String>?,
-    var maxPlayer: Int?,
-    var minPlayer: Int?,
+    var maxPlayers: Int?,
+    var minPlayers: Int?,
     var name: String?,
     var description: String?,
+    var status: Status?,
+    var password: String?
 ) {
     companion object {
         fun Room.toData(): RoomData {
             return RoomData(
                 roomId = roomId?.value,
-                gameId = gameId,
-                hostId = hostId,
-                playerIds = playerIds,
-                maxPlayer = maxPlayer,
-                minPlayer = minPlayer,
+                gameRegistrationId = gameRegistration.id!!.value,
+                hostId = host.id.value,
+                playerIds = players.map { it.id.value },
+                maxPlayers = maxPlayers,
+                minPlayers = minPlayers,
                 name = name,
-                description = description
+                description = description,
+                status = status,
+                password = password
             )
         }
     }
 
-    fun toDomain(): Room =
+    fun toDomain(gameRegistration: GameRegistration, host: Player): Room =
         Room(
-            Room.RoomId(roomId!!),
-            gameId!!,
-            hostId!!,
-            playerIds!!,
-            maxPlayer!!,
-            minPlayer!!,
+            Id(roomId!!),
+            gameRegistration,
+            host,
+            listOf(host),
+            maxPlayers!!,
+            minPlayers!!,
             name!!,
-            description!!
+            description!!,
+            status = status!!,
+            password = password
         )
 }

@@ -6,5 +6,5 @@ class User(
     val nickname: String
 ) {
     @JvmInline
-    value class UserId (val value: String)
+    value class UserId(val value: String)
 }

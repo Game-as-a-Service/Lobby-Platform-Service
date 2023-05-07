@@ -21,12 +21,10 @@ import java.util.UUID.randomUUID
 @SpringBootTest
 @ActiveProfiles(profiles = ["dev"])
 @AutoConfigureMockMvc(addFilters = false)
-class GameRegistrationControllerTest {
-    @Autowired
-    lateinit var mockMvc: MockMvc
-
-    @Autowired
-    lateinit var gameRegistrationRepository: GameRegistrationRepository
+class GameRegistrationControllerTest(
+    @Autowired val mockMvc: MockMvc,
+    @Autowired val gameRegistrationRepository: GameRegistrationRepository,
+) {
 
     @MockBean
     lateinit var eventBus: EventBus

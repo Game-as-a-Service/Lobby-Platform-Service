@@ -8,4 +8,5 @@ interface GameRegistrationRepository {
     fun deleteAll()
     fun getNumberOfTotalGameRegistrations(): Long
     fun existsByUniqueName(uniqueName: String): Boolean
+    fun findGameRegistrationById(gameRegistrationId: GameRegistration.GameRegistrationId): GameRegistration?
 }
