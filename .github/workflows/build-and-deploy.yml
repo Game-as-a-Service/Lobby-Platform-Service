@@ -1,6 +1,6 @@
 name: Build and Deploy to AWS
 
-on: [ push, pull_request, workflow_dispatch ]
+on: [ push, workflow_dispatch ]
 
 env:
   JAR_FILENAME: Lobby-Platform
