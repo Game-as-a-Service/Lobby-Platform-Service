@@ -18,7 +18,6 @@
         <kotlin-reflect.version>1.8.20</kotlin-reflect.version>
         <jackson-module-kotlin.version>2.14.2</jackson-module-kotlin.version>
         <spring-openapi.version>1.6.15</spring-openapi.version>
-        <aws-cognito.version>1.12.435</aws-cognito.version>
     </properties>
 
     <dependencies>
@@ -86,7 +85,7 @@
     <build>
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
         <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
-        <finalName>Lobby-Platform</finalName>
+        <finalName>${jar.filename}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -128,4 +127,29 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>jar-filename-env</id>
+            <activation>
+                <property>
+                    <name>env.JAR_FILENAME</name>
+                </property>
+            </activation>
+            <properties>
+                <jar.filename>${env.JAR_FILENAME}</jar.filename>
+            </properties>
+        </profile>
+        <profile>
+            <id>jar-filename-default</id>
+            <activation>
+                <property>
+                    <name>!env.JAR_FILENAME</name>
+                </property>
+            </activation>
+            <properties>
+                <jar.filename>Lobby-Platform</jar.filename>
+            </properties>
+        </profile>
+    </profiles>
 </project>

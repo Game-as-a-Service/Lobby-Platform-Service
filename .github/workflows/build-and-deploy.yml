@@ -3,7 +3,7 @@ name: Build and Deploy to AWS
 on: [ push, pull_request, workflow_dispatch ]
 
 env:
-  JAR_FILE_NAME: Lobby-Platform.jar
+  JAR_FILENAME: Lobby-Platform
   ARTIFACT_NAME: backend-app
   APPLICATION_FOLDER: ~/lobby-platform
 
@@ -27,7 +27,7 @@ jobs:
 
       # Package and Test with Maven
       - name: Package and Test with Maven
-        run: mvn -B package
+        run: mvn -B package -DJAR_FILENAME=${{ env.JAR_FILENAME }}
 
       # Publish Artifact (backend-app)
       - name: Upload Artifact
@@ -35,7 +35,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: spring/target/${{ env.JAR_FILE_NAME }}
+          path: spring/target/${{ env.JAR_FILENAME }}.jar
 
   deploy:
     name: Deploy to AWS EC2
@@ -63,7 +63,7 @@ jobs:
           source: ./${{ env.ARTIFACT_NAME }}
           target: ${{ env.APPLICATION_FOLDER }}
 
-      # Start backend-app
+      # Run Application
       - name: Run Application
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -80,7 +80,7 @@ jobs:
               -DCLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }} \
               -DCLIENT_SECRET=${{ secrets.AUTH0_CLIENT_SECRET }} \
               -DMONGO_URI=${{ secrets.MONGO_URI }} \
-              -jar ${{ env.APPLICATION_FOLDER }}/${{ env.ARTIFACT_NAME }}/${{ env.JAR_FILE_NAME }} \
+              -jar ${{ env.APPLICATION_FOLDER }}/${{ env.ARTIFACT_NAME }}/${{ env.JAR_FILENAME }}.jar \
               > ${{ env.APPLICATION_FOLDER }}/logs/lobby-platform.log \
               2> ${{ env.APPLICATION_FOLDER }}/logs/nohup.err.log \
               < /dev/null \
