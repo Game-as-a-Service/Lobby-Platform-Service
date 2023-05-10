@@ -9,6 +9,7 @@
 # User-specific stuff
 **/.idea/
 *.iml
+.vs
 # *.ipr
 
 # CMake
