@@ -1,10 +1,8 @@
 package tw.waterballsa.gaas.spring.controllers
 
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import tw.waterballsa.gaas.application.usecases.GetGameRegistrationsUsecase
 import tw.waterballsa.gaas.application.usecases.RegisterGameUsecase
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.events.DomainEvent
@@ -14,7 +12,8 @@ import tw.waterballsa.gaas.spring.extensions.getEvent
 @RestController
 @RequestMapping("/games")
 class GameRegistrationController(
-    private val registerGameUsecase: RegisterGameUsecase
+    private val registerGameUsecase: RegisterGameUsecase,
+    private val getGameRegistrationsUsecase: GetGameRegistrationsUsecase
 ) {
 
     @PostMapping
@@ -26,6 +25,9 @@ class GameRegistrationController(
             ?.let { ResponseEntity.ok(it) }
             ?: ResponseEntity.noContent().build()
     }
+
+    @GetMapping
+    fun findGameRegistrations(): List<GameRegistration> = getGameRegistrationsUsecase.execute()
 
     class RegisterGameRequest(
         private val uniqueName: String,
