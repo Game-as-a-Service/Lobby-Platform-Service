@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import tw.waterballsa.gaas.application.eventbus.EventBus
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -17,6 +18,9 @@ class WalkingSkeletonControllerTest {
 
     @Autowired
     lateinit var mockMvc: MockMvc
+
+    @Autowired
+    lateinit var eventBus: EventBus
 
     @Test
     fun walkingSkeleton() {

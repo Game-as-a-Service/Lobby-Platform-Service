@@ -1,0 +1,89 @@
+name: Build and Deploy to AWS
+
+on: [ push, workflow_dispatch ]
+
+env:
+  JAR_FILENAME: Lobby-Platform
+  ARTIFACT_NAME: backend-app
+  APPLICATION_FOLDER: ~/lobby-platform
+
+jobs:
+  #First we will see the application build or not , then we will deploy in EC2
+  build:
+    name: Build, Test and Publish Artifact
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checkout the repo
+      - name: git checkout
+        uses: actions/checkout@v3
+
+      # Setup JDK / Maven
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      # Package and Test with Maven
+      - name: Package and Test with Maven
+        run: mvn -B package -DJAR_FILENAME=${{ env.JAR_FILENAME }}
+
+      # Publish Artifact (backend-app)
+      - name: Upload Artifact
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: spring/target/${{ env.JAR_FILENAME }}.jar
+
+  deploy:
+    name: Deploy to AWS EC2
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.event_name == 'push' && github.ref_name == 'main'
+
+    steps:
+      # Download Artifact
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ./${{ env.ARTIFACT_NAME }}
+
+      # Copy Artifact to AWS EC2
+      - name: Copy Artifact to AWS EC2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ vars.EC2_HOST }}
+          username: ${{ vars.EC2_USERNAME }}
+          port: ${{ vars.EC2_PORT }}
+          key: ${{ secrets.EC2_KEY }}
+          source: ./${{ env.ARTIFACT_NAME }}
+          target: ${{ env.APPLICATION_FOLDER }}
+
+      # Run Application
+      - name: Run Application
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ vars.EC2_HOST }}
+          username: ${{ vars.EC2_USERNAME }}
+          port: ${{ vars.EC2_PORT }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            uname -a
+            whoami
+            fuser -k 8080/tcp
+            nohup java \
+              -DENV=${{ vars.ENV }} \
+              -DCLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }} \
+              -DCLIENT_SECRET=${{ secrets.AUTH0_CLIENT_SECRET }} \
+              -DMONGO_URI=${{ secrets.MONGO_URI }} \
+              -jar ${{ env.APPLICATION_FOLDER }}/${{ env.ARTIFACT_NAME }}/${{ env.JAR_FILENAME }}.jar \
+              > ${{ env.APPLICATION_FOLDER }}/logs/lobby-platform.log \
+              2> ${{ env.APPLICATION_FOLDER }}/logs/nohup.err.log \
+              < /dev/null \
+              &
+
+  

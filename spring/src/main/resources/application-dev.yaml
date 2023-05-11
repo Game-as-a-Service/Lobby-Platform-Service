@@ -2,13 +2,10 @@ spring:
   mongodb:
     embedded:
       version: 4.0.2
+      features: ONLY_WITH_SSL, ONLY_64BIT, NO_HTTP_INTERFACE_ARG
   data:
     mongodb:
-      port: 27017
-      database: test
-      username: root
-      host: localhost
-      authentication-database: admin
+      uri: mongodb://root:password@localhost:27017/test?authSource=admin
   security:
     oauth2:
       client:
