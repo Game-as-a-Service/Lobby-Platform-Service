@@ -40,7 +40,7 @@ class GameRegistrationData(
 
     fun toDomain(): GameRegistration =
         GameRegistration(
-            GameRegistration.GameRegistrationId(id!!),
+            GameRegistration.Id(id!!),
             uniqueName!!,
             displayName!!,
             shortDescription!!,

@@ -1,7 +1,7 @@
 package tw.waterballsa.gaas.domain
 
 class GameRegistration(
-    val id: GameRegistrationId? = null,
+    val id: Id? = null,
     val uniqueName: String,
     val displayName: String,
     val shortDescription: String,
@@ -10,8 +10,8 @@ class GameRegistration(
     val minPlayers: Int,
     val maxPlayers: Int,
     val frontEndUrl: String,
-    val backEndUrl: String
+    val backEndUrl: String,
 ) {
     @JvmInline
-    value class GameRegistrationId(val value: String)
+    value class Id(val value: String)
 }

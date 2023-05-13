@@ -18,6 +18,7 @@
         <kotlin-reflect.version>1.8.20</kotlin-reflect.version>
         <jackson-module-kotlin.version>2.14.2</jackson-module-kotlin.version>
         <spring-openapi.version>1.6.15</spring-openapi.version>
+        <java.version>17</java.version>
     </properties>
 
     <dependencies>

@@ -3,6 +3,7 @@ package tw.waterballsa.gaas.spring.controllers
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import tw.waterballsa.gaas.application.usecases.GetGameRegistrationsUsecase
+import tw.waterballsa.gaas.application.usecases.Presenter
 import tw.waterballsa.gaas.application.usecases.RegisterGameUsecase
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.events.DomainEvent
@@ -54,7 +55,7 @@ class GameRegistrationController(
     }
 }
 
-class RegisterGamePresenter : RegisterGameUsecase.Presenter {
+class RegisterGamePresenter : Presenter {
     private var viewModel: RegisterGameViewModel? = null
 
     override fun present(vararg events: DomainEvent) {
@@ -78,7 +79,7 @@ class RegisterGamePresenter : RegisterGameUsecase.Presenter {
         )
 
     data class RegisterGameViewModel(
-        val id: GameRegistration.GameRegistrationId,
+        val id: GameRegistration.Id,
         val uniqueName: String,
         val displayName: String,
         val shortDescription: String,

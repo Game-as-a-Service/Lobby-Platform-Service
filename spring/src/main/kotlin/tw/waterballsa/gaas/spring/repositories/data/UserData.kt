@@ -13,7 +13,7 @@ class UserData(
 ) {
     fun toDomain(): User =
         User(
-            User.UserId(id!!),
+            User.Id(id!!),
             email!!,
             nickname!!
         )

@@ -1,33 +1,22 @@
-package tw.waterballsa.gaas.spring.controllers
+package tw.waterballsa.gaas.spring.it.controllers
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import tw.waterballsa.gaas.application.eventbus.EventBus
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.User
+import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 
-@SpringBootTest
-@ActiveProfiles(profiles = ["dev"])
+
 @AutoConfigureMockMvc(addFilters = false)
-class UserControllerTest {
-
-    @Autowired
-    lateinit var mockMvc: MockMvc
-
-    @Autowired
-    lateinit var userRepository: UserRepository
-
-    @MockBean
-    lateinit var eventBus: EventBus
+class UserControllerTest @Autowired constructor(
+    val userRepository: UserRepository,
+) : AbstractSpringBootTest() {
 
     @BeforeEach
     fun cleanUp() {
@@ -36,7 +25,7 @@ class UserControllerTest {
 
     @Test
     fun givenUserCreated_whenGetUser_thenGetUserSuccessfully() {
-        val user = User(User.UserId("1"), "test@mail.com", "winner5566")
+        val user = User(User.Id("1"), "test@mail.com", "winner5566")
         givenUserCreated(user)
         findUserById("1").thenGetUserSuccessfully(user)
     }

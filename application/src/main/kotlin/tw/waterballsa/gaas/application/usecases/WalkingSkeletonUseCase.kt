@@ -5,7 +5,7 @@ import javax.inject.Named
 
 @Named
 class WalkingSkeletonUseCase(
-    private val walkingSkeletonRepository: WalkingSkeletonRepository
+    private val walkingSkeletonRepository: WalkingSkeletonRepository,
 ) {
     fun execute(): String {
         val skeleton = walkingSkeletonRepository.walk("Walk")

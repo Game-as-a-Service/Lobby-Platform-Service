@@ -1,17 +1,13 @@
-package tw.waterballsa.gaas.spring.controllers
+package tw.waterballsa.gaas.spring.it.controllers
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType.APPLICATION_JSON
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -19,17 +15,14 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.spring.controllers.RegisterGamePresenter.RegisterGameViewModel
-import tw.waterballsa.gaas.spring.model.TestGameRegistrationRequest
+import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
+import tw.waterballsa.gaas.spring.models.TestGameRegistrationRequest
 import java.util.UUID.randomUUID
 
-@SpringBootTest
-@ActiveProfiles(profiles = ["dev"])
 @AutoConfigureMockMvc(addFilters = false)
-class GameRegistrationControllerTest(
-    @Autowired val mockMvc: MockMvc,
-    @Autowired val gameRegistrationRepository: GameRegistrationRepository,
-    @Autowired val objectMapper: ObjectMapper
-) {
+class GameRegistrationControllerTest @Autowired constructor(
+    val gameRegistrationRepository: GameRegistrationRepository,
+) : AbstractSpringBootTest() {
 
     @BeforeEach
     fun cleanUp() {
@@ -204,9 +197,4 @@ class GameRegistrationControllerTest(
                 .andExpect(jsonPath("$[$index].backEndUrl").value(backEndUrl))
         }
 
-    private fun <T> ResultActions.getBody(type: Class<T>) =
-        this.andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
-
-    private fun <T> ResultActions.getBody(type: TypeReference<T>) =
-        this.andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
 }

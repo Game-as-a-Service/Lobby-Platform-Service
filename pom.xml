@@ -78,6 +78,41 @@
                     <jvmTarget>17</jvmTarget>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.github.gantsign.maven</groupId>
+                <artifactId>ktlint-maven-plugin</artifactId>
+                <version>1.16.0</version>
+                <executions>
+                    <execution>
+                        <id>format-and-check</id>
+                        <goals>
+                            <goal>format</goal>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>reporter</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <failOnViolation>false</failOnViolation>
+                            <reporters>
+                                <reporter>
+                                    <name>plain</name>
+                                    <output>${project.build.directory}/ktlint.txt</output>
+                                    <properties>
+                                        <property>
+                                            <name>group_by_file</name>
+                                            <value>true</value>
+                                        </property>
+                                    </properties>
+                                </reporter>
+                            </reporters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

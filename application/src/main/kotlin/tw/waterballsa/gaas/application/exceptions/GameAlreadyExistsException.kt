@@ -1,5 +1,5 @@
 package tw.waterballsa.gaas.application.exceptions
 
-class GameAlreadyExistsException(name: String) : RuntimeException("$name already exists") {
+import tw.waterballsa.gaas.exceptions.PlatformException
 
-}
+class GameAlreadyExistsException(name: String) : PlatformException("$name already exists")
