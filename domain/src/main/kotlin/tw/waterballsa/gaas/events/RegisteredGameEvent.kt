@@ -12,5 +12,5 @@ data class RegisteredGameEvent(
     val minPlayers: Int,
     val maxPlayers: Int,
     val frontEndUrl: String,
-    val backEndUrl: String
+    val backEndUrl: String,
 ) : DomainEvent()

@@ -10,7 +10,7 @@ import javax.inject.Named
 @Named
 class RegisterGameUsecase(
     private val gameRegistrationRepository: GameRegistrationRepository,
-    private val eventBus: EventBus
+    private val eventBus: EventBus,
 ) {
     fun execute(request: Request, presenter: Presenter) {
         gameRegistrationRepository.run {
@@ -35,7 +35,7 @@ class RegisterGameUsecase(
         val minPlayers: Int,
         val maxPlayers: Int,
         val frontEndUrl: String,
-        val backEndUrl: String
+        val backEndUrl: String,
     )
 }
 
@@ -49,7 +49,7 @@ private fun RegisterGameUsecase.Request.toGameRegistration(): GameRegistration =
         minPlayers = minPlayers,
         maxPlayers = maxPlayers,
         frontEndUrl = frontEndUrl,
-        backEndUrl = backEndUrl
+        backEndUrl = backEndUrl,
     )
 
 private fun GameRegistration.toRegisteredGameEvent(): RegisteredGameEvent =
@@ -63,5 +63,5 @@ private fun GameRegistration.toRegisteredGameEvent(): RegisteredGameEvent =
         minPlayers,
         maxPlayers,
         frontEndUrl,
-        backEndUrl
+        backEndUrl,
     )

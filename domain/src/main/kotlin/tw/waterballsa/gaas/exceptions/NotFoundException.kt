@@ -5,7 +5,7 @@ import kotlin.reflect.KClass
 
 class NotFoundException(message: String) : PlatformException(message) {
     constructor(id: Any, identifierName: String, resourceName: String) : this(
-        "Resource (${resourceName.capitalize()}) not found ($identifierName = $id)."
+        "Resource (${resourceName.capitalize()}) not found ($identifierName = $id).",
     )
 
     constructor(id: Any, resourceName: String) : this(id, "id", resourceName)
@@ -14,7 +14,6 @@ class NotFoundException(message: String) : PlatformException(message) {
         fun <T : Any> notFound(resourceType: KClass<T>): NotFoundExceptionBuilder = notFound(resourceType.simpleName!!)
 
         fun notFound(resourceName: String): NotFoundExceptionBuilder = NotFoundExceptionBuilder(resourceName)
-
 
         class NotFoundExceptionBuilder(private val resourceName: String) {
             fun identifyBy(identifierName: String, id: Any): NotFoundException =
@@ -28,8 +27,6 @@ class NotFoundException(message: String) : PlatformException(message) {
                 NotFoundException("Resource ($resourceName) not found ($resourceName = $message).")
         }
     }
-
-
 }
 
 internal fun String.capitalize(): String =

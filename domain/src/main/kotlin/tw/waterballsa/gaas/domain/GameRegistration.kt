@@ -10,7 +10,7 @@ class GameRegistration(
     val minPlayers: Int,
     val maxPlayers: Int,
     val frontEndUrl: String,
-    val backEndUrl: String
+    val backEndUrl: String,
 ) {
     @JvmInline
     value class Id(val value: String)

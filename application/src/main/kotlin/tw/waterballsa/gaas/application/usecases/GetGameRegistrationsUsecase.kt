@@ -6,7 +6,7 @@ import javax.inject.Named
 
 @Named
 class GetGameRegistrationsUsecase(
-    private val gameRegistrationRepository: GameRegistrationRepository
+    private val gameRegistrationRepository: GameRegistrationRepository,
 ) {
     fun execute(): List<GameRegistration> = gameRegistrationRepository.findGameRegistrations()
 }
