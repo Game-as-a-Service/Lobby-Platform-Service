@@ -1,4 +1,4 @@
-package tw.waterballsa.gaas.spring.model
+package tw.waterballsa.gaas.spring.models
 
 import tw.waterballsa.gaas.domain.GameRegistration
 

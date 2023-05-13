@@ -4,7 +4,6 @@ import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.application.exceptions.GameAlreadyExistsException
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.domain.GameRegistration
-import tw.waterballsa.gaas.events.DomainEvent
 import tw.waterballsa.gaas.events.RegisteredGameEvent
 import javax.inject.Named
 
@@ -38,10 +37,6 @@ class RegisterGameUsecase(
         val frontEndUrl: String,
         val backEndUrl: String
     )
-
-    interface Presenter {
-        fun present(vararg events: DomainEvent)
-    }
 }
 
 private fun RegisterGameUsecase.Request.toGameRegistration(): GameRegistration =
