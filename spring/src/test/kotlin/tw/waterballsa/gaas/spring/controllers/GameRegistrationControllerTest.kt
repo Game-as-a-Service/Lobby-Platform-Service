@@ -37,38 +37,43 @@ class GameRegistrationControllerTest(
     }
 
     @Test
-    fun givenThereAreNoGames_WhenRegisteringANewGame_ThenItShouldBeSuccessfullyRegistered() {
+    fun whenRegisteringANewGame_ThenItShouldBeSuccessfullyRegistered() {
         val request = createGameRegistrationRequest("big2-Java", "Big2 Java")
-        val viewModel = registerGameSuccessfully(request)
-        val gameRegistration = findGameRegistration(viewModel)
-        viewModel.validateWithGameRegistration(gameRegistration)
+
+        registerGameSuccessfully(request)
+            .also { big2ViewModel ->
+                val gameRegistration = findGameRegistration(big2ViewModel)
+                big2ViewModel.validateWithGameRegistration(gameRegistration)
+            }
     }
 
     @Test
     fun givenUnoIsAlreadyRegistered_WhenRegisteringUnoAgain_ThenRejectTheRegistration() {
         val request = createGameRegistrationRequest("uno-java", "UNO Java")
-        val viewModel = registerGameSuccessfully(request)
-        val gameRegistration = findGameRegistration(viewModel)
+        val unoViewModel = registerGameSuccessfully(request)
 
         registerGame(request)
             .andExpect(status().isBadRequest)
             .andExpect(content().string("${request.uniqueName} already exists"))
 
-        viewModel.validateWithGameRegistration(gameRegistration)
+        unoViewModel.let {
+            val gameRegistration = findGameRegistration(it)
+            it.validateWithGameRegistration(gameRegistration)
+        }
     }
 
     @Test
     fun givenTheRandomGameHasBeenRegistered_WhenRegisteringMahjong_ThenTheGameListShouldShowTwoGames() {
         registerRandomGame()
         val request = createGameRegistrationRequest("mahjong-python", "Mahjong Python")
-        val viewModel = registerGameSuccessfully(request)
-        val gameRegistration = findGameRegistration(viewModel)
+        val mahjongViewModel = registerGameSuccessfully(request)
 
         val numberOfTotalGameRegistrations = gameRegistrationRepository.getNumberOfTotalGameRegistrations()
         assertThat(numberOfTotalGameRegistrations).isEqualTo(2)
-
-        viewModel.validateWithGameRegistration(gameRegistration)
-
+        mahjongViewModel.let {
+            val gameRegistration = findGameRegistration(it)
+            it.validateWithGameRegistration(gameRegistration)
+        }
     }
 
     @Test
@@ -90,7 +95,6 @@ class GameRegistrationControllerTest(
         registerGameViewModels.forEachIndexed { i, model -> model.validateWithGameRegistration(gameRegistrations[i]) }
     }
 
-
     private fun createGameRegistrationRequest(
         uniqueName: String,
         displayName: String,
@@ -110,7 +114,7 @@ class GameRegistrationControllerTest(
 
     private fun registerGameSuccessfully(testGameRegistrationRequest: TestGameRegistrationRequest): RegisterGameViewModel {
         return with(testGameRegistrationRequest) {
-            val response = registerGame(this)
+            registerGame(this)
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.uniqueName").value(uniqueName))
@@ -122,8 +126,7 @@ class GameRegistrationControllerTest(
                 .andExpect(jsonPath("$.maxPlayers").value(maxPlayers))
                 .andExpect(jsonPath("$.frontEndUrl").value(frontEndUrl))
                 .andExpect(jsonPath("$.backEndUrl").value(backEndUrl))
-                .andReturn().response.contentAsString
-            objectMapper.readValue(response, RegisterGameViewModel::class.java)
+                .getBody(RegisterGameViewModel::class.java)
         }
     }
 
@@ -203,7 +206,6 @@ class GameRegistrationControllerTest(
 
     private fun <T> ResultActions.getBody(type: Class<T>) =
         this.andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
-
 
     private fun <T> ResultActions.getBody(type: TypeReference<T>) =
         this.andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
