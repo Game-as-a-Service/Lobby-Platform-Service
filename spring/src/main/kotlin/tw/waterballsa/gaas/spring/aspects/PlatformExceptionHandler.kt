@@ -11,9 +11,9 @@ import tw.waterballsa.gaas.exceptions.PlatformException
 class PlatformExceptionHandler {
     @ResponseStatus(NOT_FOUND)
     @ExceptionHandler(NotFoundException::class)
-    fun handleUserNotFoundException(exception: NotFoundException): String = exception.message!!
+    fun notFound(exception: NotFoundException): String = exception.message!!
 
     @ResponseStatus(BAD_REQUEST)
     @ExceptionHandler(PlatformException::class)
-    fun badRequest(exception: RuntimeException): String = exception.message!!
+    fun badRequest(exception: PlatformException): String = exception.message!!
 }

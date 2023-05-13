@@ -18,8 +18,8 @@ abstract class AbstractSpringBootTest {
     private lateinit var objectMapper: ObjectMapper
 
     protected fun <T> ResultActions.getBody(type: Class<T>): T =
-        this.andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
+        andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
 
     protected fun <T> ResultActions.getBody(type: TypeReference<T>): T =
-        this.andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
+        andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
 }
