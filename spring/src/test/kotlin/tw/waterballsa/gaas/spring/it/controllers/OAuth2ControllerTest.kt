@@ -37,7 +37,7 @@ class OAuth2ControllerTest @Autowired constructor(
 
     @Test
     fun givenNewUser_whenUserLogin_thenCreateUser() {
-        givenValidUserInfo().userExists(false)
+        givenNewUserInfo().userExists(false)
             .loginSuccessfully().userExists(true)
     }
 
@@ -48,7 +48,8 @@ class OAuth2ControllerTest @Autowired constructor(
     }
 
     private fun givenInvalidUserInfo(): OidcUser = givenUserInfo(null)
-    private fun givenValidUserInfo(): OidcUser = givenUserInfo(OidcUserInfo(mapOf("email" to "test@mail.com")))
+    private fun givenNewUserInfo(): OidcUser = givenUserInfo(OidcUserInfo(mapOf("email" to "user@example.com")))
+    private fun givenOldUserInfo(): OidcUser = givenUserInfo(OidcUserInfo(mapOf("email" to "other@example.com")))
 
     private fun givenUserInfo(oidcUserInfo: OidcUserInfo?): OidcUser = DefaultOidcUser(
         listOf(),
@@ -56,7 +57,7 @@ class OAuth2ControllerTest @Autowired constructor(
         oidcUserInfo
     )
 
-    private fun givenUserLoginBefore(): OidcUser = givenValidUserInfo().loginSuccessfully()
+    private fun givenUserLoginBefore(): OidcUser = givenOldUserInfo().loginSuccessfully()
 
     private fun OidcUser.userExists(isExists: Boolean): OidcUser = this.also {
         Assertions.assertThat(userRepository.existsUserByEmail(userInfo.email)).isEqualTo(isExists)
