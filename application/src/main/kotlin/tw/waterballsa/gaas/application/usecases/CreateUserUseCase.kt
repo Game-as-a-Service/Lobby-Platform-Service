@@ -21,7 +21,7 @@ class CreateUserUseCase(
     }
 
     class Request(val email: String) {
-        fun toUser(): User = User(email = email, nickname = "")
+        fun toUser(): User = User(email = email)
     }
 }
 
