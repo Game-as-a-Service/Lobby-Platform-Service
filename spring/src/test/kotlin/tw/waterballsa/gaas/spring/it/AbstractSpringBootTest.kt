@@ -17,6 +17,8 @@ abstract class AbstractSpringBootTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
 
+    protected fun <T> T.toJson(): String = objectMapper.writeValueAsString(this)
+
     protected fun <T> ResultActions.getBody(type: Class<T>): T =
         andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
 
