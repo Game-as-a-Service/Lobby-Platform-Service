@@ -12,13 +12,13 @@ import java.util.*
 class OAuth2Controller(
     private val createUserUseCase: CreateUserUseCase
 ) {
-    @GetMapping("/")
+    @GetMapping
     fun home(@AuthenticationPrincipal principal: OidcUser?): String {
         createUserUseCase.execute(principal.toRequest())
         return principal?.idToken?.tokenValue ?: "index"
     }
 }
 
-fun OidcUser?.toRequest(): CreateUserUseCase.Request = CreateUserUseCase.Request(
+private fun OidcUser?.toRequest(): CreateUserUseCase.Request = CreateUserUseCase.Request(
     this?.userInfo?.email ?: throw PlatformException("User email is null")
 )

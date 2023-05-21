@@ -1,6 +1,6 @@
 package tw.waterballsa.gaas.spring.it.controllers
 
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,14 +37,14 @@ class OAuth2ControllerTest @Autowired constructor(
 
     @Test
     fun givenNewUser_whenUserLogin_thenCreateUser() {
-        givenNewUserInfo().userExists(false)
-            .loginSuccessfully().userExists(true)
+        givenNewUserInfo().assertUserExists(false)
+            .loginSuccessfully().assertUserExists(true)
     }
 
     @Test
     fun givenOldUser_whenUserLogin_thenLoginSuccessfully() {
-        givenUserLoginBefore().userExists(true)
-            .loginSuccessfully().userExists(true)
+        givenUserLoginBefore().assertUserExists(true)
+            .loginSuccessfully().assertUserExists(true)
     }
 
     private fun givenInvalidUserInfo(): OidcUser = givenUserInfo(null)
@@ -59,8 +59,8 @@ class OAuth2ControllerTest @Autowired constructor(
 
     private fun givenUserLoginBefore(): OidcUser = givenOldUserInfo().loginSuccessfully()
 
-    private fun OidcUser.userExists(isExists: Boolean): OidcUser = this.also {
-        Assertions.assertThat(userRepository.existsUserByEmail(userInfo.email)).isEqualTo(isExists)
+    private fun OidcUser.assertUserExists(isExists: Boolean): OidcUser = this.also {
+        assertThat(userRepository.existsUserByEmail(userInfo.email)).isEqualTo(isExists)
     }
 
     private fun OidcUser.login(): ResultActions =

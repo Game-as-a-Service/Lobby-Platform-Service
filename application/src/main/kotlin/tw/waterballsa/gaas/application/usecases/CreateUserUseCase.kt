@@ -14,13 +14,14 @@ class CreateUserUseCase(
     fun execute(request: Request) = when {
         userRepository.existsUserByEmail(request.email) -> {}
         else -> {
-            val event = userRepository.createUser(request.toUser()).toUserCreatedEvent()
+            val user = userRepository.createUser(request.toUser())
+            val event = user.toUserCreatedEvent()
             eventBus.broadcast(event)
         }
     }
 
     class Request(val email: String) {
-        fun toUser(): User = User(null, email, "")
+        fun toUser(): User = User(email = email, nickname = "")
     }
 }
 
