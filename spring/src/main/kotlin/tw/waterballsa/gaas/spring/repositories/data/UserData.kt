@@ -7,10 +7,11 @@ import tw.waterballsa.gaas.domain.User
 @Document
 class UserData(
     @Id
-    private var id: String? = null,
+    var id: String? = null,
     private var email: String? = null,
-    private var nickname: String? = null
+    var nickname: String? = null
 ) {
+
     fun toDomain(): User =
         User(
             User.Id(id!!),
