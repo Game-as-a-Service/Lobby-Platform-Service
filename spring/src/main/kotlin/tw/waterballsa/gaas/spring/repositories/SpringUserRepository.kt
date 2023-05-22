@@ -15,6 +15,8 @@ class SpringUserRepository(
     override fun findById(id: User.Id): User? =
         userDAO.findById(id.value).mapOrNull(UserData::toDomain)
 
+    override fun existsUserByEmail(email: String): Boolean = userDAO.existsByEmail(email)
+
     override fun createUser(user: User): User = userDAO.save(user.toData()).toDomain()
 
     override fun deleteAll() {
