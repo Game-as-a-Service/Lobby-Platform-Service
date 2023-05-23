@@ -9,7 +9,7 @@ import javax.inject.Named
 @Named
 class CreateUserUseCase(
     private val userRepository: UserRepository,
-    private val eventBus: EventBus
+    private val eventBus: EventBus,
 ) {
     fun execute(request: Request) = when {
         userRepository.existsUserByEmail(request.email) -> {}
