@@ -22,6 +22,7 @@ import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.spring.models.TestJoinRoomRequest
+import tw.waterballsa.gaas.spring.repositories.data.UserData
 
 @SpringBootTest
 @ActiveProfiles(profiles = ["dev"])
@@ -54,10 +55,11 @@ class RoomControllerTest(
     @Test
     fun giveHasPublicRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinThePublicRoom_ThenShouldSucceed(){
         testRoom = createRoom()
-        val user = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
-        val request = joinRoomRequest(user.id!!.value);
+        val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
+        val playerB = Room.Player(userB.id!!, userB.nickname)
+        val request = joinRoomRequest(userB.id!!.value);
         joinRoom(request)
-            .thenJoinRoomSuccessfully(request)
+            .thenJoinRoomSuccessfully()
     }
 
     @Test
@@ -65,19 +67,20 @@ class RoomControllerTest(
         val password = "P@ssw0rd"
         val errorPassword = "password"
         testRoom = createRoom(password)
-        val user = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
-        val request = joinRoomRequest(user.id!!.value, errorPassword);
+        val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
+        val request = joinRoomRequest(userB.id!!.value, errorPassword);
         joinRoom(request)
-            .andExpect(status().isBadRequest)
+            .thenWrongPassword()
     }
     @Test
     fun giveHasEncryptedRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinTheEncryptedRoomAndThePasswordIsCorrect_ThenShouldSucceed(){
         val password = "P@ssw0rd"
         testRoom = createRoom(password)
-        val user = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
-        val request = joinRoomRequest(user.id!!.value, password);
+        val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
+        val playerB = Room.Player(userB.id!!, userB.nickname)
+        val request = joinRoomRequest(userB.id!!.value, password);
         joinRoom(request)
-            .thenJoinRoomSuccessfully(request)
+            .thenJoinRoomSuccessfully()
     }
 
     private fun createUser(): User =
@@ -106,22 +109,14 @@ class RoomControllerTest(
     private fun joinRoom(request: TestJoinRoomRequest): ResultActions =
         mockMvc.perform(post("/rooms/${testRoom.id!!.value}/players").contentType(APPLICATION_JSON).content(request.toJson()))
 
-    private fun ResultActions.thenJoinRoomSuccessfully(request: TestJoinRoomRequest) {
-        request.let {
-            this.andExpect(status().isOk)
-                .andExpect(jsonPath("$.id").value(testRoom.id!!.value))
-                .andExpect(jsonPath("$.gameRegistrationId").value(testRoom.gameRegistration.id!!.value))
-                .andExpect(jsonPath("$.hostId").value(testRoom.host.id!!.value))
-                .andExpect(jsonPath("$.hostName").value(testRoom.host.nickname))
-                .andExpect(jsonPath("$.playerIds").exists())
-                .andExpect(jsonPath("$.playerIds").isArray)
-                .andExpect(jsonPath("$.playerIds[0]").value(testRoom.players[0].id!!.value))
-                .andExpect(jsonPath("$.playerIds[1]").value(it.userId))
-                .andExpect(jsonPath("$.maxPlayers").value(testRoom.maxPlayers))
-                .andExpect(jsonPath("$.minPlayers").value(testRoom.minPlayers))
-                .andExpect(jsonPath("$.name").value(testRoom.name))
-                .andExpect(jsonPath("$.status").value(Room.Status.WAITING.name))
-        }
+    private fun ResultActions.thenJoinRoomSuccessfully() {
+        this.andExpect(status().isOk)
+            .andExpect(jsonPath("$.message").value("success"))
+    }
+
+    private fun ResultActions.thenWrongPassword() {
+        this.andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("wrong password"))
     }
 
     private fun createRoom(password: String? = null): Room = roomRepository.createRoom(

@@ -1,8 +1,10 @@
 package tw.waterballsa.gaas.spring.controllers
 
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import tw.waterballsa.gaas.application.usecases.JoinRoomUsecase
+import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.events.DomainEvent
 import tw.waterballsa.gaas.events.JoinedRoomEvent
@@ -15,11 +17,15 @@ class RoomController(
 ) {
     @PostMapping("/{roomId}/players")
     fun joinRoom(@PathVariable roomId: String, @RequestBody request: JoinRoomRequest): ResponseEntity<Any> {
-        val presenter = JoinRoomPresenter()
-        joinRoomUsecase.execute(request.toRequest(roomId), presenter)
-        return presenter.viewModel
-            ?.let { ResponseEntity.ok(it) }
-            ?: ResponseEntity.noContent().build()
+        try {
+            val presenter = JoinRoomPresenter()
+            joinRoomUsecase.execute(request.toRequest(roomId), presenter)
+            return presenter.viewModel
+                ?.let { ResponseEntity.ok(it) }
+                ?: ResponseEntity.noContent().build()
+        }catch (e : Exception){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(JoinRoomViewModel(e.message!!))
+        }
     }
 
     class JoinRoomRequest(
@@ -44,29 +50,11 @@ class RoomController(
 
         private fun JoinedRoomEvent.toViewModel(): JoinRoomViewModel =
             JoinRoomViewModel(
-                id = id,
-                name = name,
-                status = status,
-                gameRegistrationId = gameRegistrationId.value,
-                hostId = host.id.value,
-                hostName = hostName,
-                playerIds = playerIds.map { it.id.value },
-                maxPlayers = maxPlayers,
-                minPlayers = minPlayers,
-                isEncrypted = isEncrypted
+                message = message
             )
     }
 
     data class JoinRoomViewModel(
-        val id: Room.Id,
-        val name: String,
-        val status: Room.Status,
-        val gameRegistrationId: String,
-        val hostId: String,
-        val hostName: String,
-        val playerIds: List<String>,
-        val maxPlayers: Int,
-        val minPlayers: Int,
-        val isEncrypted: Boolean
+        val message: String
     )
 }
