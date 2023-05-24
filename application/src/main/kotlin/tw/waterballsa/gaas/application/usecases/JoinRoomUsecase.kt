@@ -7,7 +7,7 @@ import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.events.DomainEvent
 import tw.waterballsa.gaas.events.JoinedRoomEvent
-import tw.waterballsa.gaas.exceptions.IncorrectRoomPasswordException
+import tw.waterballsa.gaas.exceptions.WrongRoomPasswordException
 import tw.waterballsa.gaas.exceptions.NotFoundException
 import javax.inject.Named
 
@@ -22,14 +22,14 @@ class JoinRoomUsecase(
         request.run {
             validateJoinRoom(this)
             joinRoom(request)
-                .also { presenter.present(it.toJoinedRoomEvent())}
+                .also { presenter.present(it.toJoinedRoomEvent("success"))}
         }
     }
 
     private fun validateJoinRoom(request: Request) {
         val room = findRoomById(Room.Id(request.roomId))
         if(!room.password.isNullOrEmpty() && !room.password.equals(request.password)){
-            throw IncorrectRoomPasswordException(room.password!!)
+            throw WrongRoomPasswordException(room.password!!)
         }
     }
 
@@ -58,16 +58,7 @@ class JoinRoomUsecase(
     }
 }
 
-private fun Room.toJoinedRoomEvent(): JoinedRoomEvent =
+private fun Room.toJoinedRoomEvent(message: String): JoinedRoomEvent =
     JoinedRoomEvent(
-        id = id!!,
-        name = name,
-        status = status,
-        gameRegistrationId = gameRegistration.id!!,
-        host = host,
-        hostName = host.nickname,
-        playerIds = players,
-        maxPlayers = maxPlayers,
-        minPlayers = minPlayers,
-        isEncrypted = !password.isNullOrEmpty()
+       message = message
     )
