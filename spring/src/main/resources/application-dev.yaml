@@ -34,3 +34,12 @@ server:
 logging:
   level:
     org.springframework.security: trace
+
+springdoc:
+  api-docs:
+    path: /swagger-ui/api-docs
+  swagger-ui:
+    path: /swagger-ui
+    doc-expansion: none
+    operations-sorter: alpha
+    tags-sorter: alpha
