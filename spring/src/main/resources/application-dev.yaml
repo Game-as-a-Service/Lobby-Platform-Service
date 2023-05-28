@@ -13,14 +13,24 @@ spring:
           auth0:
             client-id: ${CLIENT_ID}
             client-secret: ${CLIENT_SECRET}
+            authorization-grant-type: authorization_code
             scope:
               - openid
               - profile
               - email
+            redirect-uri: http://localhost:8087/login/oauth2/code/auth0
         provider:
           auth0:
             # trailing slash is important!
             issuer-uri: https://dev-1l0ixjw8yohsluoi.us.auth0.com/
+            jwk-set-uri: https://dev-1l0ixjw8yohsluoi.us.auth0.com/.well-known/jwks.json
+            authorization-uri: https://dev-1l0ixjw8yohsluoi.us.auth0.com/authorize
+            token-uri: https://dev-1l0ixjw8yohsluoi.us.auth0.com/oauth/token
+            user-info-uri: https://dev-1l0ixjw8yohsluoi.us.auth0.com/oauth/userinfo
 
 server:
   port: 8087
+
+logging:
+  level:
+    org.springframework.security: trace
