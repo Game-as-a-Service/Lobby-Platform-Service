@@ -11,7 +11,7 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
-import javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED
+import javax.servlet.http.HttpServletResponse.SC_FORBIDDEN
 
 @EnableWebSecurity
 class SecurityConfig(
@@ -58,7 +58,7 @@ class SecurityConfig(
         AuthenticationEntryPoint { request, response, _ ->
             when (request.requestURI) {
                 "/login" -> response.sendRedirect("/oauth2/authorization/auth0")
-                else -> response.sendError(SC_UNAUTHORIZED)
+                else -> response.sendError(SC_FORBIDDEN)
             }
         }
 }
