@@ -47,7 +47,7 @@ class CreateRoomUsecase(
 
     private fun findPlayerByUserId(hostId: User.Id): Player =
         userRepository.findById(hostId)
-            ?.let { Player(it.id!!, it.nickname) }
+            ?.toRoomPlayer()
             ?: throw notFound(User::class).id(hostId.value)
 
     data class Request(
@@ -58,10 +58,10 @@ class CreateRoomUsecase(
         val minPlayers: Int,
         val maxPlayers: Int,
     )
-
-    private val Request.hostPlayerId
-        get() = User.Id(hostId)
 }
+
+private val CreateRoomUsecase.Request.hostPlayerId
+    get() = User.Id(hostId)
 
 private fun CreateRoomUsecase.Request.toRoom(gameRegistration: GameRegistration, host: Player): Room =
     Room(
@@ -85,3 +85,6 @@ private fun Room.toCreatedRoomEvent(): CreatedRoomEvent =
         name = name,
         isLocked = isLocked,
     )
+
+private fun User.toRoomPlayer(): Player =
+    Player(Player.Id(id!!.value), nickname)

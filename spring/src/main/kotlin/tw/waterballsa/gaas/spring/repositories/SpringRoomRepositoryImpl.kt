@@ -6,6 +6,8 @@ import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
+import tw.waterballsa.gaas.domain.Room.Id
+import tw.waterballsa.gaas.domain.Room.Player
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.spring.extensions.mapOrNull
@@ -21,7 +23,7 @@ class SpringRoomRepository(
 ) : RoomRepository {
     override fun createRoom(room: Room): Room = roomDAO.save(room.toData()).toDomain()
 
-    override fun findById(roomId: Room.Id): Room? = roomDAO.findById(roomId.value).mapOrNull { it.toDomain() }
+    override fun findById(roomId: Id): Room? = roomDAO.findById(roomId.value).mapOrNull { it.toDomain() }
 
     override fun deleteAll() {
         roomDAO.deleteAll()
@@ -31,7 +33,7 @@ class SpringRoomRepository(
 
     private fun RoomData.toDomain(): Room =
         Room(
-            roomId = Room.Id(id!!),
+            roomId = Id(id!!),
             game = GameRegistration.Id(gameRegistrationId).toGameRegistration(),
             host = User.Id(hostId).toRoomPlayer(),
             players = userRepository.findRoomPlayers(playerIds),
@@ -45,19 +47,19 @@ class SpringRoomRepository(
         gameRegistrationRepository.findById(this)
             ?: throw notFound(GameRegistration::class).id(value)
 
-    private fun User.Id.toRoomPlayer(): Room.Player =
+    private fun User.Id.toRoomPlayer(): Player =
         userRepository.findById(this)
             ?.toRoomPlayer()
             ?: throw notFound(User::class).id(value)
 }
 
-private fun UserRepository.findRoomPlayers(playerIds: Collection<String>): MutableList<Room.Player> =
+private fun UserRepository.findRoomPlayers(playerIds: Collection<String>): MutableList<Player> =
     findAllById(playerIds.map(User::Id))
         .map { user -> user.toRoomPlayer() }
         .toMutableList()
 
-private fun User.toRoomPlayer(): Room.Player =
-    Room.Player(
-        userId = id!!,
+private fun User.toRoomPlayer(): Player =
+    Player(
+        id = Player.Id(id!!.value),
         nickname = nickname
     )

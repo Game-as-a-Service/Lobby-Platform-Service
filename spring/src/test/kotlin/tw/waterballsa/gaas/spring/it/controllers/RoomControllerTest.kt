@@ -115,7 +115,7 @@ class RoomControllerTest @Autowired constructor(
             post("/rooms")
                 .with(oidcLogin().oidcUser(mockOidcUser()))
                 .contentType(APPLICATION_JSON)
-                .content(request.toJSON())
+                .content(request.toJson())
         )
 
     private fun ResultActions.thenCreateRoomSuccessfully(request: TestCreateRoomRequest) {

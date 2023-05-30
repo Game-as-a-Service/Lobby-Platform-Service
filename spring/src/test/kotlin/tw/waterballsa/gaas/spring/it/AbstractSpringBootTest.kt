@@ -23,5 +23,5 @@ abstract class AbstractSpringBootTest {
     protected fun <T> ResultActions.getBody(type: TypeReference<T>): T =
         andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
 
-    protected fun Any.toJSON(): String = objectMapper.writeValueAsString(this)
+    protected fun Any.toJson(): String = objectMapper.writeValueAsString(this)
 }

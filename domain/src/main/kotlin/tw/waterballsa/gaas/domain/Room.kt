@@ -24,15 +24,9 @@ class Room(
     }
 
     class Player(
-        userId: User.Id,
+        val id: Id,
         val nickname: String,
     ) {
-        val id: Id
-
-        init {
-            id = Id(userId.value)
-        }
-
         @JvmInline
         value class Id(val value: String)
     }
