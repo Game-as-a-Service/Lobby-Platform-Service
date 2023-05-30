@@ -18,11 +18,15 @@ import tw.waterballsa.gaas.spring.controllers.RoomController.CreateRoomViewModel
 import tw.waterballsa.gaas.spring.extensions.getEvent
 import javax.validation.Valid
 import javax.validation.constraints.Pattern
+import tw.waterballsa.gaas.application.usecases.JoinRoomUsecase
+import tw.waterballsa.gaas.events.JoinedRoomEvent
+import tw.waterballsa.gaas.exceptions.PlatformException
 
 @RestController
 @RequestMapping("/rooms")
 class RoomController(
     private val createRoomUsecase: CreateRoomUsecase
+    private val joinRoomUsecase: JoinRoomUsecase
 ) {
     @PostMapping
     fun createRoom(
@@ -89,6 +93,49 @@ class RoomController(
         data class Game(val id: String, val name: String)
         data class Player(val id: String, val nickname: String)
     }
+
+    @PostMapping("/{roomId}/players")
+    fun joinRoom(@PathVariable roomId: String, @RequestBody request: JoinRoomRequest, @AuthenticationPrincipal principal: OidcUser?): ResponseEntity<Any> {
+        try {
+            val presenter = JoinRoomPresenter()
+            val joinerId = principal?.subject ?: throw PlatformException("User id is null")
+            joinRoomUsecase.execute(request.toRequest(roomId, joinerId), presenter)
+            return presenter.viewModel
+                ?.let { ResponseEntity.ok(it) }
+                ?: ResponseEntity.noContent().build()
+        }catch (e : Exception){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(JoinRoomViewModel(e.message!!))
+        }
+    }
+
+    class JoinRoomRequest(
+        val password: String? = null
+    ) {
+        fun toRequest(roomId: String, userId: String): JoinRoomUsecase.Request =
+            JoinRoomUsecase.Request(
+                roomId = roomId,
+                userId = userId,
+                password = password
+            )
+    }
+
+    class JoinRoomPresenter : JoinRoomUsecase.Presenter {
+        var viewModel: JoinRoomViewModel? = null
+            private set
+
+        override fun present(vararg events: DomainEvent) {
+            viewModel = events.getEvent(JoinedRoomEvent::class)?.toViewModel()
+        }
+
+        private fun JoinedRoomEvent.toViewModel(): JoinRoomViewModel =
+            JoinRoomViewModel(
+                message = message
+            )
+    }
+
+    data class JoinRoomViewModel(
+        val message: String
+    )
 }
 
 private fun GameRegistration.toView(): CreateRoomViewModel.Game =

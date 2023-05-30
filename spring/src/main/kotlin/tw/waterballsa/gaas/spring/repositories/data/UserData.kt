@@ -8,7 +8,7 @@ import tw.waterballsa.gaas.domain.User
 class UserData(
     @Id
     var id: String? = null,
-    private var email: String? = null,
+    var email: String? = null,
     var nickname: String? = null
 ) {
 

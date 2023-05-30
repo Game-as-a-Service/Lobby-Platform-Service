@@ -82,6 +82,36 @@ class RoomControllerTest @Autowired constructor(
         createRoom(request)
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$").value("A user can only create one room at a time."))
+    fun giveHasPublicRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinThePublicRoom_ThenShouldSucceed(){
+        testRoom = createRoom()
+        val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
+        val playerB = Room.Player(userB.id!!, userB.nickname)
+        requestPostProcessor = oidcLogin(userB.id!!.value, userB.nickname, userB.email)
+        val request = joinRoomRequest();
+        joinRoom(request, requestPostProcessor)
+            .thenJoinRoomSuccessfully()
+    }
+
+    @Test
+    fun giveHasEncryptedRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinTheEncryptedRoomAndThePasswordIsIncorrect_ThenShouldFail(){
+        val password = "P@ssw0rd"
+        val errorPassword = "password"
+        testRoom = createRoom(password)
+        val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
+        requestPostProcessor = oidcLogin(userB.id!!.value, userB.nickname, userB.email)
+        val request = joinRoomRequest(errorPassword);
+        joinRoom(request, requestPostProcessor)
+            .thenWrongPassword()
+    }
+    @Test
+    fun giveHasEncryptedRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinTheEncryptedRoomAndThePasswordIsCorrect_ThenShouldSucceed(){
+        val password = "P@ssw0rd"
+        testRoom = createRoom(password)
+        val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
+        requestPostProcessor = oidcLogin(userB.id!!.value, userB.nickname, userB.email)
+        val request = joinRoomRequest(password);
+        joinRoom(request, requestPostProcessor)
+            .thenJoinRoomSuccessfully()
     }
 
     private fun createUser(): User =
@@ -144,5 +174,51 @@ class RoomControllerTest @Autowired constructor(
         }
         val idToken = OidcIdToken("token", now(), now().plusSeconds(60), claims)
         return DefaultOidcUser(emptyList(), idToken)
+    }
+}
+    private fun joinRoomRequest(password: String? = null): TestJoinRoomRequest =
+        TestJoinRoomRequest(
+            password = password
+        )
+
+    private fun joinRoom(request: TestJoinRoomRequest, requestPostProcessor: RequestPostProcessor): ResultActions =
+        mockMvc.perform(post("/rooms/${testRoom.id!!.value}/players")
+            .with(requestPostProcessor)
+            .contentType(APPLICATION_JSON)
+            .content(request.toJson())
+        )
+
+    private fun ResultActions.thenJoinRoomSuccessfully() {
+        this.andExpect(status().isOk)
+            .andExpect(jsonPath("$.message").value("success"))
+    }
+
+    private fun ResultActions.thenWrongPassword() {
+        this.andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("wrong password"))
+    }
+
+    private fun createRoom(password: String? = null): Room = roomRepository.createRoom(
+        Room(
+            gameRegistration = testGame,
+            host = Room.Player(User.Id(testUser.id!!.value), testUser.nickname),
+            players =  mutableListOf (Room.Player(User.Id(testUser.id!!.value), testUser.nickname)),
+            maxPlayers = testGame.maxPlayers,
+            minPlayers = testGame.minPlayers,
+            name = "My Room",
+            status = Room.Status.WAITING,
+            password = password
+        )
+    )
+
+    private fun oidcLogin(sub: String, name: String, email: String) = RequestPostProcessor { request ->
+        val claims: Map<String, Any> = mapOf("sub" to sub, "name" to name, "email" to email)
+        val idToken = OidcIdToken("token", Instant.now(), Instant.now().plusSeconds(60), claims)
+        val authorityAttributes: Map<String, Any> = claims
+        val authority = OAuth2UserAuthority(authorityAttributes)
+        val oidcUser: OidcUser = DefaultOidcUser(listOf(authority), idToken)
+        val authentication = OAuth2AuthenticationToken(oidcUser, listOf(SimpleGrantedAuthority("ROLE_USER")), "oidc")
+        SecurityContextHolder.getContext().authentication = authentication
+        request
     }
 }
