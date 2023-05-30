@@ -22,4 +22,7 @@ class SpringUserRepository(
     override fun deleteAll() {
         userDAO.deleteAll()
     }
+
+    override fun findAllById(ids: Collection<User.Id>): List<User> =
+        userDAO.findAllById(ids.map(User.Id::value)).map(UserData::toDomain)
 }
