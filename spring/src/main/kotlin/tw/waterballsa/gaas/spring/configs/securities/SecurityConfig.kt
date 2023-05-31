@@ -11,7 +11,7 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
-import javax.servlet.http.HttpServletResponse.SC_FORBIDDEN
+import javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED
 
 @EnableWebSecurity
 class SecurityConfig(
@@ -23,6 +23,7 @@ class SecurityConfig(
         http
             .csrf().disable()
             .authorizeHttpRequests()
+            .antMatchers("/health", "/walking-skeleton").permitAll()
             .anyRequest().authenticated()
             .and()
             .oauth2Login()
@@ -57,7 +58,7 @@ class SecurityConfig(
         AuthenticationEntryPoint { request, response, _ ->
             when (request.requestURI) {
                 "/login" -> response.sendRedirect("/oauth2/authorization/auth0")
-                else -> response.sendError(SC_FORBIDDEN)
+                else -> response.sendError(SC_UNAUTHORIZED)
             }
         }
 }
