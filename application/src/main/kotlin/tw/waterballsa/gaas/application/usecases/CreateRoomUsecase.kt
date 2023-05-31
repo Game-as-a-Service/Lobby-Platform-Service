@@ -85,6 +85,3 @@ private fun Room.toCreatedRoomEvent(): CreatedRoomEvent =
         name = name,
         isLocked = isLocked,
     )
-
-private fun User.toRoomPlayer(): Player =
-    Player(Player.Id(id!!.value), nickname)

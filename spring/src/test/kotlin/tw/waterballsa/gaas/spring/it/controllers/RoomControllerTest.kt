@@ -88,35 +88,26 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun giveHasPublicRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinThePublicRoom_ThenShouldSucceed() {
-        testRoom = createTestRoom()
-        val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
-        val joinUser = mockOidcUser(userB.id!!.value, userB.nickname, userB.email)
-        val request = joinRoomRequest();
-        joinRoom(request, joinUser)
+    fun giveHasPublicRoomAndHostIsUserAAndUserBIsInTheLobby_WhenUserBJoinThePublicRoom_ThenShouldSucceed() {
+        giveHasRoomAndHostIsUserAAndUserBIsInTheLobby()
+            .WhenUserBJoinTheRoom()
             .thenJoinRoomSuccessfully()
     }
 
     @Test
-    fun giveHasEncryptedRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinTheEncryptedRoomAndThePasswordIsIncorrect_ThenShouldFail() {
+    fun giveHasEncryptedRoomAndHostIsUserAAndUserBIsInTheLobby_WhenUserBJoinTheEncryptedRoomAndThePasswordIsIncorrect_ThenShouldFail() {
         val password = "P@ssw0rd"
         val errorPassword = "password"
-        testRoom = createTestRoom(password)
-        val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
-        val joinUser = mockOidcUser(userB.id!!.value, userB.nickname, userB.email)
-        val request = joinRoomRequest(errorPassword);
-        joinRoom(request, joinUser)
+        giveHasRoomAndHostIsUserAAndUserBIsInTheLobby(password)
+            .WhenUserBJoinTheRoom(errorPassword)
             .thenWrongPassword()
     }
 
     @Test
-    fun giveHasEncryptedRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinTheEncryptedRoomAndThePasswordIsCorrect_ThenShouldSucceed() {
+    fun giveHasEncryptedRoomAndHostIsUserAAndsIsInTheLobby_WhenUserBJoinTheEncryptedRoomAndThePasswordIsCorrect_ThenShouldSucceed() {
         val password = "P@ssw0rd"
-        testRoom = createTestRoom(password)
-        val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
-        val joinUser = mockOidcUser(userB.id!!.value, userB.nickname, userB.email)
-        val request = joinRoomRequest(password);
-        joinRoom(request, joinUser)
+        giveHasRoomAndHostIsUserAAndUserBIsInTheLobby(password)
+            .WhenUserBJoinTheRoom(password)
             .thenJoinRoomSuccessfully()
     }
 
@@ -195,16 +186,6 @@ class RoomControllerTest @Autowired constructor(
                 .content(request.toJson())
         )
 
-    private fun ResultActions.thenJoinRoomSuccessfully() {
-        this.andExpect(status().isOk)
-            .andExpect(jsonPath("$.message").value("success"))
-    }
-
-    private fun ResultActions.thenWrongPassword() {
-        this.andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.message").value("wrong password"))
-    }
-
     private fun createTestRoom(password: String? = null): Room = roomRepository.createRoom(
         Room(
             game = testGame,
@@ -217,4 +198,23 @@ class RoomControllerTest @Autowired constructor(
             password = password
         )
     )
+    private fun giveHasRoomAndHostIsUserAAndUserBIsInTheLobby(password: String? = null): OidcUser{
+        testRoom = createTestRoom(password)
+        val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
+        return mockOidcUser(userB.id!!.value, userB.nickname, userB.email)
+    }
+    private fun OidcUser.WhenUserBJoinTheRoom(password: String? = null):ResultActions{
+        val request = joinRoomRequest(password);
+        return joinRoom(request, this)
+    }
+
+    private fun ResultActions.thenJoinRoomSuccessfully() {
+        this.andExpect(status().isOk)
+            .andExpect(jsonPath("$.message").value("success"))
+    }
+
+    private fun ResultActions.thenWrongPassword() {
+        this.andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("wrong password"))
+    }
 }

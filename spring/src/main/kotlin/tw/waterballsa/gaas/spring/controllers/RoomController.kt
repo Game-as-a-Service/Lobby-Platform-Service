@@ -39,17 +39,17 @@ class RoomController(
     }
 
     @PostMapping("/{roomId}/players")
-    fun joinRoom(@PathVariable roomId: String, @RequestBody request: JoinRoomRequest, @AuthenticationPrincipal principal: OidcUser?): ResponseEntity<Any> {
-        try {
-            val presenter = JoinRoomPresenter()
-            val joinerId = principal?.subject ?: throw PlatformException("User id is null")
-            joinRoomUsecase.execute(request.toRequest(roomId, joinerId), presenter)
-            return presenter.viewModel
-                ?.let { ResponseEntity.ok(it) }
-                ?: ResponseEntity.noContent().build()
-        }catch (e : Exception){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(JoinRoomViewModel(e.message!!))
-        }
+    fun joinRoom(
+        @AuthenticationPrincipal principal: OidcUser?,
+        @PathVariable roomId: String,
+        @RequestBody request: JoinRoomRequest
+    ): ResponseEntity<Any> {
+        val presenter = JoinRoomPresenter()
+        val joinerId = principal?.subject ?: throw PlatformException("User id is null")
+        joinRoomUsecase.execute(request.toRequest(roomId, joinerId), presenter)
+        return presenter.viewModel
+            ?.let { ResponseEntity.ok(it) }
+            ?: ResponseEntity.noContent().build()
     }
 
     class CreateRoomRequest(
@@ -117,7 +117,7 @@ class RoomController(
             )
     }
 
-    class JoinRoomPresenter : JoinRoomUsecase.Presenter {
+    class JoinRoomPresenter : Presenter {
         var viewModel: JoinRoomViewModel? = null
             private set
 
