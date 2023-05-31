@@ -17,9 +17,11 @@ import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.GameRegistration
+import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 import tw.waterballsa.gaas.spring.models.TestCreateRoomRequest
+import tw.waterballsa.gaas.spring.models.TestJoinRoomRequest
 import java.time.Instant.now
 
 
@@ -31,6 +33,7 @@ class RoomControllerTest @Autowired constructor(
 
     lateinit var testUser: User
     lateinit var testGame: GameRegistration
+    lateinit var testRoom: Room
 
     @BeforeEach
     fun setUp() {
@@ -82,35 +85,38 @@ class RoomControllerTest @Autowired constructor(
         createRoom(request)
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$").value("A user can only create one room at a time."))
-    fun giveHasPublicRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinThePublicRoom_ThenShouldSucceed(){
-        testRoom = createRoom()
+    }
+
+    @Test
+    fun giveHasPublicRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinThePublicRoom_ThenShouldSucceed() {
+        testRoom = createTestRoom()
         val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
-        val playerB = Room.Player(userB.id!!, userB.nickname)
-        requestPostProcessor = oidcLogin(userB.id!!.value, userB.nickname, userB.email)
+        val joinUser = mockOidcUser(userB.id!!.value, userB.nickname, userB.email)
         val request = joinRoomRequest();
-        joinRoom(request, requestPostProcessor)
+        joinRoom(request, joinUser)
             .thenJoinRoomSuccessfully()
     }
 
     @Test
-    fun giveHasEncryptedRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinTheEncryptedRoomAndThePasswordIsIncorrect_ThenShouldFail(){
+    fun giveHasEncryptedRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinTheEncryptedRoomAndThePasswordIsIncorrect_ThenShouldFail() {
         val password = "P@ssw0rd"
         val errorPassword = "password"
-        testRoom = createRoom(password)
+        testRoom = createTestRoom(password)
         val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
-        requestPostProcessor = oidcLogin(userB.id!!.value, userB.nickname, userB.email)
+        val joinUser = mockOidcUser(userB.id!!.value, userB.nickname, userB.email)
         val request = joinRoomRequest(errorPassword);
-        joinRoom(request, requestPostProcessor)
+        joinRoom(request, joinUser)
             .thenWrongPassword()
     }
+
     @Test
-    fun giveHasEncryptedRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinTheEncryptedRoomAndThePasswordIsCorrect_ThenShouldSucceed(){
+    fun giveHasEncryptedRoomAndHostIsUserAAndUerBIsInTheLobby_WhenUserBJoinTheEncryptedRoomAndThePasswordIsCorrect_ThenShouldSucceed() {
         val password = "P@ssw0rd"
-        testRoom = createRoom(password)
+        testRoom = createTestRoom(password)
         val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
-        requestPostProcessor = oidcLogin(userB.id!!.value, userB.nickname, userB.email)
+        val joinUser = mockOidcUser(userB.id!!.value, userB.nickname, userB.email)
         val request = joinRoomRequest(password);
-        joinRoom(request, requestPostProcessor)
+        joinRoom(request, joinUser)
             .thenJoinRoomSuccessfully()
     }
 
@@ -143,7 +149,7 @@ class RoomControllerTest @Autowired constructor(
     private fun createRoom(request: TestCreateRoomRequest): ResultActions =
         mockMvc.perform(
             post("/rooms")
-                .with(oidcLogin().oidcUser(mockOidcUser()))
+                .with(oidcLogin().oidcUser(mockOidcUser(testUser.id!!.value, testUser.nickname, testUser.email)))
                 .contentType(APPLICATION_JSON)
                 .content(request.toJson())
         )
@@ -164,28 +170,29 @@ class RoomControllerTest @Autowired constructor(
         }
     }
 
-    private fun mockOidcUser(): OidcUser {
-        val claims: Map<String, Any> = testUser.run {
+    private fun mockOidcUser(id: String, name: String, email: String): OidcUser {
+        val claims: Map<String, Any> =
             mapOf(
-                "sub" to this.id!!.value,
-                "name" to nickname,
+                "sub" to id,
+                "name" to name,
                 "email" to email
             )
-        }
+
         val idToken = OidcIdToken("token", now(), now().plusSeconds(60), claims)
         return DefaultOidcUser(emptyList(), idToken)
     }
-}
+
     private fun joinRoomRequest(password: String? = null): TestJoinRoomRequest =
         TestJoinRoomRequest(
             password = password
         )
 
-    private fun joinRoom(request: TestJoinRoomRequest, requestPostProcessor: RequestPostProcessor): ResultActions =
-        mockMvc.perform(post("/rooms/${testRoom.id!!.value}/players")
-            .with(requestPostProcessor)
-            .contentType(APPLICATION_JSON)
-            .content(request.toJson())
+    private fun joinRoom(request: TestJoinRoomRequest, joinUser: OidcUser): ResultActions =
+        mockMvc.perform(
+            post("/rooms/${testRoom.roomId!!.value}/players")
+                .with(oidcLogin().oidcUser(joinUser))
+                .contentType(APPLICATION_JSON)
+                .content(request.toJson())
         )
 
     private fun ResultActions.thenJoinRoomSuccessfully() {
@@ -198,11 +205,11 @@ class RoomControllerTest @Autowired constructor(
             .andExpect(jsonPath("$.message").value("wrong password"))
     }
 
-    private fun createRoom(password: String? = null): Room = roomRepository.createRoom(
+    private fun createTestRoom(password: String? = null): Room = roomRepository.createRoom(
         Room(
-            gameRegistration = testGame,
-            host = Room.Player(User.Id(testUser.id!!.value), testUser.nickname),
-            players =  mutableListOf (Room.Player(User.Id(testUser.id!!.value), testUser.nickname)),
+            game = testGame,
+            host = Room.Player(Room.Player.Id(testUser.id!!.value), testUser.nickname),
+            players = mutableListOf(Room.Player(Room.Player.Id(testUser.id!!.value), testUser.nickname)),
             maxPlayers = testGame.maxPlayers,
             minPlayers = testGame.minPlayers,
             name = "My Room",
@@ -210,15 +217,4 @@ class RoomControllerTest @Autowired constructor(
             password = password
         )
     )
-
-    private fun oidcLogin(sub: String, name: String, email: String) = RequestPostProcessor { request ->
-        val claims: Map<String, Any> = mapOf("sub" to sub, "name" to name, "email" to email)
-        val idToken = OidcIdToken("token", Instant.now(), Instant.now().plusSeconds(60), claims)
-        val authorityAttributes: Map<String, Any> = claims
-        val authority = OAuth2UserAuthority(authorityAttributes)
-        val oidcUser: OidcUser = DefaultOidcUser(listOf(authority), idToken)
-        val authentication = OAuth2AuthenticationToken(oidcUser, listOf(SimpleGrantedAuthority("ROLE_USER")), "oidc")
-        SecurityContextHolder.getContext().authentication = authentication
-        request
-    }
 }

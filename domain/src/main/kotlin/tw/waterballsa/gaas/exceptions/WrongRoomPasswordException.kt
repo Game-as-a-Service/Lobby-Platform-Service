@@ -1,3 +1,3 @@
 package tw.waterballsa.gaas.exceptions
 
-class WrongRoomPasswordException(password: String) : PlatformException("wrong password")
+class WrongRoomPasswordException() : PlatformException("wrong password")

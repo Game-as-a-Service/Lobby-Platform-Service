@@ -19,21 +19,21 @@ class JoinRoomUsecase(
 ){
 
     fun execute(request: Request, presenter: Presenter) {
-        request.run {
+        with(request) {
             validateJoinRoom(this)
             joinRoom(request)
                 .also { presenter.present(it.toJoinedRoomEvent("success"))}
         }
     }
 
-    private fun validateJoinRoom(request: Request) {
+    private fun Request.validateJoinRoom(request: Request) {
         val room = findRoomById(Room.Id(request.roomId))
-        if(!room.password.isNullOrEmpty() && !room.password.equals(request.password)){
-            throw WrongRoomPasswordException(room.password!!)
+        if(room.validatePassword(request.password)){
+            throw WrongRoomPasswordException()
         }
     }
 
-    private fun joinRoom(request: Request): Room {
+    private fun Request.joinRoom(request: Request): Room {
         val room = findRoomById(Room.Id(request.roomId))
         val player = findPlayerByUserId(User.Id(request.userId))
         room.players.add(player)
@@ -45,7 +45,7 @@ class JoinRoomUsecase(
             ?: throw NotFoundException("Room(${roomId.value}) not found.")
     private fun findPlayerByUserId(userId: User.Id) =
         userRepository.findById(userId)
-            ?.let { Room.Player(it.id!!, it.nickname) }
+            ?.let { Room.Player(Room.Player.Id(it.id!!.value), it.nickname) }
             ?: throw NotFoundException("User(${userId.value}) not found.")
     data class Request(
         val roomId: String,

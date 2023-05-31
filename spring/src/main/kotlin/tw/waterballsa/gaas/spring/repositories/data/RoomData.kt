@@ -38,16 +38,16 @@ class RoomData(
         }
     }
 
-    fun toDomain(gameRegistration: GameRegistration, host: Room.Player, players: MutableList<Room.Player>): Room =
+    fun toDomain(game: GameRegistration, host: Room.Player, players: MutableList<Room.Player>): Room =
         Room(
             Room.Id(id!!),
-            name!!,
-            status = status!!,
-            gameRegistration,
+            game,
             host,
             players,
             maxPlayers!!,
             minPlayers!!,
+            name!!,
+            status = status!!,
             password = password
         )
 }

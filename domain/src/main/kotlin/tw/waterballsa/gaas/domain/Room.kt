@@ -16,6 +16,10 @@ class Room(
     val isLocked: Boolean
         get() = !password.isNullOrEmpty()
 
+    fun validatePassword(password: String?): Boolean{
+        return this.isLocked && !this.password.equals(password)
+    }
+
     @JvmInline
     value class Id(val value: String)
 

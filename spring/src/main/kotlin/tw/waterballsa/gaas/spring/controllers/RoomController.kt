@@ -1,13 +1,11 @@
 package tw.waterballsa.gaas.spring.controllers
 
+import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.*
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import tw.waterballsa.gaas.application.usecases.CreateRoomUsecase
 import tw.waterballsa.gaas.application.usecases.Presenter
 import tw.waterballsa.gaas.domain.GameRegistration
@@ -25,7 +23,7 @@ import tw.waterballsa.gaas.exceptions.PlatformException
 @RestController
 @RequestMapping("/rooms")
 class RoomController(
-    private val createRoomUsecase: CreateRoomUsecase
+    private val createRoomUsecase: CreateRoomUsecase,
     private val joinRoomUsecase: JoinRoomUsecase
 ) {
     @PostMapping
@@ -38,6 +36,20 @@ class RoomController(
         return presenter.viewModel
             ?.let { ResponseEntity.status(CREATED).body(it) }
             ?: ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/{roomId}/players")
+    fun joinRoom(@PathVariable roomId: String, @RequestBody request: JoinRoomRequest, @AuthenticationPrincipal principal: OidcUser?): ResponseEntity<Any> {
+        try {
+            val presenter = JoinRoomPresenter()
+            val joinerId = principal?.subject ?: throw PlatformException("User id is null")
+            joinRoomUsecase.execute(request.toRequest(roomId, joinerId), presenter)
+            return presenter.viewModel
+                ?.let { ResponseEntity.ok(it) }
+                ?: ResponseEntity.noContent().build()
+        }catch (e : Exception){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(JoinRoomViewModel(e.message!!))
+        }
     }
 
     class CreateRoomRequest(
@@ -92,20 +104,6 @@ class RoomController(
     ) {
         data class Game(val id: String, val name: String)
         data class Player(val id: String, val nickname: String)
-    }
-
-    @PostMapping("/{roomId}/players")
-    fun joinRoom(@PathVariable roomId: String, @RequestBody request: JoinRoomRequest, @AuthenticationPrincipal principal: OidcUser?): ResponseEntity<Any> {
-        try {
-            val presenter = JoinRoomPresenter()
-            val joinerId = principal?.subject ?: throw PlatformException("User id is null")
-            joinRoomUsecase.execute(request.toRequest(roomId, joinerId), presenter)
-            return presenter.viewModel
-                ?.let { ResponseEntity.ok(it) }
-                ?: ResponseEntity.noContent().build()
-        }catch (e : Exception){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(JoinRoomViewModel(e.message!!))
-        }
     }
 
     class JoinRoomRequest(
