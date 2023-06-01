@@ -19,8 +19,6 @@ class IdTokenAuthenticationFilter(
 ): OncePerRequestFilter() {
     companion object{
         private const val REGISTRATION_ID = "auth0"
-        private const val BEARER_TOKEN_HEADER = "Authorization"
-        private const val BEARER_TOKEN_PREFIX = "Bearer "
     }
 
     private val registration = clientRegistrationRepository.findByRegistrationId(REGISTRATION_ID)
@@ -30,18 +28,15 @@ class IdTokenAuthenticationFilter(
         request: HttpServletRequest,
         response: HttpServletResponse,
         filterChain: FilterChain) {
-        val idToken = request.getHeader(BEARER_TOKEN_HEADER)
-            ?.takeIf { it.startsWith(BEARER_TOKEN_PREFIX) }
-            ?.let { it.split(" ")[1] }
-        if (idToken != null) {
-            toOidcUser(idToken)?.also {
+        request.bearerToken()
+            ?.let { toOidcUser(it) }
+            ?.run {
                 SecurityContextHolder.getContext().authentication = OAuth2AuthenticationToken(
-                    it,
+                    this,
                     emptyList<GrantedAuthority>(),
                     registration.registrationId
                 )
             }
-        }
         filterChain.doFilter(request, response)
     }
 
@@ -57,3 +52,6 @@ class IdTokenAuthenticationFilter(
         return oidcUser
     }
 }
+private fun HttpServletRequest.bearerToken(): String? = this.getHeader("Authorization")
+    ?.takeIf { it.startsWith("Bearer ") }
+    ?.let { it.split(" ")[1] }
