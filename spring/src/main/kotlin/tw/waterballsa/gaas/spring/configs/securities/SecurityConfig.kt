@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED
 
 @EnableWebSecurity
@@ -41,6 +42,8 @@ class SecurityConfig(
             .and()
             .exceptionHandling()
             .authenticationEntryPoint(redirectToLoginEndPoint())
+            .and()
+            .addFilterBefore(IdTokenAuthenticationFilter(clientRegistrationRepository), UsernamePasswordAuthenticationFilter::class.java)
 
         return http.build()
     }
