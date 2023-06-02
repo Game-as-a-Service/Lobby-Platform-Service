@@ -9,6 +9,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.core.oidc.OidcIdToken
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
+import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtException
 import org.springframework.web.filter.OncePerRequestFilter
 import javax.servlet.FilterChain
@@ -29,22 +30,12 @@ class IdTokenAuthenticationFilter(
         request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain
     ) {
         request.bearerToken()
-            ?.let { toOidcUser(it) }
+            ?.toOidcUser(jwtDecoder)
             ?.run {
-                SecurityContextHolder.getContext().authentication = OAuth2AuthenticationToken(
-                    this, emptyList<GrantedAuthority>(), registration.registrationId
-                )
+                SecurityContextHolder.getContext().authentication =
+                    this.toOAuth2AuthenticationToken(REGISTRATION_ID)
             }
         filterChain.doFilter(request, response)
-    }
-
-    private fun toOidcUser(idTokenValue: String): OidcUser? = try {
-        jwtDecoder.decode(idTokenValue)
-            ?.let { OidcIdToken(it.tokenValue, it.issuedAt, it.expiresAt, it.claims) }
-            ?.let { DefaultOidcUser(emptyList(), it) }
-    } catch (e: JwtException) {
-        // id token not accept
-        null
     }
 }
 
@@ -52,3 +43,16 @@ private fun HttpServletRequest.bearerToken(): String? = this.getHeader(AUTHORIZA
     ?.takeIf { it.startsWith("Bearer ") }
     ?.split(" ")
     ?.last()
+
+private fun String.toOidcUser(jwtDecoder: JwtDecoder): OidcUser? = try {
+    jwtDecoder.decode(this)
+        ?.let { OidcIdToken(it.tokenValue, it.issuedAt, it.expiresAt, it.claims) }
+        ?.let { DefaultOidcUser(emptyList(), it) }
+} catch (e: JwtException) {
+    // id token not accept
+    null
+}
+
+private fun OidcUser.toOAuth2AuthenticationToken(registrationId: String) = OAuth2AuthenticationToken(
+    this, emptyList<GrantedAuthority>(), registrationId
+)
