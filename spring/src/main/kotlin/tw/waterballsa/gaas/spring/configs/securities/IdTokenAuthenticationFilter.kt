@@ -16,8 +16,8 @@ import javax.servlet.http.HttpServletResponse
 
 class IdTokenAuthenticationFilter(
     clientRegistrationRepository: ClientRegistrationRepository
-): OncePerRequestFilter() {
-    companion object{
+) : OncePerRequestFilter() {
+    companion object {
         private const val REGISTRATION_ID = "auth0"
     }
 
@@ -27,7 +27,8 @@ class IdTokenAuthenticationFilter(
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain: FilterChain) {
+        filterChain: FilterChain
+    ) {
         request.bearerToken()
             ?.let { toOidcUser(it) }
             ?.run {
@@ -40,18 +41,20 @@ class IdTokenAuthenticationFilter(
         filterChain.doFilter(request, response)
     }
 
-    private fun toOidcUser(idTokenValue: String): OidcUser?{
-        var oidcUser: OidcUser? = null
-        try{
-            oidcUser = jwtDecoder.decode(idTokenValue)
+    private fun toOidcUser(idTokenValue: String): OidcUser? {
+        val oidcUser: OidcUser? = try {
+            jwtDecoder.decode(idTokenValue)
                 ?.let { OidcIdToken(it.tokenValue, it.issuedAt, it.expiresAt, it.claims) }
-                ?.let { DefaultOidcUser(emptyList(), it)}
-        }catch (e: JwtException){
+                ?.let { DefaultOidcUser(emptyList(), it) }
+        } catch (e: JwtException) {
             // id token not accept
+            null
         }
         return oidcUser
     }
 }
+
 private fun HttpServletRequest.bearerToken(): String? = this.getHeader("Authorization")
     ?.takeIf { it.startsWith("Bearer ") }
-    ?.let { it.split(" ")[1] }
+    ?.split(" ")
+    ?.last()
