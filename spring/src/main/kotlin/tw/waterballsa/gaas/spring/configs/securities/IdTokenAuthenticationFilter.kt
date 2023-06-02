@@ -1,5 +1,6 @@
 package tw.waterballsa.gaas.spring.configs.securities
 
+import org.springframework.http.HttpHeaders.AUTHORIZATION
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
@@ -21,40 +22,33 @@ class IdTokenAuthenticationFilter(
         private const val REGISTRATION_ID = "auth0"
     }
 
-    private val registration = clientRegistrationRepository.findByRegistrationId(REGISTRATION_ID)
-    private val jwtDecoder = OidcIdTokenDecoderFactory().createDecoder(registration)
+    private val registration by lazy { clientRegistrationRepository.findByRegistrationId(REGISTRATION_ID) }
+    private val jwtDecoder by lazy { OidcIdTokenDecoderFactory().createDecoder(registration) }
 
     override fun doFilterInternal(
-        request: HttpServletRequest,
-        response: HttpServletResponse,
-        filterChain: FilterChain
+        request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain
     ) {
         request.bearerToken()
             ?.let { toOidcUser(it) }
             ?.run {
                 SecurityContextHolder.getContext().authentication = OAuth2AuthenticationToken(
-                    this,
-                    emptyList<GrantedAuthority>(),
-                    registration.registrationId
+                    this, emptyList<GrantedAuthority>(), registration.registrationId
                 )
             }
         filterChain.doFilter(request, response)
     }
 
-    private fun toOidcUser(idTokenValue: String): OidcUser? {
-        val oidcUser: OidcUser? = try {
-            jwtDecoder.decode(idTokenValue)
-                ?.let { OidcIdToken(it.tokenValue, it.issuedAt, it.expiresAt, it.claims) }
-                ?.let { DefaultOidcUser(emptyList(), it) }
-        } catch (e: JwtException) {
-            // id token not accept
-            null
-        }
-        return oidcUser
+    private fun toOidcUser(idTokenValue: String): OidcUser? = try {
+        jwtDecoder.decode(idTokenValue)
+            ?.let { OidcIdToken(it.tokenValue, it.issuedAt, it.expiresAt, it.claims) }
+            ?.let { DefaultOidcUser(emptyList(), it) }
+    } catch (e: JwtException) {
+        // id token not accept
+        null
     }
 }
 
-private fun HttpServletRequest.bearerToken(): String? = this.getHeader("Authorization")
+private fun HttpServletRequest.bearerToken(): String? = this.getHeader(AUTHORIZATION)
     ?.takeIf { it.startsWith("Bearer ") }
     ?.split(" ")
     ?.last()
