@@ -3,12 +3,12 @@ package tw.waterballsa.gaas.exceptions
 import java.util.*
 import kotlin.reflect.KClass
 
-class NotFoundException(message: String) : PlatformException(message) {
-    constructor(id: Any, identifierName: String, resourceName: String) : this(
+class NotFoundException private constructor(message: String) : PlatformException(message) {
+    private constructor(id: Any, identifierName: String, resourceName: String) : this(
         "Resource (${resourceName.capitalize()}) not found ($identifierName = $id).",
     )
 
-    constructor(id: Any, resourceName: String) : this(id, "id", resourceName)
+    private constructor(id: Any, resourceName: String) : this(id, "id", resourceName)
 
     companion object {
         fun <T : Any> notFound(resourceType: KClass<T>): NotFoundExceptionBuilder = notFound(resourceType.simpleName!!)
