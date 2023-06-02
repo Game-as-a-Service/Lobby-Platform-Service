@@ -5,12 +5,16 @@ on: [ push, workflow_dispatch ]
 env:
   JAR_FILENAME: Lobby-Platform
   ARTIFACT_NAME: backend-app
-  APPLICATION_FOLDER: ~/lobby-platform
+  SYSTEMD_SERVICE_NAME: lobby-platform
+
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
 
 jobs:
-  #First we will see the application build or not , then we will deploy in EC2
-  build:
-    name: Build, Test and Publish Artifact
+  
+  maven-package:
+    name: Maven Package
     runs-on: ubuntu-latest
     
     steps:
@@ -28,42 +32,73 @@ jobs:
       # Package and Test with Maven
       - name: Package and Test with Maven
         run: mvn -B package -DJAR_FILENAME=${{ env.JAR_FILENAME }}
+      
+      # Dump GitHub Context
+      - name: Dump GitHub Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
 
-      # Publish Artifact (backend-app)
+      # Publish Artifact
       - name: Upload Artifact
         if: github.event_name == 'push' && github.ref_name == 'main'
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: spring/target/${{ env.JAR_FILENAME }}.jar
+          path: |
+            spring/target/${{ env.JAR_FILENAME }}.jar
+            docker/Dockerfile
 
-  deploy:
-    name: Deploy to AWS EC2
-    needs: build
+  docker-push:
+    name: Docker Push
     runs-on: ubuntu-latest
+    needs: maven-package
     environment: production
     if: github.event_name == 'push' && github.ref_name == 'main'
 
     steps:
+      # Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE }}
+          role-session-name: github-runner-build-and-deploy
+          aws-region: us-east-1
+      
+      # Login to Amazon ECR Public
+      - name: Login to Amazon ECR Public
+        id: login-ecr-public
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry-type: public
+
       # Download Artifact
       - name: Download Artifact
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: ./${{ env.ARTIFACT_NAME }}
+          path: .
 
-      # Copy Artifact to AWS EC2
-      - name: Copy Artifact to AWS EC2
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ vars.EC2_HOST }}
-          username: ${{ vars.EC2_USERNAME }}
-          port: ${{ vars.EC2_PORT }}
-          key: ${{ secrets.EC2_KEY }}
-          source: ./${{ env.ARTIFACT_NAME }}
-          target: ${{ env.APPLICATION_FOLDER }}
+      # Docker build & push to AWS ECR Public
+      - name: Docker build & push
+        run: |
+          docker build \
+            --build-arg JAR_FILENAME=spring/target/${{ env.JAR_FILENAME }}.jar \
+            -t ${{ vars.AWS_ECR_URI }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:latest \
+            -t ${{ vars.AWS_ECR_URI }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ github.sha }} \
+            -f docker/Dockerfile \
+            .
+          docker push ${{ vars.AWS_ECR_URI }}/${{ vars.AWS_ECR_REPOSITORY_NAME }} --all-tags
 
-      # Run Application
+  deploy:
+    name: Deploy to AWS EC2
+    needs: docker-push
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.event_name == 'push' && github.ref_name == 'main'
+
+    steps:
+      # Restart systemd service
       - name: Run Application
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -74,16 +109,7 @@ jobs:
           script: |
             uname -a
             whoami
-            fuser -k 8080/tcp
-            nohup java \
-              -DENV=${{ vars.ENV }} \
-              -DCLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }} \
-              -DCLIENT_SECRET=${{ secrets.AUTH0_CLIENT_SECRET }} \
-              -DMONGO_URI=${{ secrets.MONGO_URI }} \
-              -jar ${{ env.APPLICATION_FOLDER }}/${{ env.ARTIFACT_NAME }}/${{ env.JAR_FILENAME }}.jar \
-              > ${{ env.APPLICATION_FOLDER }}/logs/lobby-platform.log \
-              2> ${{ env.APPLICATION_FOLDER }}/logs/nohup.err.log \
-              < /dev/null \
-              &
+            pwd
+            sudo systemctl restart ${{ env.SYSTEMD_SERVICE_NAME }}
 
   
