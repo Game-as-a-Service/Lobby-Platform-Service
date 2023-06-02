@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.domain.GameRegistration
+import tw.waterballsa.gaas.spring.controllers.GetGameRegistrationPresenter.*
 import tw.waterballsa.gaas.spring.controllers.RegisterGamePresenter.RegisterGameViewModel
 import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 import tw.waterballsa.gaas.spring.models.TestGameRegistrationRequest
@@ -76,16 +77,16 @@ class GameRegistrationControllerTest @Autowired constructor(
         registerGameSuccessfully(big2Request)
         registerGameSuccessfully(unoRequest)
 
-        val registerGameViewModels = mockMvc.perform(get("/games"))
+        val getGamesViewModels = mockMvc.perform(get("/games"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$").isArray)
             .andExpect(jsonPath("$.size()").value(2))
             .validateSpecificElement(0, big2Request)
             .validateSpecificElement(1, unoRequest)
-            .getBody(object : TypeReference<List<RegisterGameViewModel>>() {})
+            .getBody(object : TypeReference<List<GetGamesViewModel>>() {})
 
         val gameRegistrations = gameRegistrationRepository.findGameRegistrations()
-        registerGameViewModels.forEachIndexed { i, model -> model.validateWithGameRegistration(gameRegistrations[i]) }
+        getGamesViewModels.forEachIndexed { i, model -> model.validateWithGameRegistration(gameRegistrations[i]) }
     }
 
     private fun createGameRegistrationRequest(
@@ -186,15 +187,19 @@ class GameRegistrationControllerTest @Autowired constructor(
     ): ResultActions =
         with(testGameRegistrationRequest) {
             this@validateSpecificElement.andExpect(jsonPath("$[$index].id").exists())
-                .andExpect(jsonPath("$[$index].uniqueName").value(uniqueName))
-                .andExpect(jsonPath("$[$index].displayName").value(displayName))
-                .andExpect(jsonPath("$[$index].shortDescription").value(shortDescription))
-                .andExpect(jsonPath("$[$index].rule").value(rule))
-                .andExpect(jsonPath("$[$index].imageUrl").value(imageUrl))
+                .andExpect(jsonPath("$[$index].name").value(displayName))
+                .andExpect(jsonPath("$[$index].img").value(imageUrl))
                 .andExpect(jsonPath("$[$index].minPlayers").value(minPlayers))
                 .andExpect(jsonPath("$[$index].maxPlayers").value(maxPlayers))
-                .andExpect(jsonPath("$[$index].frontEndUrl").value(frontEndUrl))
-                .andExpect(jsonPath("$[$index].backEndUrl").value(backEndUrl))
         }
 
+    private fun GetGamesViewModel.validateWithGameRegistration(gameRegistration: GameRegistration) {
+        gameRegistration.let {
+            assertThat(it.id).isEqualTo(id)
+            assertThat(it.displayName).isEqualTo(name)
+            assertThat(it.imageUrl).isEqualTo(img)
+            assertThat(it.minPlayers).isEqualTo(minPlayers)
+            assertThat(it.maxPlayers).isEqualTo(maxPlayers)
+        }
+    }
 }
