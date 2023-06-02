@@ -6,8 +6,10 @@ import tw.waterballsa.gaas.application.usecases.GetGameRegistrationsUsecase
 import tw.waterballsa.gaas.application.usecases.Presenter
 import tw.waterballsa.gaas.application.usecases.RegisterGameUsecase
 import tw.waterballsa.gaas.domain.GameRegistration
+import tw.waterballsa.gaas.domain.GameRegistration.*
 import tw.waterballsa.gaas.events.DomainEvent
 import tw.waterballsa.gaas.events.RegisteredGameEvent
+import tw.waterballsa.gaas.spring.controllers.GetGameRegistrationPresenter.*
 import tw.waterballsa.gaas.spring.extensions.getEvent
 
 @RestController
@@ -22,13 +24,17 @@ class GameRegistrationController(
         val presenter = RegisterGamePresenter()
         registerGameUsecase.execute(request.toRequest(), presenter)
 
-        return presenter.getViewModel()
+        return presenter.viewModel
             ?.let { ResponseEntity.ok(it) }
             ?: ResponseEntity.noContent().build()
     }
 
     @GetMapping
-    fun findGameRegistrations(): List<GameRegistration> = getGameRegistrationsUsecase.execute()
+    fun findGameRegistrations(): List<GetGamesViewModel> {
+        val presenter = GetGameRegistrationPresenter()
+        getGameRegistrationsUsecase.execute(presenter)
+        return presenter.viewModel
+    }
 
     class RegisterGameRequest(
         private val uniqueName: String,
@@ -56,13 +62,12 @@ class GameRegistrationController(
 }
 
 class RegisterGamePresenter : Presenter {
-    private var viewModel: RegisterGameViewModel? = null
+    var viewModel: RegisterGameViewModel? = null
+        private set
 
     override fun present(vararg events: DomainEvent) {
         viewModel = events.getEvent(RegisteredGameEvent::class)?.toViewModel()
     }
-
-    fun getViewModel(): RegisterGameViewModel? = viewModel
 
     private fun RegisteredGameEvent.toViewModel() =
         RegisterGameViewModel(
@@ -79,7 +84,7 @@ class RegisterGamePresenter : Presenter {
         )
 
     data class RegisterGameViewModel(
-        val id: GameRegistration.Id,
+        val id: Id,
         val uniqueName: String,
         val displayName: String,
         val shortDescription: String,
@@ -89,5 +94,31 @@ class RegisterGamePresenter : Presenter {
         val maxPlayers: Int,
         val frontEndUrl: String,
         val backEndUrl: String
+    )
+}
+
+class GetGameRegistrationPresenter : GetGameRegistrationsUsecase.Presenter {
+    var viewModel = emptyList<GetGamesViewModel>()
+        private set
+
+    override fun renderGameRegistrations(gameRegistrations: Collection<GameRegistration>) {
+        viewModel = gameRegistrations.map { it.toViewModel() }
+    }
+
+    private fun GameRegistration.toViewModel(): GetGamesViewModel =
+        GetGamesViewModel(
+            id = id!!,
+            name = displayName,
+            img = imageUrl,
+            minPlayers = minPlayers,
+            maxPlayers = maxPlayers
+        )
+
+    data class GetGamesViewModel(
+        val id: Id,
+        val name: String,
+        val img: String,
+        val minPlayers: Int,
+        val maxPlayers: Int,
     )
 }
