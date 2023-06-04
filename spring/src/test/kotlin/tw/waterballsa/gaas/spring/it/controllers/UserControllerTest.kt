@@ -35,11 +35,24 @@ class UserControllerTest @Autowired constructor(
         findUserById("0").thenUserNotFound()
     }
 
+
+    @Test
+    fun createRandomNickname_thenNicknameIfNull(){
+        val user = User(User.Id("2"), "test@email.com", "")
+        //userRepository.existsUserByEmail(user.email)
+        givenUserCreated(user)
+        checkNicknameExist("2").andExpect(jsonPath("$.nickname").isNotEmpty)
+
+    }
+
     private fun givenUserCreated(user: User) {
         userRepository.createUser(user)
     }
 
     private fun findUserById(id: String): ResultActions = mockMvc.perform(get("/users/$id"))
+
+    private fun checkNicknameExist(id: String): ResultActions = mockMvc.perform(get("/users/$id/nickname"))
+
 
     private fun ResultActions.thenGetUserSuccessfully(user: User) {
         this.andExpect(status().isOk)
@@ -54,5 +67,7 @@ class UserControllerTest @Autowired constructor(
             .andExpect(jsonPath("$.email").doesNotExist())
             .andExpect(jsonPath("$.nickname").doesNotExist())
     }
+
+
 
 }
