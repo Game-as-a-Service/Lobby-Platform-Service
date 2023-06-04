@@ -3,6 +3,7 @@ package tw.waterballsa.gaas.spring.configs.securities
 import org.springframework.context.annotation.Bean
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
@@ -11,11 +12,15 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler
+import tw.waterballsa.gaas.application.usecases.CreateUserUseCase
 import javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED
 
 @EnableWebSecurity
 class SecurityConfig(
     private val clientRegistrationRepository: ClientRegistrationRepository,
+    private val authorizedClientService: OAuth2AuthorizedClientService,
+    private val createUserUseCase: CreateUserUseCase
 ) {
 
     @Bean
@@ -28,7 +33,7 @@ class SecurityConfig(
             .anyRequest().authenticated()
             .and()
             .oauth2Login()
-            .defaultSuccessUrl("/login-successfully", true)
+            .successHandler(successHandler())
             .authorizationEndpoint()
             .authorizationRequestResolver(
                 CustomOAuthorizationRequestResolver(
@@ -46,6 +51,11 @@ class SecurityConfig(
             .authenticationEntryPoint(redirectToLoginEndPoint())
 
         return http.build()
+    }
+
+    @Bean
+    fun successHandler(): AuthenticationSuccessHandler{
+        return CustomSuccessHandler(authorizedClientService, createUserUseCase);
     }
 
     private fun oidcUserService(): OAuth2UserService<OidcUserRequest, OidcUser> {
