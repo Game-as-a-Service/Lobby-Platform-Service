@@ -12,4 +12,7 @@ class UserController(
 ) {
     @GetMapping("/users/{id}")
     fun getUser(@PathVariable id: String): User = getUserUseCase.execute(User.Id(id))
+
+    @GetMapping("/users/{id}/nickname")
+    fun checkNicknameExist(@PathVariable id: String): User? =  getUserUseCase.checkNickNameExist(User.Id(id))
 }
