@@ -25,6 +25,7 @@ class SecurityConfig(
             .csrf().disable()
             .authorizeHttpRequests()
             .antMatchers("/health", "/walking-skeleton").permitAll()
+            .antMatchers("/swagger-ui/**", "/favicon.ico").permitAll()
             .anyRequest().authenticated()
             .and()
             .oauth2Login()

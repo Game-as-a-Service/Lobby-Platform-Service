@@ -21,3 +21,12 @@ spring:
             issuer-uri: https://dev-1l0ixjw8yohsluoi.us.auth0.com/
 
 frontend: https://lobby.gaas.waterballsa.tw
+
+springdoc:
+  api-docs:
+    path: /swagger-ui/api-docs
+  swagger-ui:
+    path: /swagger-ui
+    doc-expansion: none
+    operations-sorter: alpha
+    tags-sorter: alpha
