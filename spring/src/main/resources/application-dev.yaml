@@ -27,6 +27,9 @@ spring:
             authorization-uri: https://dev-1l0ixjw8yohsluoi.us.auth0.com/authorize
             token-uri: https://dev-1l0ixjw8yohsluoi.us.auth0.com/oauth/token
             user-info-uri: https://dev-1l0ixjw8yohsluoi.us.auth0.com/oauth/userinfo
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-1l0ixjw8yohsluoi.us.auth0.com/
 
 server:
   port: 8087
