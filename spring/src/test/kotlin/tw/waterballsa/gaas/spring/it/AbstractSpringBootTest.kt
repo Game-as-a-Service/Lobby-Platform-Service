@@ -12,6 +12,10 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
 import tw.waterballsa.gaas.domain.User
+import org.springframework.security.oauth2.core.oidc.OidcIdToken
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
+import org.springframework.security.oauth2.core.oidc.user.OidcUser
+import java.time.Instant
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -50,4 +54,21 @@ abstract class AbstractSpringBootTest {
     protected fun MockHttpServletRequestBuilder.withJwt(jwt: Jwt): MockHttpServletRequestBuilder =
         with(jwt().jwt(jwt))
 
+    protected fun mockDefaultOidcUser(): OidcUser {
+        return mockOidcUser(User(User.Id("1"), "user@example.com", "winner5566"))
+    }
+
+    protected fun mockOidcUser(mockUser: User): OidcUser {
+        val idToken = OidcIdToken(
+            "token",
+            Instant.now(),
+            Instant.now().plusSeconds(60),
+            mapOf(
+                "sub" to mockUser.id!!.value,
+                "name" to mockUser.nickname,
+                "email" to mockUser.email
+            )
+        )
+        return DefaultOidcUser(emptyList(), idToken)
+    }
 }
