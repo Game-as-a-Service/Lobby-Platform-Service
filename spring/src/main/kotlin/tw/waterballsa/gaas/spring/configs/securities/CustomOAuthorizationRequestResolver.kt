@@ -114,7 +114,11 @@ class CustomOAuthorizationRequestResolver(
         val identityProviders = IdentityProvider.values().map { it.queryParam }
         val targetIdentityProvider = originalRequest.parameterMap["type"]?.find { it in identityProviders }
         authorizationRequestCustomizer = Consumer {
-            it.parameters { params -> params["connection"] = targetIdentityProvider ?: "google-oauth2" }
+            it.parameters { params ->
+                params["connection"] = targetIdentityProvider ?: "google-oauth2"
+                //To obtain a JWT token from Auth0, it is necessary to configure the audience for the access token.
+                params["audience"] = "https://api.gaas.waterballsa.tw"
+            }
         }
 
         return resolve(request, registrationId, redirectUriAction)!!
