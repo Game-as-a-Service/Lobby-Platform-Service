@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import tw.waterballsa.gaas.exceptions.NotFoundException
 import tw.waterballsa.gaas.exceptions.PlatformException
-import tw.waterballsa.gaas.exceptions.JoinRoomException
 
 @RestControllerAdvice
 class PlatformExceptionHandler {
@@ -17,12 +16,8 @@ class PlatformExceptionHandler {
 
     @ResponseStatus(BAD_REQUEST)
     @ExceptionHandler(PlatformException::class)
-    fun badRequest(exception: PlatformException): String = exception.message!!
-
-    @ExceptionHandler(JoinRoomException::class)
-    fun validateRoom(exception: JoinRoomException): ResponseEntity<Any> {
-        return ResponseEntity(RoomErrorResponse(exception.message ?: ""), BAD_REQUEST)
+    fun badRequest(exception: PlatformException):  ResponseEntity<Any> {
+        return ResponseEntity(mapOf("message" to (exception.message ?: "")), BAD_REQUEST)
     }
-}
 
-data class RoomErrorResponse(val message: String)
+}

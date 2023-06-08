@@ -40,12 +40,12 @@ class RoomController(
 
     @PostMapping("/{roomId}/players")
     fun joinRoom(
-        @AuthenticationPrincipal principal: OidcUser?,
+        @AuthenticationPrincipal principal: OidcUser,
         @PathVariable roomId: String,
         @RequestBody request: JoinRoomRequest
     ): ResponseEntity<Any> {
         val presenter = JoinRoomPresenter()
-        val joinerId = principal?.subject ?: throw PlatformException("User id is null")
+        val joinerId = principal.subject ?: throw PlatformException("User id can't be null.")
         joinRoomUsecase.execute(request.toRequest(roomId, joinerId), presenter)
         return presenter.viewModel
             ?.let { ResponseEntity.ok(it) }

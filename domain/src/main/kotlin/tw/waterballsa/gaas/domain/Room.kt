@@ -17,11 +17,11 @@ class Room(
         get() = !password.isNullOrEmpty()
 
     fun isPasswordCorrect(password: String?): Boolean{
-        return this.isLocked && !this.password.equals(password)
+        return this.password.equals(password)
     }
 
     fun addPlayer(player: Player){
-        this.players.add(player)
+        players.add(player)
     }
 
     @JvmInline

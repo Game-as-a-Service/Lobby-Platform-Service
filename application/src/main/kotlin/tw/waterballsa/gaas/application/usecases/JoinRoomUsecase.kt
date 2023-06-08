@@ -1,13 +1,14 @@
 package tw.waterballsa.gaas.application.usecases
 
 import tw.waterballsa.gaas.application.eventbus.EventBus
+import tw.waterballsa.gaas.application.extension.toRoomPlayer
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.events.JoinedRoomEvent
 import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
-import tw.waterballsa.gaas.exceptions.JoinRoomException
+import tw.waterballsa.gaas.exceptions.PlatformException
 import javax.inject.Named
 
 @Named
@@ -19,23 +20,23 @@ class JoinRoomUsecase(
 
     fun execute(request: Request, presenter: Presenter) {
         with(request) {
-            val room = findRoomById(Room.Id(this.roomId))
-            validateRoomPassword(room)
-            joinRoom(room)
+            val room = findRoomById(Room.Id(roomId))
+            room.validateRoomPassword(password)
+            room.joinPlayer(userId)
                 .also { presenter.present(it.toJoinedRoomEvent("success"))}
         }
     }
 
-    private fun Request.validateRoomPassword(room: Room) {
-        if(room.isPasswordCorrect(this.password)){
-            throw JoinRoomException("wrong password")
+    private fun Room.validateRoomPassword(password: String?) {
+        if(isLocked && !isPasswordCorrect(password)){
+            throw PlatformException("wrong password")
         }
     }
 
-    private fun Request.joinRoom(room: Room): Room {
-        val player = findPlayerByUserId(User.Id(this.userId))
-        room.addPlayer(player)
-        return roomRepository.joinRoom(room)
+    private fun Room.joinPlayer(userId: String): Room {
+        val player = findPlayerByUserId(User.Id(userId))
+        addPlayer(player)
+        return roomRepository.joinRoom(this)
     }
 
     private fun findRoomById(roomId: Room.Id) =
