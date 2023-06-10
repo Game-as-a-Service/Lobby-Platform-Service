@@ -16,8 +16,6 @@ class PlatformExceptionHandler {
 
     @ResponseStatus(BAD_REQUEST)
     @ExceptionHandler(PlatformException::class)
-    fun badRequest(exception: PlatformException):  ResponseEntity<Any> {
-        return ResponseEntity(mapOf("message" to (exception.message ?: "")), BAD_REQUEST)
-    }
+    fun badRequest(exception: PlatformException): Map<String, String> = mapOf("message" to (exception.message ?: ""))
 
 }

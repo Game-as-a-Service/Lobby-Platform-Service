@@ -27,6 +27,10 @@ class JoinRoomUsecase(
         }
     }
 
+    private fun findRoomById(roomId: Room.Id) =
+        roomRepository.findById(roomId)
+            ?: throw notFound(Room::class).id(roomId)
+
     private fun Room.validateRoomPassword(password: String?) {
         if(isLocked && !isPasswordCorrect(password)){
             throw PlatformException("wrong password")
@@ -38,10 +42,6 @@ class JoinRoomUsecase(
         addPlayer(player)
         return roomRepository.joinRoom(this)
     }
-
-    private fun findRoomById(roomId: Room.Id) =
-        roomRepository.findById(roomId)
-            ?: throw notFound(Room::class).id(roomId)
 
     private fun findPlayerByUserId(userId: User.Id) =
         userRepository.findById(userId)
