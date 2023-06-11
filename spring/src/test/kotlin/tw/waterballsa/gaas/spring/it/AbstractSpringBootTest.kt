@@ -39,6 +39,7 @@ abstract class AbstractSpringBootTest {
             .subject(this)
             .claim("email", mockUser.email)
             .build()
+    protected var testUser = User(User.Id("1"), "user@example.com", "winner5566")
 
     protected fun <T> ResultActions.getBody(type: Class<T>): T =
         andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
@@ -55,7 +56,7 @@ abstract class AbstractSpringBootTest {
         with(jwt().jwt(jwt))
 
     protected fun mockDefaultOidcUser(): OidcUser {
-        return mockOidcUser(User(User.Id("1"), "user@example.com", "winner5566"))
+        return mockOidcUser(testUser)
     }
 
     protected fun mockOidcUser(mockUser: User): OidcUser {

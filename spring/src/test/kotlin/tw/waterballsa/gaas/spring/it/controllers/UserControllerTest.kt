@@ -16,8 +16,6 @@ class UserControllerTest @Autowired constructor(
     val userRepository: UserRepository,
 ) : AbstractSpringBootTest() {
 
-    var testUser = User(User.Id("1"), "user@example.com", "winner5566")
-
     @BeforeEach
     fun cleanUp() {
         userRepository.deleteAll()
