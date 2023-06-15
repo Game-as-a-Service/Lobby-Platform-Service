@@ -6,7 +6,6 @@ import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.User
-import tw.waterballsa.gaas.events.JoinedRoomEvent
 import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.exceptions.PlatformException
 import javax.inject.Named
@@ -23,7 +22,6 @@ class JoinRoomUsecase(
             val room = findRoomById(Room.Id(roomId))
             room.validateRoomPassword(password)
             room.joinPlayer(userId)
-                .also { presenter.present(it.toJoinedRoomEvent("success"))}
         }
     }
 
@@ -54,8 +52,3 @@ class JoinRoomUsecase(
         val password: String? = null,
     )
 }
-
-private fun Room.toJoinedRoomEvent(message: String): JoinedRoomEvent =
-    JoinedRoomEvent(
-       message = message
-    )

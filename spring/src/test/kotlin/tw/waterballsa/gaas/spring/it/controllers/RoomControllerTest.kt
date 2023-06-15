@@ -38,7 +38,7 @@ class RoomControllerTest @Autowired constructor(
 
     @BeforeEach
     fun setUp() {
-        testUser = createUser()
+        testUser = createUser("1", "test@mail.com", "winner5566")
         testGame = registerGame()
     }
 
@@ -89,29 +89,35 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun giveUserACreatedPublicRoomC_WhenUserBJoinRoomC_ThenShouldSucceed() {
-        val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
-        testRoom = giveTheHostCreatedPublicRoom(testUser)
-        testRoom.whenUserJoinTheRoom(userB)
+    fun giveUserACreatedRoomC_WhenUserBJoinRoomC_ThenShouldSucceed() {
+        val userA = testUser
+        val userB = createUser("2", "test2@mail.com", "winner1122")
+        val roomC = giveUserCreatedRoom(userA)
+        testRoom = roomC
+        roomC.whenUserJoinTheRoom(userB)
             .thenJoinRoomSuccessfully()
     }
 
     @Test
-    fun giveUserACreatedEncryptedRoomC_WhenUserBJoinRoomCAndPasswordIsIncorrect_ThenShouldFail() {
+    fun giveUserACreatedRoomCWithPassword_WhenUserBJoinRoomCAndPasswordIsIncorrect_ThenShouldFail() {
         val password = "P@ssw0rd"
         val errorPassword = "password"
-        val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
-        testRoom = giveUserACreatedEncryptedRoomC(testUser, password)
-        testRoom.whenUserJoinTheRoom(userB, errorPassword)
+        val userA = testUser
+        val userB = createUser("2", "test2@mail.com", "winner1122")
+        val roomC = giveUserCreatedRoomWithPassword(userA, password)
+        testRoom = roomC
+        roomC.whenUserJoinTheRoom(userB, errorPassword)
             .thenWrongPassword()
     }
 
     @Test
-    fun giveUserACreatedEncryptedRoomC_WhenUserBJoinRoomCAndPasswordIsCorrect_ThenShouldSucceed() {
+    fun giveUserACreatedRoomCWithPassword_WhenUserBJoinRoomCAndPasswordIsCorrect_ThenShouldSucceed() {
         val password = "P@ssw0rd"
-        val userB = userRepository.createUser(User(User.Id("2"), "test2@mail.com", "winner1122"))
-        testRoom = giveUserACreatedEncryptedRoomC(testUser, password)
-        testRoom.whenUserJoinTheRoom(userB, password)
+        val userA = testUser
+        val userB = createUser("2", "test2@mail.com", "winner1122")
+        val roomC = giveUserCreatedRoomWithPassword(userA, password)
+        testRoom = roomC
+        roomC.whenUserJoinTheRoom(userB, password)
             .thenJoinRoomSuccessfully()
     }
 
@@ -131,8 +137,44 @@ class RoomControllerTest @Autowired constructor(
                 .content(request.toJson())
         )
 
-    private fun createUser(): User =
-        userRepository.createUser(User(User.Id("1"), "test@mail.com", "winner5566"))
+    private fun giveUserCreatedRoom(host: User): Room = createRoom(host)
+
+    private fun giveUserCreatedRoomWithPassword(host: User, password: String): Room = createRoom(host, password)
+
+    private fun Room.whenUserJoinTheRoom(user: User, password: String? = null):ResultActions{
+        val request = joinRoomRequest(password);
+        val joinUser = mockOidcUser(user)
+        return joinRoom(request, joinUser)
+    }
+
+    private fun ResultActions.thenCreateRoomSuccessfully(request: TestCreateRoomRequest) {
+        request.let {
+            this.andExpect(status().isCreated)
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.name").value(it.name))
+                .andExpect(jsonPath("$.game.id").value(testGame.id!!.value))
+                .andExpect(jsonPath("$.game.name").value(testGame.displayName))
+                .andExpect(jsonPath("$.host.id").value(testUser.id!!.value))
+                .andExpect(jsonPath("$.host.nickname").value(testUser.nickname))
+                .andExpect(jsonPath("$.isLocked").value(!it.password.isNullOrEmpty()))
+                .andExpect(jsonPath("$.currentPlayers").value(1))
+                .andExpect(jsonPath("$.minPlayers").value(it.minPlayers))
+                .andExpect(jsonPath("$.maxPlayers").value(it.maxPlayers))
+        }
+    }
+
+    private fun ResultActions.thenJoinRoomSuccessfully() {
+        this.andExpect(status().isOk)
+            .andExpect(jsonPath("$.message").value("success"))
+    }
+
+    private fun ResultActions.thenWrongPassword() {
+        this.andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("wrong password"))
+    }
+
+    private fun createUser(id: String, email: String, nickname: String): User =
+        userRepository.createUser(User(User.Id(id), email, nickname))
 
     private fun registerGame(): GameRegistration = gameRegistrationRepository.registerGame(
         GameRegistration(
@@ -145,6 +187,19 @@ class RoomControllerTest @Autowired constructor(
             maxPlayers = 4,
             frontEndUrl = "https://example.com/play/game01",
             backEndUrl = "https://example.com/api/game01"
+        )
+    )
+
+    private fun createRoom(host : User, password: String? = null): Room = roomRepository.createRoom(
+        Room(
+            game = testGame,
+            host = Player(Player.Id(host.id!!.value), host.nickname),
+            players = mutableListOf(Player(Player.Id(host.id!!.value), host.nickname)),
+            maxPlayers = testGame.maxPlayers,
+            minPlayers = testGame.minPlayers,
+            name = "My Room",
+            status = Room.Status.WAITING,
+            password = password
         )
     )
 
@@ -169,57 +224,8 @@ class RoomControllerTest @Autowired constructor(
         return DefaultOidcUser(emptyList(), idToken)
     }
 
-    private fun ResultActions.thenCreateRoomSuccessfully(request: TestCreateRoomRequest) {
-        request.let {
-            this.andExpect(status().isCreated)
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value(it.name))
-                .andExpect(jsonPath("$.game.id").value(testGame.id!!.value))
-                .andExpect(jsonPath("$.game.name").value(testGame.displayName))
-                .andExpect(jsonPath("$.host.id").value(testUser.id!!.value))
-                .andExpect(jsonPath("$.host.nickname").value(testUser.nickname))
-                .andExpect(jsonPath("$.isLocked").value(!it.password.isNullOrEmpty()))
-                .andExpect(jsonPath("$.currentPlayers").value(1))
-                .andExpect(jsonPath("$.minPlayers").value(it.minPlayers))
-                .andExpect(jsonPath("$.maxPlayers").value(it.maxPlayers))
-        }
-    }
-
-    private fun createTestRoom(host : User, password: String? = null): Room = roomRepository.createRoom(
-        Room(
-            game = testGame,
-            host = Player(Player.Id(host.id!!.value), host.nickname),
-            players = mutableListOf(Player(Player.Id(host.id!!.value), host.nickname)),
-            maxPlayers = testGame.maxPlayers,
-            minPlayers = testGame.minPlayers,
-            name = "My Room",
-            status = Room.Status.WAITING,
-            password = password
-        )
-    )
-
-    private fun giveTheHostCreatedPublicRoom(host: User): Room = createTestRoom(host)
-
-    private fun Room.whenUserJoinTheRoom(user: User, password: String? = null):ResultActions{
-        val request = joinRoomRequest(password);
-        val joinUser = mockOidcUser(user)
-        return joinRoom(request, joinUser)
-    }
-
     private fun joinRoomRequest(password: String? = null): TestJoinRoomRequest =
         TestJoinRoomRequest(
             password = password
         )
-
-    private fun ResultActions.thenJoinRoomSuccessfully() {
-        this.andExpect(status().isOk)
-            .andExpect(jsonPath("$.message").value("success"))
-    }
-
-    private fun giveUserACreatedEncryptedRoomC(host: User, password: String): Room = createTestRoom(host, password)
-
-    private fun ResultActions.thenWrongPassword() {
-        this.andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.message").value("wrong password"))
-    }
 }

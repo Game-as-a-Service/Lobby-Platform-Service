@@ -1,6 +1,5 @@
 package tw.waterballsa.gaas.spring.controllers
 
-import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.*
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -17,7 +16,6 @@ import tw.waterballsa.gaas.spring.extensions.getEvent
 import javax.validation.Valid
 import javax.validation.constraints.Pattern
 import tw.waterballsa.gaas.application.usecases.JoinRoomUsecase
-import tw.waterballsa.gaas.events.JoinedRoomEvent
 import tw.waterballsa.gaas.exceptions.PlatformException
 
 @RestController
@@ -45,7 +43,7 @@ class RoomController(
         @RequestBody request: JoinRoomRequest
     ): ResponseEntity<Any> {
         val presenter = JoinRoomPresenter()
-        val joinerId = principal.subject ?: throw PlatformException("User id can't be null.")
+        val joinerId = principal.subject ?: throw PlatformException("User id must exist.")
         joinRoomUsecase.execute(request.toRequest(roomId, joinerId), presenter)
         return presenter.viewModel
             ?.let { ResponseEntity.ok(it) }
@@ -118,17 +116,14 @@ class RoomController(
     }
 
     class JoinRoomPresenter : Presenter {
-        var viewModel: JoinRoomViewModel? = null
+        var viewModel: JoinRoomViewModel? = JoinRoomViewModel(
+            message = "success"
+        )
             private set
 
         override fun present(vararg events: DomainEvent) {
-            viewModel = events.getEvent(JoinedRoomEvent::class)?.toViewModel()
-        }
 
-        private fun JoinedRoomEvent.toViewModel(): JoinRoomViewModel =
-            JoinRoomViewModel(
-                message = message
-            )
+        }
     }
 
     data class JoinRoomViewModel(
