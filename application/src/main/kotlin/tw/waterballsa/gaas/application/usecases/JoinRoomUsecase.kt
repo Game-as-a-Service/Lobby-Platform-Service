@@ -17,7 +17,7 @@ class JoinRoomUsecase(
     private val eventBus: EventBus
 ){
 
-    fun execute(request: Request, presenter: Presenter) {
+    fun execute(request: Request) {
         with(request) {
             val room = findRoomById(Room.Id(roomId))
             room.validateRoomPassword(password)

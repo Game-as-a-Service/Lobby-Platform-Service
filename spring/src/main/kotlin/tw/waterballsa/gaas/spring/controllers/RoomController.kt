@@ -42,12 +42,9 @@ class RoomController(
         @PathVariable roomId: String,
         @RequestBody request: JoinRoomRequest
     ): ResponseEntity<Any> {
-        val presenter = JoinRoomPresenter()
         val joinerId = principal.subject ?: throw PlatformException("User id must exist.")
-        joinRoomUsecase.execute(request.toRequest(roomId, joinerId), presenter)
-        return presenter.viewModel
-            ?.let { ResponseEntity.ok(it) }
-            ?: ResponseEntity.noContent().build()
+        joinRoomUsecase.execute(request.toRequest(roomId, joinerId))
+        return ResponseEntity.ok(JoinRoomViewModel("success"))
     }
 
     class CreateRoomRequest(
@@ -113,17 +110,6 @@ class RoomController(
                 userId = userId,
                 password = password
             )
-    }
-
-    class JoinRoomPresenter : Presenter {
-        var viewModel: JoinRoomViewModel? = JoinRoomViewModel(
-            message = "success"
-        )
-            private set
-
-        override fun present(vararg events: DomainEvent) {
-
-        }
     }
 
     data class JoinRoomViewModel(

@@ -4,7 +4,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.security.oauth2.core.oidc.OidcIdToken
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
@@ -92,32 +91,29 @@ class RoomControllerTest @Autowired constructor(
     fun giveUserACreatedRoomC_WhenUserBJoinRoomC_ThenShouldSucceed() {
         val userA = testUser
         val userB = createUser("2", "test2@mail.com", "winner1122")
-        val roomC = giveUserCreatedRoom(userA)
-        testRoom = roomC
-        roomC.whenUserJoinTheRoom(userB)
+        givenTheHostCreatePublicRoom(userA)
+            .whenUserJoinTheRoom(userB)
             .thenJoinRoomSuccessfully()
     }
 
     @Test
-    fun giveUserACreatedRoomCWithPassword_WhenUserBJoinRoomCAndPasswordIsIncorrect_ThenShouldFail() {
+    fun giveUserACreatedRoomCWithPassword_WhenUserBJoinRoomCWithIncorrectPassword_ThenShouldFail() {
         val password = "P@ssw0rd"
         val errorPassword = "password"
         val userA = testUser
         val userB = createUser("2", "test2@mail.com", "winner1122")
-        val roomC = giveUserCreatedRoomWithPassword(userA, password)
-        testRoom = roomC
-        roomC.whenUserJoinTheRoom(userB, errorPassword)
-            .thenWrongPassword()
+        givenTheHostCreateRoomWithPassword(userA, password)
+            .whenUserJoinTheRoom(userB, errorPassword)
+            .thenJoinRoomFailed()
     }
 
     @Test
-    fun giveUserACreatedRoomCWithPassword_WhenUserBJoinRoomCAndPasswordIsCorrect_ThenShouldSucceed() {
+    fun giveUserACreatedRoomCWithPassword_WhenUserBJoinRoomCWithCorrectPassword_ThenShouldSucceed() {
         val password = "P@ssw0rd"
         val userA = testUser
         val userB = createUser("2", "test2@mail.com", "winner1122")
-        val roomC = giveUserCreatedRoomWithPassword(userA, password)
-        testRoom = roomC
-        roomC.whenUserJoinTheRoom(userB, password)
+        givenTheHostCreateRoomWithPassword(userA, password)
+            .whenUserJoinTheRoom(userB, password)
             .thenJoinRoomSuccessfully()
     }
 
@@ -125,21 +121,26 @@ class RoomControllerTest @Autowired constructor(
         mockMvc.perform(
             post("/rooms")
                 .with(oidcLogin().oidcUser(mockOidcUser(testUser)))
-                .contentType(APPLICATION_JSON)
-                .content(request.toJson())
+                .withJson(request)
         )
 
     private fun joinRoom(request: TestJoinRoomRequest, joinUser: OidcUser): ResultActions =
         mockMvc.perform(
             post("/rooms/${testRoom.roomId!!.value}/players")
                 .with(oidcLogin().oidcUser(joinUser))
-                .contentType(APPLICATION_JSON)
-                .content(request.toJson())
+                .withJson(request)
         )
 
-    private fun giveUserCreatedRoom(host: User): Room = createRoom(host)
+    private fun givenTheHostCreatePublicRoom(host: User): Room {
+        testRoom = createRoom(host)
+        return  testRoom
+    }
 
-    private fun giveUserCreatedRoomWithPassword(host: User, password: String): Room = createRoom(host, password)
+    private fun givenTheHostCreateRoomWithPassword(host: User, password: String): Room {
+        testRoom = createRoom(host, password)
+        return testRoom
+
+    }
 
     private fun Room.whenUserJoinTheRoom(user: User, password: String? = null):ResultActions{
         val request = joinRoomRequest(password);
@@ -168,7 +169,7 @@ class RoomControllerTest @Autowired constructor(
             .andExpect(jsonPath("$.message").value("success"))
     }
 
-    private fun ResultActions.thenWrongPassword() {
+    private fun ResultActions.thenJoinRoomFailed() {
         this.andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value("wrong password"))
     }
@@ -228,4 +229,5 @@ class RoomControllerTest @Autowired constructor(
         TestJoinRoomRequest(
             password = password
         )
+
 }
