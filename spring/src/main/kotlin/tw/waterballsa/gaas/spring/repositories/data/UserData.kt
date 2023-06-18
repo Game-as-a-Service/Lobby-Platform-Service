@@ -9,14 +9,16 @@ class UserData(
     @Id
     var id: String? = null,
     private var email: String? = null,
-    var nickname: String? = null
+    var nickname: String? = null,
+    var identities: List<String> = emptyList()
 ) {
 
     fun toDomain(): User =
         User(
             User.Id(id!!),
             email!!,
-            nickname!!
+            nickname!!,
+            identities
         )
 }
 
@@ -24,5 +26,6 @@ fun User.toData(): UserData =
     UserData(
         id = id?.value,
         email = email,
-        nickname = nickname
+        nickname = nickname,
+        identities = identities
     )

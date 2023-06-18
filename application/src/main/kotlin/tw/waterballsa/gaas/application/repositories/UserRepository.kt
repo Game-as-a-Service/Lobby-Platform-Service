@@ -5,6 +5,7 @@ import tw.waterballsa.gaas.domain.User.Id
 
 interface UserRepository {
     fun findById(id: Id): User?
+    fun existsByIdentitiesIn(identityProviderId: String): Boolean
     fun existsUserByEmail(email: String): Boolean
     fun createUser(user: User): User
     fun deleteAll()
