@@ -33,3 +33,6 @@ springdoc:
     doc-expansion: none
     operations-sorter: alpha
     tags-sorter: alpha
+
+server:
+  forward-headers-strategy: native
