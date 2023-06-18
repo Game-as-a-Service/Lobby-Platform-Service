@@ -44,7 +44,8 @@ class OAuth2Controller(
     }
 }
 
-private fun Jwt.toRequest(): CreateUserUseCase.Request =
+fun Jwt.toRequest(): CreateUserUseCase.Request =
     CreateUserUseCase.Request(
-        this.subject ?: throw PlatformException("JWT subject is null")
+        email = claims["email"] as String? ?: throw PlatformException("JWT email should exist."),
+        identityProviderId = subject ?: throw PlatformException("JWT subject should exist.")
     )

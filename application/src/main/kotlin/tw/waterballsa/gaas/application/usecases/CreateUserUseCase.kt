@@ -11,17 +11,27 @@ class CreateUserUseCase(
     private val userRepository: UserRepository,
     private val eventBus: EventBus,
 ) {
-    fun execute(request: Request) = when {
-        userRepository.existsByIdentitiesIn(request.identityProviderId) -> {}
-        else -> {
-            val user = userRepository.createUser(request.toUser())
-            val event = user.toUserCreatedEvent()
-            eventBus.broadcast(event)
+    fun execute(request: Request) {
+        var user = userRepository.findByEmail(request.email)
+
+        when {
+            user == null -> {
+                user = userRepository.createUser(request.toUser())
+                val event = user.toUserCreatedEvent()
+                eventBus.broadcast(event)
+            }
+            user.doesNotHaveIdentity(request.identityProviderId) -> {
+                user = user.addIdentity(request.identityProviderId)
+                userRepository.update(user)
+            }
         }
     }
 
-    class Request(val identityProviderId: String) {
-        fun toUser(): User = User(identities = listOf(identityProviderId))
+    class Request(
+        val email: String,
+        val identityProviderId: String
+    ) {
+        fun toUser(): User = User(email = email, identities = listOf(identityProviderId))
     }
 }
 

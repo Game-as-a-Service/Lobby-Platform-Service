@@ -6,9 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType.APPLICATION_JSON
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
+import tw.waterballsa.gaas.domain.User
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -18,6 +20,8 @@ abstract class AbstractSpringBootTest {
 
     @Autowired
     private lateinit var objectMapper: ObjectMapper
+
+    protected val mockUser: User = mockDefaultUser()
 
     protected fun <T> ResultActions.getBody(type: Class<T>): T =
         andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
@@ -29,4 +33,18 @@ abstract class AbstractSpringBootTest {
 
     protected fun MockHttpServletRequestBuilder.withJson(request: Any): MockHttpServletRequestBuilder =
         contentType(APPLICATION_JSON).content(request.toJson())
+
+    protected fun mockDefaultUser(): User =
+        User(User.Id("1"),
+            "user@example.com",
+            "user-437b200d-da9c-449e-b147-114b4822b5aa",
+            listOf("google-oauth2|102527320242660434908")
+        )
+
+    protected fun mockJwt(subject: String, email: String): Jwt =
+        Jwt.withTokenValue("mock-token")
+            .header("alg", "none")
+            .subject(subject)
+            .claim("email", email)
+            .build()
 }

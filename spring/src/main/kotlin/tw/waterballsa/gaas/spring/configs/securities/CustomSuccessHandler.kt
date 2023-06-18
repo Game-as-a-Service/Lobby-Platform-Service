@@ -5,9 +5,10 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
-import org.springframework.security.oauth2.core.oidc.user.OidcUser
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import tw.waterballsa.gaas.application.usecases.CreateUserUseCase
+import tw.waterballsa.gaas.spring.controllers.toRequest
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -25,8 +26,8 @@ class CustomSuccessHandler(
     ) {
         authentication as OAuth2AuthenticationToken
 
-        val email = authentication.principal.let { it as OidcUser }.email
-        createUserUseCase.execute(CreateUserUseCase.Request(email))
+        val jwt = authentication.principal.let { it as Jwt }
+        createUserUseCase.execute(jwt.toRequest())
 
         val accessTokenValue = authorizedClientService.loadAuthorizedClient<OAuth2AuthorizedClient>(
             authentication.authorizedClientRegistrationId,

@@ -7,5 +7,5 @@ import tw.waterballsa.gaas.spring.repositories.data.UserData
 @Repository
 interface UserDAO : MongoRepository<UserData, String> {
     fun existsByEmail(email: String): Boolean
-    fun existsByIdentitiesIn(identities: MutableCollection<MutableList<String>>): Boolean
+    fun findByEmail(email: String): UserData?
 }
