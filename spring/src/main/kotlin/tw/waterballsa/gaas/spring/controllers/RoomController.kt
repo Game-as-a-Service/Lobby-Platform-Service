@@ -41,10 +41,10 @@ class RoomController(
         @AuthenticationPrincipal principal: OidcUser,
         @PathVariable roomId: String,
         @RequestBody request: JoinRoomRequest
-    ): ResponseEntity<Any> {
+    ): JoinRoomViewModel {
         val joinerId = principal.subject ?: throw PlatformException("User id must exist.")
         joinRoomUsecase.execute(request.toRequest(roomId, joinerId))
-        return ResponseEntity.ok(JoinRoomViewModel("success"))
+        return JoinRoomViewModel("success")
     }
 
     class CreateRoomRequest(

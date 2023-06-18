@@ -150,7 +150,7 @@ class RoomControllerTest @Autowired constructor(
 
     private fun ResultActions.thenCreateRoomSuccessfully(request: TestCreateRoomRequest) {
         request.let {
-            this.andExpect(status().isCreated)
+            andExpect(status().isCreated)
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.name").value(it.name))
                 .andExpect(jsonPath("$.game.id").value(testGame.id!!.value))
@@ -165,12 +165,12 @@ class RoomControllerTest @Autowired constructor(
     }
 
     private fun ResultActions.thenJoinRoomSuccessfully() {
-        this.andExpect(status().isOk)
+        andExpect(status().isOk)
             .andExpect(jsonPath("$.message").value("success"))
     }
 
     private fun ResultActions.thenJoinRoomFailed() {
-        this.andExpect(status().isBadRequest)
+        andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value("wrong password"))
     }
 
