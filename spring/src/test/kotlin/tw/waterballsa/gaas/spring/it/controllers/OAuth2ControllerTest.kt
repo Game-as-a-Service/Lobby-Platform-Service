@@ -4,13 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.oauth2.core.oidc.OidcIdToken
-import org.springframework.security.oauth2.core.oidc.OidcUserInfo
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
-import org.springframework.security.oauth2.core.oidc.user.OidcUser
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.User
@@ -26,57 +23,57 @@ class OAuth2ControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenInvalidUserInfo_whenUserLogin_thenShouldLoginFailed() {
-        givenInvalidUserInfo()
-            .whenLogin()
-            .thenShouldLoginFailed()
+    fun givenInvalidJwtSubject_whenUserLogin_thenShouldLoginFailed() {
+        givenInvalidJwtSubject()
+            ?.whenUserLogin()
+            ?.thenShouldLoginFailed()
     }
 
     @Test
-    fun givenNewUser_whenUserLogin_thenCreateUser() {
-        givenNewUserInfo().assertUserNotExists()
-            .whenLogin()
-            .thenShouldLoginSuccessfully()
+    fun givenNewUserWithJwtSubject_whenUserLogin_thenCreateUser() {
+        givenNewUserWithJwtSubject()
+            .whenUserLogin()
+            .thenCreateUser()
     }
 
     @Test
     fun givenOldUser_whenUserLogin_thenShouldLoginSuccessfully() {
-        givenOldUserInfo().assertUserExists()
-            .whenLogin()
-            .thenShouldLoginSuccessfully()
+        givenOldUserWithJwtSubject()
+            .whenUserLogin()
+            .thenLoginSuccessfully()
     }
 
-    private fun givenInvalidUserInfo(): OidcUser = givenUserInfo(null)
+    private fun givenInvalidJwtSubject(): String? = null
 
-    private fun givenNewUserInfo(): OidcUser = givenUserInfo(OidcUserInfo(mapOf("email" to "user@example.com")))
-
-    private fun givenOldUserInfo(): OidcUser {
-        val userInfo = givenUserInfo(OidcUserInfo(mapOf("email" to "other@example.com")))
-        userRepository.createUser(User(email = userInfo.email))
-        return userInfo
+    private fun givenNewUserWithJwtSubject(): String {
+        val subject = "google-oauth2|102527320242660434908"
+        assertThat(userRepository.existsByIdentitiesIn(subject)).isFalse()
+        return subject
     }
 
-    private fun givenUserInfo(oidcUserInfo: OidcUserInfo?): OidcUser = DefaultOidcUser(
-        listOf(),
-        OidcIdToken("token", null, null, mapOf("sub" to "my_sub")),
-        oidcUserInfo
-    )
-
-    private fun OidcUser.assertUserExists(): OidcUser = this.also {
-        assertThat(userRepository.existsUserByEmail(userInfo.email)).isTrue()
+    private fun givenOldUserWithJwtSubject(): String {
+        val subject = givenNewUserWithJwtSubject()
+        userRepository.createUser(User(identities = listOf(subject)))
+        assertThat(userRepository.existsByIdentitiesIn(subject)).isTrue()
+        return subject
     }
 
-    private fun OidcUser.assertUserNotExists(): OidcUser = this.also {
-        assertThat(userRepository.existsUserByEmail(userInfo.email)).isFalse()
+    private fun String.whenUserLogin(): ResultActions =
+        mockMvc.perform(get("/").with(jwt().jwt { it.subject(this) }))
+
+    private fun ResultActions.thenShouldLoginFailed() {
+        this.andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$").value("JWT subject is null"))
     }
 
-    private fun OidcUser.whenLogin(): ResultActions =
-        mockMvc.perform(get("/").with(oidcLogin().oidcUser(this)))
+    private fun ResultActions.thenLoginSuccessfully() {
+        this.andExpect(status().isOk)
+    }
 
-    private fun ResultActions.thenShouldLoginSuccessfully(): ResultActions =
-        andExpect(status().isOk)
-
-    private fun ResultActions.thenShouldLoginFailed(): ResultActions =
-        andExpect(status().isBadRequest)
+    private fun ResultActions.thenCreateUser() {
+        thenLoginSuccessfully()
+        val subject = "google-oauth2|102527320242660434908"
+        assertThat(userRepository.existsByIdentitiesIn(subject)).isTrue()
+    }
 
 }
