@@ -48,7 +48,7 @@ class GameRegistrationControllerTest @Autowired constructor(
 
         registerGame(request)
             .andExpect(status().isBadRequest)
-            .andExpect(content().string("${request.uniqueName} already exists"))
+            .andExpect(jsonPath("$.message").value("${request.uniqueName} already exists"))
 
         unoViewModel.let {
             val gameRegistration = findGameRegistration(it)

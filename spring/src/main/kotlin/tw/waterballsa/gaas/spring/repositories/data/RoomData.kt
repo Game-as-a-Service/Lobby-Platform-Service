@@ -3,6 +3,7 @@ package tw.waterballsa.gaas.spring.repositories.data
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
+import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 
 @Document
@@ -36,4 +37,17 @@ class RoomData(
             )
         }
     }
+
+    fun toDomain(game: GameRegistration, host: Room.Player, players: MutableList<Room.Player>): Room =
+        Room(
+            Room.Id(id!!),
+            game,
+            host,
+            players,
+            maxPlayers!!,
+            minPlayers!!,
+            name!!,
+            status = status!!,
+            password = password
+        )
 }

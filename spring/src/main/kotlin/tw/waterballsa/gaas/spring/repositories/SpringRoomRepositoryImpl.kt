@@ -31,6 +31,8 @@ class SpringRoomRepository(
 
     override fun existsByHostId(hostId: User.Id): Boolean = roomDAO.existsByHostId(hostId.value)
 
+    override fun joinRoom(room: Room): Room = roomDAO.save(room.toData()).toDomain(room.game, room.host, room.players)
+
     private fun RoomData.toDomain(): Room =
         Room(
             roomId = Id(id!!),

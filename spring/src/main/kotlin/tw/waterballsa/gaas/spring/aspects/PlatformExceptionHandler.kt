@@ -1,6 +1,7 @@
 package tw.waterballsa.gaas.spring.aspects
 
 import org.springframework.http.HttpStatus.*
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -15,5 +16,6 @@ class PlatformExceptionHandler {
 
     @ResponseStatus(BAD_REQUEST)
     @ExceptionHandler(PlatformException::class)
-    fun badRequest(exception: PlatformException): String = exception.message!!
+    fun badRequest(exception: PlatformException): Map<String, String> = mapOf("message" to (exception.message ?: ""))
+
 }

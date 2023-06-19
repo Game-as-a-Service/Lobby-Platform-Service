@@ -1,6 +1,7 @@
 package tw.waterballsa.gaas.application.usecases
 
 import tw.waterballsa.gaas.application.eventbus.EventBus
+import tw.waterballsa.gaas.application.extension.toRoomPlayer
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
@@ -85,6 +86,3 @@ private fun Room.toCreatedRoomEvent(): CreatedRoomEvent =
         name = name,
         isLocked = isLocked,
     )
-
-private fun User.toRoomPlayer(): Player =
-    Player(Player.Id(id!!.value), nickname)

@@ -4,10 +4,7 @@ import org.springframework.http.HttpStatus.*
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import tw.waterballsa.gaas.application.usecases.CreateRoomUsecase
 import tw.waterballsa.gaas.application.usecases.Presenter
 import tw.waterballsa.gaas.domain.GameRegistration
@@ -18,11 +15,14 @@ import tw.waterballsa.gaas.spring.controllers.RoomController.CreateRoomViewModel
 import tw.waterballsa.gaas.spring.extensions.getEvent
 import javax.validation.Valid
 import javax.validation.constraints.Pattern
+import tw.waterballsa.gaas.application.usecases.JoinRoomUsecase
+import tw.waterballsa.gaas.exceptions.PlatformException
 
 @RestController
 @RequestMapping("/rooms")
 class RoomController(
-    private val createRoomUsecase: CreateRoomUsecase
+    private val createRoomUsecase: CreateRoomUsecase,
+    private val joinRoomUsecase: JoinRoomUsecase
 ) {
     @PostMapping
     fun createRoom(
@@ -34,6 +34,17 @@ class RoomController(
         return presenter.viewModel
             ?.let { ResponseEntity.status(CREATED).body(it) }
             ?: ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/{roomId}/players")
+    fun joinRoom(
+        @AuthenticationPrincipal principal: OidcUser,
+        @PathVariable roomId: String,
+        @RequestBody request: JoinRoomRequest
+    ): JoinRoomViewModel {
+        val joinerId = principal.subject ?: throw PlatformException("User id must exist.")
+        joinRoomUsecase.execute(request.toRequest(roomId, joinerId))
+        return JoinRoomViewModel("success")
     }
 
     class CreateRoomRequest(
@@ -89,6 +100,21 @@ class RoomController(
         data class Game(val id: String, val name: String)
         data class Player(val id: String, val nickname: String)
     }
+
+    class JoinRoomRequest(
+        val password: String? = null
+    ) {
+        fun toRequest(roomId: String, userId: String): JoinRoomUsecase.Request =
+            JoinRoomUsecase.Request(
+                roomId = roomId,
+                userId = userId,
+                password = password
+            )
+    }
+
+    data class JoinRoomViewModel(
+        val message: String
+    )
 }
 
 private fun GameRegistration.toView(): CreateRoomViewModel.Game =
