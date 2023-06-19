@@ -6,6 +6,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.web.bind.annotation.*
 import tw.waterballsa.gaas.application.usecases.CreateRoomUsecase
+import tw.waterballsa.gaas.application.usecases.GetRoomsUseCase
 import tw.waterballsa.gaas.application.usecases.Presenter
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
@@ -22,7 +23,8 @@ import tw.waterballsa.gaas.exceptions.PlatformException
 @RequestMapping("/rooms")
 class RoomController(
     private val createRoomUsecase: CreateRoomUsecase,
-    private val joinRoomUsecase: JoinRoomUsecase
+    private val joinRoomUsecase: JoinRoomUsecase,
+    private val getRoomsUseCase: GetRoomsUseCase
 ) {
     @PostMapping
     fun createRoom(
@@ -45,6 +47,11 @@ class RoomController(
         val joinerId = principal.subject ?: throw PlatformException("User id must exist.")
         joinRoomUsecase.execute(request.toRequest(roomId, joinerId))
         return JoinRoomViewModel("success")
+    }
+
+    @GetMapping
+    fun getRooms(@RequestBody request: GetRoomsRequest): GetRoomsViewModel {
+        return getRoomsUseCase.execute(request.toRequest()).toRoomsViewModel(request)
     }
 
     class CreateRoomRequest(
@@ -115,6 +122,44 @@ class RoomController(
     data class JoinRoomViewModel(
         val message: String
     )
+
+    class GetRoomsRequest(
+        val status: String,
+        val page: Int,
+        val perPage: Int
+    ) {
+        fun toRequest(): GetRoomsUseCase.Request =
+            GetRoomsUseCase.Request(
+                status = status,
+                page = page,
+                perPage = perPage
+            )
+    }
+
+    data class GetRoomsViewModel(
+        val rooms: List<RoomViewModel>,
+        val meta: Meta
+    ) {
+        data class RoomViewModel(
+            val id: String,
+            val name: String,
+            val game: Game,
+            val host: Player,
+            val maxPlayers: Int,
+            val minPlayers: Int,
+            val currentPlayers: Int,
+            val isLocked: Boolean,
+        ) {
+            data class Game(val id: String, val name: String)
+            data class Player(val id: String, val nickname: String)
+        }
+
+        data class Meta(
+            val total: Int,
+            val page: Int,
+            val perPage: Int
+        )
+    }
 }
 
 private fun GameRegistration.toView(): CreateRoomViewModel.Game =
@@ -122,3 +167,29 @@ private fun GameRegistration.toView(): CreateRoomViewModel.Game =
 
 private fun Room.Player.toView(): CreateRoomViewModel.Player =
     CreateRoomViewModel.Player(id.value, nickname)
+
+private fun List<Room>.toRoomsViewModel(request: RoomController.GetRoomsRequest): RoomController.GetRoomsViewModel =
+    RoomController.GetRoomsViewModel(
+        rooms = map { room ->
+            RoomController.GetRoomsViewModel.RoomViewModel(
+                id = room.roomId!!.value,
+                name = room.name,
+                game = room.game.toGetRoomsView(),
+                host = room.host.toGetRoomsView(),
+                minPlayers = room.minPlayers,
+                maxPlayers = room.maxPlayers,
+                currentPlayers = room.players.size,
+                isLocked = room.isLocked,
+            )
+        }, meta = RoomController.GetRoomsViewModel.Meta(
+            page = request.page,
+            perPage = request.perPage,
+            total = size
+        )
+    )
+
+private fun GameRegistration.toGetRoomsView(): RoomController.GetRoomsViewModel.RoomViewModel.Game =
+    RoomController.GetRoomsViewModel.RoomViewModel.Game(id!!.value, displayName)
+
+private fun Room.Player.toGetRoomsView(): RoomController.GetRoomsViewModel.RoomViewModel.Player =
+    RoomController.GetRoomsViewModel.RoomViewModel.Player(id.value, nickname)
