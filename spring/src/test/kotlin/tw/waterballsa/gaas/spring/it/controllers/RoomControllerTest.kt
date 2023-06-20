@@ -119,25 +119,30 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenUserAIsLoginAndThereAreRoom01AndRoom02_WhenUserALookRoomList_ThenShouldSeeTheRoom01AndRoom02() {
+    fun givenWaitingRoomBAndWaitingRoomC_WhenUserAVisitLobby_ThenShouldHaveRoomBAndRoomC() {
         val userA = testUser
+        givenWaitingRoomBAndWaitingRoomC()
+        whenUserAVisitLobbyhenVisitLobby(TestGetRoomsRequest("WAITING", 0, 10), userA)
+            .thenShouldHaveRoomBAndRoomC()
+    }
+
+    private fun givenWaitingRoomBAndWaitingRoomC() {
         val userB = createUser("2", "test2@mail.com", "winner1122")
         val userC = createUser("3", "test3@mail.com", "winner1234")
         givenTheHostCreatePublicRoom(userB)
         givenTheHostCreatePublicRoom(userC)
-        whenVisitLobby(TestGetRoomsRequest("WAITING", 0, 10), userA)
-            .andDo { print(it) }
-            .thenSeeRoomListHaveTwoRooms()
     }
 
-    private fun whenVisitLobby(request: TestGetRoomsRequest, joinUser: User): ResultActions =
+    private fun whenUserAVisitLobbyhenVisitLobby(request: TestGetRoomsRequest, joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
                 .with(oidcLogin().oidcUser(mockOidcUser(joinUser)))
-                .withJson(request)
+                .param("status", request.status)
+                .param("page", request.page.toString())
+                .param("offset", request.offset.toString())
         )
 
-    private fun ResultActions.thenSeeRoomListHaveTwoRooms() {
+    private fun ResultActions.thenShouldHaveRoomBAndRoomC() {
         andExpect(status().isOk)
             .andExpect(jsonPath("$.rooms").isArray)
             .andExpect(jsonPath("$.rooms.length()").value(2))
