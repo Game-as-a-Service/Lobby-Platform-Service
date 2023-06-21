@@ -144,10 +144,10 @@ class RoomControllerTest @Autowired constructor(
                 .param("offset", request.offset.toString())
         )
 
-    private fun ResultActions.thenShouldHaveRooms(count: Int, currentPlayers: Int) {
+    private fun ResultActions.thenShouldHaveRooms(countOfRoom: Int, currentPlayers: Int) {
         andExpect(status().isOk)
             .andExpect(jsonPath("$.rooms").isArray)
-            .andExpect(jsonPath("$.rooms.length()").value(count))
+            .andExpect(jsonPath("$.rooms.length()").value(countOfRoom))
             .andExpect(jsonPath("$.rooms[0].id").exists())
             .andExpect(jsonPath("$.rooms[0].name").exists())
             .andExpect(jsonPath("$.rooms[0].game.id").value(testGame.id!!.value))
