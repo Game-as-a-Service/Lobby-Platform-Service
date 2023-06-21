@@ -14,7 +14,7 @@ class GetRoomsUseCase(
 ) {
 
     fun execute(request: Request, presenter: Presenter) =
-        roomRepository.findByStatus(request.status, request.toPageable()).toGetRoomEvent()
+        roomRepository.findByStatus(request.status, request.toPagination()).toGetRoomEvent()
             .also { event ->
                 presenter.present(event)
                 eventBus.broadcast(event)
@@ -25,14 +25,14 @@ class GetRoomsUseCase(
         private val page: Int,
         private val offset: Int
     ) {
-        fun toPageable(): Pagination<Any> = Pagination(page, offset)
+        fun toPagination(): Pagination<Any> = Pagination(page, offset)
     }
 }
 
 private fun Pagination<Room>.toGetRoomEvent(): GetRoomsEvent =
     GetRoomsEvent(
         rooms = data,
-        GetRoomsEvent.Meta(
+        GetRoomsEvent.Page(
             total = data.size,
             page = page,
             offset = offset

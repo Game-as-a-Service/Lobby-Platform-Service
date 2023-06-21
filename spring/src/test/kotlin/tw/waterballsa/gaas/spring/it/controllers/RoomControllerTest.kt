@@ -121,19 +121,21 @@ class RoomControllerTest @Autowired constructor(
     @Test
     fun givenWaitingRoomBAndWaitingRoomC_WhenUserAVisitLobby_ThenShouldHaveRoomBAndRoomC() {
         val userA = testUser
-        givenWaitingRoomBAndWaitingRoomC()
-        whenUserAVisitLobbyhenVisitLobby(TestGetRoomsRequest("WAITING", 0, 10), userA)
-            .thenShouldHaveRoomBAndRoomC()
-    }
-
-    private fun givenWaitingRoomBAndWaitingRoomC() {
         val userB = createUser("2", "test2@mail.com", "winner1122")
         val userC = createUser("3", "test3@mail.com", "winner1234")
-        givenTheHostCreatePublicRoom(userB)
-        givenTheHostCreatePublicRoom(userC)
+        val request = TestGetRoomsRequest("WAITING", 0, 10)
+
+        givenWaitingRoomBAndWaitingRoomC(userB, userC)
+        whenUserAVisitLobbyThenVisitLobby(request, userA)
+            .thenShouldHaveRooms(2, 1)
     }
 
-    private fun whenUserAVisitLobbyhenVisitLobby(request: TestGetRoomsRequest, joinUser: User): ResultActions =
+    private fun givenWaitingRoomBAndWaitingRoomC(user: User, otherUser: User) {
+        givenTheHostCreatePublicRoom(user)
+        givenTheHostCreatePublicRoom(otherUser)
+    }
+
+    private fun whenUserAVisitLobbyThenVisitLobby(request: TestGetRoomsRequest, joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
                 .with(oidcLogin().oidcUser(mockOidcUser(joinUser)))
@@ -142,16 +144,16 @@ class RoomControllerTest @Autowired constructor(
                 .param("offset", request.offset.toString())
         )
 
-    private fun ResultActions.thenShouldHaveRoomBAndRoomC() {
+    private fun ResultActions.thenShouldHaveRooms(count: Int, currentPlayers: Int) {
         andExpect(status().isOk)
             .andExpect(jsonPath("$.rooms").isArray)
-            .andExpect(jsonPath("$.rooms.length()").value(2))
+            .andExpect(jsonPath("$.rooms.length()").value(count))
             .andExpect(jsonPath("$.rooms[0].id").exists())
             .andExpect(jsonPath("$.rooms[0].name").exists())
             .andExpect(jsonPath("$.rooms[0].game.id").value(testGame.id!!.value))
             .andExpect(jsonPath("$.rooms[0].host.id").exists())
             .andExpect(jsonPath("$.rooms[0].isLocked").value(testRoom.isLocked))
-            .andExpect(jsonPath("$.rooms[0].currentPlayers").value(1))
+            .andExpect(jsonPath("$.rooms[0].currentPlayers").value(currentPlayers))
             .andExpect(jsonPath("$.rooms[0].maxPlayers").value(testRoom.maxPlayers))
             .andExpect(jsonPath("$.rooms[0].minPlayers").value(testRoom.minPlayers))
     }
@@ -182,7 +184,7 @@ class RoomControllerTest @Autowired constructor(
     }
 
     private fun Room.whenUserJoinTheRoom(user: User, password: String? = null): ResultActions {
-        val request = joinRoomRequest(password);
+        val request = joinRoomRequest(password)
         val joinUser = mockOidcUser(user)
         return joinRoom(request, joinUser)
     }

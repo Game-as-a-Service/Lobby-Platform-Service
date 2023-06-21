@@ -7,19 +7,19 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.web.bind.annotation.*
 import tw.waterballsa.gaas.application.usecases.CreateRoomUsecase
 import tw.waterballsa.gaas.application.usecases.GetRoomsUseCase
+import tw.waterballsa.gaas.application.usecases.JoinRoomUsecase
 import tw.waterballsa.gaas.application.usecases.Presenter
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.events.CreatedRoomEvent
 import tw.waterballsa.gaas.events.DomainEvent
+import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.spring.controllers.RoomController.CreateRoomViewModel
+import tw.waterballsa.gaas.spring.controllers.presenter.GetRoomsPresenter
+import tw.waterballsa.gaas.spring.controllers.viewmodel.GetRoomsViewModel
 import tw.waterballsa.gaas.spring.extensions.getEvent
 import javax.validation.Valid
 import javax.validation.constraints.Pattern
-import tw.waterballsa.gaas.application.usecases.JoinRoomUsecase
-import tw.waterballsa.gaas.events.GetRoomsEvent
-import tw.waterballsa.gaas.exceptions.PlatformException
-import tw.waterballsa.gaas.spring.controllers.viewmodel.GetRoomsViewModel
 
 @RestController
 @RequestMapping("/rooms")
@@ -133,6 +133,10 @@ class RoomController(
     )
 
     class GetRoomsRequest(
+        @field:Pattern(
+            regexp = """^(WAITING|PLAYING)$""",
+            message = "The status must be either WAITING or PLAYING."
+        )
         val status: String,
         @field:Pattern(regexp = """^\d+$""", message = "The page must be a positive integer.")
         val page: Int,
@@ -146,21 +150,6 @@ class RoomController(
                 offset = offset
             )
     }
-
-    class GetRoomsPresenter : Presenter {
-        lateinit var viewModel: GetRoomsViewModel
-
-        override fun present(vararg events: DomainEvent) {
-            viewModel = events.getEvent(GetRoomsEvent::class)!!.toViewModel()
-        }
-
-        private fun GetRoomsEvent.toViewModel(): GetRoomsViewModel =
-            GetRoomsViewModel(
-                rooms = rooms.map { it.toRoomsViewModel() },
-                meta = toMeta(rooms.size)
-            )
-    }
-
 }
 
 private fun GameRegistration.toView(): CreateRoomViewModel.Game =
@@ -168,28 +157,3 @@ private fun GameRegistration.toView(): CreateRoomViewModel.Game =
 
 private fun Room.Player.toView(): CreateRoomViewModel.Player =
     CreateRoomViewModel.Player(id.value, nickname)
-
-private fun Room.toRoomsViewModel(): GetRoomsViewModel.RoomViewModel =
-    GetRoomsViewModel.RoomViewModel(
-        id = roomId!!.value,
-        name = name,
-        game = game.toGetRoomsView(),
-        host = host.toGetRoomsView(),
-        minPlayers = minPlayers,
-        maxPlayers = maxPlayers,
-        currentPlayers = players.size,
-        isLocked = isLocked,
-    )
-
-private fun GameRegistration.toGetRoomsView(): GetRoomsViewModel.RoomViewModel.Game =
-    GetRoomsViewModel.RoomViewModel.Game(id!!.value, displayName)
-
-private fun Room.Player.toGetRoomsView(): GetRoomsViewModel.RoomViewModel.Player =
-    GetRoomsViewModel.RoomViewModel.Player(id.value, nickname)
-
-fun GetRoomsEvent.toMeta(size: Int): GetRoomsViewModel.Meta =
-    GetRoomsViewModel.Meta(
-        page = meta.page,
-        offset = meta.offset,
-        total = size
-    )

@@ -4,10 +4,10 @@ import tw.waterballsa.gaas.domain.Room
 
 data class GetRoomsEvent(
     val rooms: List<Room>,
-    val meta: Meta
+    val page: Page
 ) : DomainEvent() {
 
-    data class Meta(
+    data class Page(
         val total: Int,
         val page: Int,
         val offset: Int

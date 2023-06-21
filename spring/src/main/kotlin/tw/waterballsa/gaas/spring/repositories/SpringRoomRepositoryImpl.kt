@@ -1,5 +1,6 @@
 package tw.waterballsa.gaas.spring.repositories
 
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import tw.waterballsa.gaas.application.model.Pagination
@@ -37,8 +38,7 @@ class SpringRoomRepository(
 
     override fun findByStatus(status: Room.Status, page: Pagination<Any>): Pagination<Room> {
         return roomDAO.findByStatus(status, page.toPageable())
-            .map { it.toDomain() }
-            .let { Pagination(page.page, page.offset, it.content) }
+        .map { it.toDomain() }.toPagination()
     }
 
     private fun RoomData.toDomain(): Room =
@@ -75,3 +75,6 @@ private fun User.toRoomPlayer(): Player =
     )
 
 private fun Pagination<Any>.toPageable() = PageRequest.of(page, offset)
+
+private fun <T> Page<T>.toPagination(): Pagination<T> =
+    Pagination(pageable.pageNumber, pageable.pageSize, content)

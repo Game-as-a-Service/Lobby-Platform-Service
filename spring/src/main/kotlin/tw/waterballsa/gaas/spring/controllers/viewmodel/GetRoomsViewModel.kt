@@ -2,7 +2,7 @@ package tw.waterballsa.gaas.spring.controllers.viewmodel
 
 data class GetRoomsViewModel(
     val rooms: List<RoomViewModel>,
-    val meta: Meta
+    val page: Page
 ) {
     data class RoomViewModel(
         val id: String,
@@ -18,7 +18,7 @@ data class GetRoomsViewModel(
         data class Player(val id: String, val nickname: String)
     }
 
-    data class Meta(
+    data class Page(
         val total: Int,
         val page: Int,
         val offset: Int
