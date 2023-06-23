@@ -1,24 +1,23 @@
 package tw.waterballsa.gaas.spring.controllers.presenter
 
-import tw.waterballsa.gaas.application.usecases.Presenter
+import tw.waterballsa.gaas.application.model.Pagination
+import tw.waterballsa.gaas.application.usecases.GetRoomsPresenter
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
-import tw.waterballsa.gaas.events.DomainEvent
-import tw.waterballsa.gaas.events.GetRoomsEvent
 import tw.waterballsa.gaas.spring.controllers.viewmodel.GetRoomsViewModel
-import tw.waterballsa.gaas.spring.extensions.getEvent
 
-class GetRoomsPresenter : Presenter {
+class GetRoomsPresenter : GetRoomsPresenter {
     lateinit var viewModel: GetRoomsViewModel
+        private set
 
-    override fun present(vararg events: DomainEvent) {
-        viewModel = events.getEvent(GetRoomsEvent::class)!!.toViewModel()
+    override fun present(rooms: Pagination<Room>) {
+        viewModel = rooms.toViewModel()
     }
 
-    private fun GetRoomsEvent.toViewModel(): GetRoomsViewModel =
+    private fun Pagination<Room>.toViewModel(): GetRoomsViewModel =
         GetRoomsViewModel(
-            rooms = rooms.map { it.toRoomsViewModel() },
-            page = page.toPage(rooms.size)
+            rooms = data.map { it.toRoomsViewModel() },
+            page = toPage(data.size)
         )
 }
 
@@ -41,7 +40,7 @@ private fun GameRegistration.toGetRoomsView(): GetRoomsViewModel.RoomViewModel.G
 private fun Room.Player.toGetRoomsView(): GetRoomsViewModel.RoomViewModel.Player =
     GetRoomsViewModel.RoomViewModel.Player(id.value, nickname)
 
-private fun GetRoomsEvent.Page.toPage(size: Int): GetRoomsViewModel.Page =
+private fun Pagination<Room>.toPage(size: Int): GetRoomsViewModel.Page =
     GetRoomsViewModel.Page(
         page = page,
         offset = offset,
