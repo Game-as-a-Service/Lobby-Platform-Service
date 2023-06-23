@@ -95,6 +95,7 @@ class OAuth2ControllerTest @Autowired constructor(
     private fun ResultActions.thenCreateNewUser() {
         thenLoginSuccessfully()
         userRepository.findByEmail(email)!!
+            .thenCreateNickname()
             .thenSaveIdentityProviderId(googleIdentityProviderId)
     }
 
@@ -102,6 +103,12 @@ class OAuth2ControllerTest @Autowired constructor(
         assertThat(this).isNotNull
         assertThat(identities).isNotEmpty
         assertThat(identities).contains(identityProviderId)
+        return this
+    }
+
+    private fun User.thenCreateNickname(): User {
+        assertThat(this).isNotNull
+        assertThat(nickname).startsWith("user_")
         return this
     }
 
