@@ -153,14 +153,14 @@ class RoomControllerTest @Autowired constructor(
 
     private fun ResultActions.roomExcept(rooms: Pagination<Room>) {
         rooms.data.forEachIndexed() { index, room ->
-            andExpect(jsonPath("$.rooms[$index].id").exists())
-                .andExpect(jsonPath("$.rooms[$index].name").exists())
-                .andExpect(jsonPath("$.rooms[$index].game.id").value(testGame.id!!.value))
-                .andExpect(jsonPath("$.rooms[$index].host.id").exists())
-                .andExpect(jsonPath("$.rooms[$index].isLocked").value(testRoom.isLocked))
+            andExpect(jsonPath("$.rooms[$index].id").value(room.roomId!!.value))
+                .andExpect(jsonPath("$.rooms[$index].name").value(room.name))
+                .andExpect(jsonPath("$.rooms[$index].game.id").value(room.game.id!!.value))
+                .andExpect(jsonPath("$.rooms[$index].host.id").value(room.host.id.value))
+                .andExpect(jsonPath("$.rooms[$index].isLocked").value(room.isLocked))
                 .andExpect(jsonPath("$.rooms[$index].currentPlayers").value(room.players.size))
-                .andExpect(jsonPath("$.rooms[$index].maxPlayers").value(testRoom.maxPlayers))
-                .andExpect(jsonPath("$.rooms[$index].minPlayers").value(testRoom.minPlayers))
+                .andExpect(jsonPath("$.rooms[$index].maxPlayers").value(room.maxPlayers))
+                .andExpect(jsonPath("$.rooms[$index].minPlayers").value(room.minPlayers))
         }
     }
 
