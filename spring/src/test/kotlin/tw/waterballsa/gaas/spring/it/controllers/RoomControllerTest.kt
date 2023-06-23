@@ -126,17 +126,17 @@ class RoomControllerTest @Autowired constructor(
         val request = TestGetRoomsRequest("WAITING", 0, 10)
 
         givenWaitingRooms(userB, userC)
-        request.whenUserAVisitLobby(request, userA)
+        request.whenUserAVisitLobby(userA)
             .thenShouldHaveRooms(request)
     }
 
-    private fun TestGetRoomsRequest.whenUserAVisitLobby(request: TestGetRoomsRequest, joinUser: User): ResultActions =
+    private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
                 .with(oidcLogin().oidcUser(mockOidcUser(joinUser)))
-                .param("status", request.status)
-                .param("page", request.page.toString())
-                .param("offset", request.offset.toString())
+                .param("status", status)
+                .param("page", page.toString())
+                .param("offset", offset.toString())
         )
 
     private fun givenWaitingRooms(vararg user: User) =

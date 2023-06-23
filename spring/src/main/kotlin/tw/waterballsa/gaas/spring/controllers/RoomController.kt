@@ -141,7 +141,7 @@ class RoomController(
         val status: String,
         @field:Positive(message = "The page must be a positive integer.")
         val page: Int,
-        @field:Positive(message = "The page must be a positive integer.")
+        @field:Positive(message = "The offset must be a positive integer.")
         val offset: Int
     ) {
         fun toRequest(): GetRoomsUseCase.Request =
