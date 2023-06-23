@@ -18,11 +18,9 @@ class GetRoomsUseCase(
 
     class Request(
         val status: Room.Status,
-        private val page: Int,
-        private val offset: Int
-    ) {
-        fun toPagination(): Pagination<Any> = Pagination(page, offset)
-    }
+        val page: Int,
+        val offset: Int
+    )
 }
 
 private fun Pagination<Room>.toGetRoomEvent(): GetRoomsEvent =
@@ -35,3 +33,5 @@ private fun Pagination<Room>.toGetRoomEvent(): GetRoomsEvent =
         )
     )
 
+private fun GetRoomsUseCase.Request.toPagination(): Pagination<Any> =
+    Pagination(page, offset)

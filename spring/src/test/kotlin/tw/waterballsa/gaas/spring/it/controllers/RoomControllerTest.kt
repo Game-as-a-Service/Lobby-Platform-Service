@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import tw.waterballsa.gaas.application.model.Pagination
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
@@ -139,22 +140,28 @@ class RoomControllerTest @Autowired constructor(
                 .param("offset", offset.toString())
         )
 
-    private fun givenWaitingRooms(vararg user: User) =
-        user.forEach { givenTheHostCreatePublicRoom(it) }
+    private fun givenWaitingRooms(vararg users: User) =
+        users.forEach { givenTheHostCreatePublicRoom(it) }
 
     private fun ResultActions.thenShouldHaveRooms(request: TestGetRoomsRequest) {
         val rooms = roomRepository.findByStatus(request.toStatus(), request.toPagination())
         andExpect(status().isOk)
             .andExpect(jsonPath("$.rooms").isArray)
             .andExpect(jsonPath("$.rooms.length()").value(rooms.data.size))
-            .andExpect(jsonPath("$.rooms[0].id").exists())
-            .andExpect(jsonPath("$.rooms[0].name").exists())
-            .andExpect(jsonPath("$.rooms[0].game.id").value(testGame.id!!.value))
-            .andExpect(jsonPath("$.rooms[0].host.id").exists())
-            .andExpect(jsonPath("$.rooms[0].isLocked").value(testRoom.isLocked))
-            .andExpect(jsonPath("$.rooms[0].currentPlayers").value(rooms.data[0].players.size))
-            .andExpect(jsonPath("$.rooms[0].maxPlayers").value(testRoom.maxPlayers))
-            .andExpect(jsonPath("$.rooms[0].minPlayers").value(testRoom.minPlayers))
+            .roomExcept(rooms)
+    }
+
+    private fun ResultActions.roomExcept(rooms: Pagination<Room>) {
+        rooms.data.forEachIndexed() { index, room ->
+            andExpect(jsonPath("$.rooms[$index].id").exists())
+                .andExpect(jsonPath("$.rooms[$index].name").exists())
+                .andExpect(jsonPath("$.rooms[$index].game.id").value(testGame.id!!.value))
+                .andExpect(jsonPath("$.rooms[$index].host.id").exists())
+                .andExpect(jsonPath("$.rooms[$index].isLocked").value(testRoom.isLocked))
+                .andExpect(jsonPath("$.rooms[$index].currentPlayers").value(room.players.size))
+                .andExpect(jsonPath("$.rooms[$index].maxPlayers").value(testRoom.maxPlayers))
+                .andExpect(jsonPath("$.rooms[$index].minPlayers").value(testRoom.minPlayers))
+        }
     }
 
     private fun createRoom(request: TestCreateRoomRequest): ResultActions =
