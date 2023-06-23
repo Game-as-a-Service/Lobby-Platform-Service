@@ -38,7 +38,8 @@ class SpringRoomRepository(
 
     override fun findByStatus(status: Room.Status, page: Pagination<Any>): Pagination<Room> {
         return roomDAO.findByStatus(status, page.toPageable())
-        .map { it.toDomain() }.toPagination()
+        .map { it.toDomain() }
+        .toPagination()
     }
 
     private fun RoomData.toDomain(): Room =

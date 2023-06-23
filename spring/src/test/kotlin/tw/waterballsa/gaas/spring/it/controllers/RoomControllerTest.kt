@@ -30,7 +30,7 @@ import java.time.Instant.now
 class RoomControllerTest @Autowired constructor(
     val userRepository: UserRepository,
     val roomRepository: RoomRepository,
-    val gameRegistrationRepository: GameRegistrationRepository,
+    val gameRegistrationRepository: GameRegistrationRepository
 ) : AbstractSpringBootTest() {
 
     lateinit var testUser: User
@@ -125,17 +125,12 @@ class RoomControllerTest @Autowired constructor(
         val userC = createUser("3", "test3@mail.com", "winner1234")
         val request = TestGetRoomsRequest("WAITING", 0, 10)
 
-        givenWaitingRoomBAndWaitingRoomC(userB, userC)
-        whenUserAVisitLobbyThenVisitLobby(request, userA)
-            .thenShouldHaveRooms(2, 1)
+        givenWaitingRooms(userB, userC)
+        request.whenUserAVisitLobby(request, userA)
+            .thenShouldHaveRooms(request)
     }
 
-    private fun givenWaitingRoomBAndWaitingRoomC(user: User, otherUser: User) {
-        givenTheHostCreatePublicRoom(user)
-        givenTheHostCreatePublicRoom(otherUser)
-    }
-
-    private fun whenUserAVisitLobbyThenVisitLobby(request: TestGetRoomsRequest, joinUser: User): ResultActions =
+    private fun TestGetRoomsRequest.whenUserAVisitLobby(request: TestGetRoomsRequest, joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
                 .with(oidcLogin().oidcUser(mockOidcUser(joinUser)))
@@ -144,16 +139,20 @@ class RoomControllerTest @Autowired constructor(
                 .param("offset", request.offset.toString())
         )
 
-    private fun ResultActions.thenShouldHaveRooms(countOfRoom: Int, currentPlayers: Int) {
+    private fun givenWaitingRooms(vararg user: User) =
+        user.forEach { givenTheHostCreatePublicRoom(it) }
+
+    private fun ResultActions.thenShouldHaveRooms(request: TestGetRoomsRequest) {
+        val rooms = roomRepository.findByStatus(request.toStatus(), request.toPagination())
         andExpect(status().isOk)
             .andExpect(jsonPath("$.rooms").isArray)
-            .andExpect(jsonPath("$.rooms.length()").value(countOfRoom))
+            .andExpect(jsonPath("$.rooms.length()").value(rooms.data.size))
             .andExpect(jsonPath("$.rooms[0].id").exists())
             .andExpect(jsonPath("$.rooms[0].name").exists())
             .andExpect(jsonPath("$.rooms[0].game.id").value(testGame.id!!.value))
             .andExpect(jsonPath("$.rooms[0].host.id").exists())
             .andExpect(jsonPath("$.rooms[0].isLocked").value(testRoom.isLocked))
-            .andExpect(jsonPath("$.rooms[0].currentPlayers").value(currentPlayers))
+            .andExpect(jsonPath("$.rooms[0].currentPlayers").value(rooms.data[0].players.size))
             .andExpect(jsonPath("$.rooms[0].maxPlayers").value(testRoom.maxPlayers))
             .andExpect(jsonPath("$.rooms[0].minPlayers").value(testRoom.minPlayers))
     }
@@ -180,7 +179,6 @@ class RoomControllerTest @Autowired constructor(
     private fun givenTheHostCreateRoomWithPassword(host: User, password: String): Room {
         testRoom = createRoom(host, password)
         return testRoom
-
     }
 
     private fun Room.whenUserJoinTheRoom(user: User, password: String? = null): ResultActions {
@@ -270,5 +268,4 @@ class RoomControllerTest @Autowired constructor(
         TestJoinRoomRequest(
             password = password
         )
-
 }

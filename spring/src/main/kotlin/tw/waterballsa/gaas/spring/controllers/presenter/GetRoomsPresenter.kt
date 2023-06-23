@@ -18,7 +18,7 @@ class GetRoomsPresenter : Presenter {
     private fun GetRoomsEvent.toViewModel(): GetRoomsViewModel =
         GetRoomsViewModel(
             rooms = rooms.map { it.toRoomsViewModel() },
-            page = toPage(rooms.size)
+            page = page.toPage(rooms.size)
         )
 }
 
@@ -41,9 +41,9 @@ private fun GameRegistration.toGetRoomsView(): GetRoomsViewModel.RoomViewModel.G
 private fun Room.Player.toGetRoomsView(): GetRoomsViewModel.RoomViewModel.Player =
     GetRoomsViewModel.RoomViewModel.Player(id.value, nickname)
 
-fun GetRoomsEvent.toPage(size: Int): GetRoomsViewModel.Page =
+private fun GetRoomsEvent.Page.toPage(size: Int): GetRoomsViewModel.Page =
     GetRoomsViewModel.Page(
-        page = page.page,
-        offset = page.offset,
+        page = page,
+        offset = offset,
         total = size
     )

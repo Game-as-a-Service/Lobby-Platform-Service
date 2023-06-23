@@ -20,6 +20,7 @@ import tw.waterballsa.gaas.spring.controllers.viewmodel.GetRoomsViewModel
 import tw.waterballsa.gaas.spring.extensions.getEvent
 import javax.validation.Valid
 import javax.validation.constraints.Pattern
+import javax.validation.constraints.Positive
 
 @RestController
 @RequestMapping("/rooms")
@@ -138,9 +139,9 @@ class RoomController(
             message = "The status must be either WAITING or PLAYING."
         )
         val status: String,
-        @field:Pattern(regexp = """^\d+$""", message = "The page must be a positive integer.")
+        @field:Positive(message = "The page must be a positive integer.")
         val page: Int,
-        @field:Pattern(regexp = """^\d+$""", message = "The page must be a positive integer.")
+        @field:Positive(message = "The page must be a positive integer.")
         val offset: Int
     ) {
         fun toRequest(): GetRoomsUseCase.Request =

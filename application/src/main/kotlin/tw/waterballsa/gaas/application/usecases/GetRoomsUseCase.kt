@@ -1,6 +1,5 @@
 package tw.waterballsa.gaas.application.usecases
 
-import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.application.model.Pagination
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.domain.Room
@@ -10,15 +9,12 @@ import javax.inject.Named
 @Named
 class GetRoomsUseCase(
     private val roomRepository: RoomRepository,
-    private val eventBus: EventBus
 ) {
 
     fun execute(request: Request, presenter: Presenter) =
-        roomRepository.findByStatus(request.status, request.toPagination()).toGetRoomEvent()
-            .also { event ->
-                presenter.present(event)
-                eventBus.broadcast(event)
-            }
+        roomRepository.findByStatus(request.status, request.toPagination())
+            .toGetRoomEvent()
+            .also { presenter.present(it) }
 
     class Request(
         val status: Room.Status,
