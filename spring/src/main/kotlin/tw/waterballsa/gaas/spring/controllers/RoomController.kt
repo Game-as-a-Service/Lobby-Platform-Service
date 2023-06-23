@@ -6,23 +6,28 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.web.bind.annotation.*
 import tw.waterballsa.gaas.application.usecases.CreateRoomUsecase
+import tw.waterballsa.gaas.application.usecases.GetRoomsUseCase
+import tw.waterballsa.gaas.application.usecases.JoinRoomUsecase
 import tw.waterballsa.gaas.application.usecases.Presenter
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.events.CreatedRoomEvent
 import tw.waterballsa.gaas.events.DomainEvent
+import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.spring.controllers.RoomController.CreateRoomViewModel
+import tw.waterballsa.gaas.spring.controllers.presenter.GetRoomsPresenter
+import tw.waterballsa.gaas.spring.controllers.viewmodel.GetRoomsViewModel
 import tw.waterballsa.gaas.spring.extensions.getEvent
 import javax.validation.Valid
 import javax.validation.constraints.Pattern
-import tw.waterballsa.gaas.application.usecases.JoinRoomUsecase
-import tw.waterballsa.gaas.exceptions.PlatformException
+import javax.validation.constraints.Positive
 
 @RestController
 @RequestMapping("/rooms")
 class RoomController(
     private val createRoomUsecase: CreateRoomUsecase,
-    private val joinRoomUsecase: JoinRoomUsecase
+    private val joinRoomUsecase: JoinRoomUsecase,
+    private val getRoomsUseCase: GetRoomsUseCase
 ) {
     @PostMapping
     fun createRoom(
@@ -45,6 +50,18 @@ class RoomController(
         val joinerId = principal.subject ?: throw PlatformException("User id must exist.")
         joinRoomUsecase.execute(request.toRequest(roomId, joinerId))
         return JoinRoomViewModel("success")
+    }
+
+    @GetMapping
+    fun getRooms(
+        @RequestParam status: String,
+        @RequestParam page: Int,
+        @RequestParam offset: Int
+    ): GetRoomsViewModel {
+        val request = GetRoomsRequest(status, page, offset)
+        val presenter = GetRoomsPresenter()
+        getRoomsUseCase.execute(request.toRequest(), presenter)
+        return presenter.viewModel
     }
 
     class CreateRoomRequest(
@@ -115,6 +132,25 @@ class RoomController(
     data class JoinRoomViewModel(
         val message: String
     )
+
+    class GetRoomsRequest(
+        @field:Pattern(
+            regexp = """^(WAITING|PLAYING)$""",
+            message = "The status must be either WAITING or PLAYING."
+        )
+        val status: String,
+        @field:Positive(message = "The page must be a positive number.")
+        val page: Int,
+        @field:Positive(message = "The offset must be a positive number.")
+        val offset: Int
+    ) {
+        fun toRequest(): GetRoomsUseCase.Request =
+            GetRoomsUseCase.Request(
+                status = Room.Status.valueOf(status),
+                page = page,
+                offset = offset
+            )
+    }
 }
 
 private fun GameRegistration.toView(): CreateRoomViewModel.Game =

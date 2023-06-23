@@ -9,9 +9,11 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin
 import org.springframework.test.web.servlet.ResultActions
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import tw.waterballsa.gaas.application.model.Pagination
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
@@ -21,6 +23,7 @@ import tw.waterballsa.gaas.domain.Room.Player
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 import tw.waterballsa.gaas.spring.models.TestCreateRoomRequest
+import tw.waterballsa.gaas.spring.models.TestGetRoomsRequest
 import tw.waterballsa.gaas.spring.models.TestJoinRoomRequest
 import java.time.Instant.now
 
@@ -81,7 +84,6 @@ class RoomControllerTest @Autowired constructor(
         val request = createRoomRequest("1234")
         createRoom(request)
             .thenCreateRoomSuccessfully(request)
-
         createRoom(request)
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value("A user can only create one room at a time."))
@@ -117,6 +119,51 @@ class RoomControllerTest @Autowired constructor(
             .thenJoinRoomSuccessfully()
     }
 
+    @Test
+    fun givenWaitingRoomBAndWaitingRoomC_WhenUserAVisitLobby_ThenShouldHaveRoomBAndRoomC() {
+        val userA = testUser
+        val userB = createUser("2", "test2@mail.com", "winner1122")
+        val userC = createUser("3", "test3@mail.com", "winner1234")
+        val request = TestGetRoomsRequest("WAITING", 0, 10)
+
+        givenWaitingRooms(userB, userC)
+        request.whenUserAVisitLobby(userA)
+            .thenShouldHaveRooms(request)
+    }
+
+    private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
+        mockMvc.perform(
+            get("/rooms")
+                .with(oidcLogin().oidcUser(mockOidcUser(joinUser)))
+                .param("status", status)
+                .param("page", page.toString())
+                .param("offset", offset.toString())
+        )
+
+    private fun givenWaitingRooms(vararg users: User) =
+        users.forEach { givenTheHostCreatePublicRoom(it) }
+
+    private fun ResultActions.thenShouldHaveRooms(request: TestGetRoomsRequest) {
+        val rooms = roomRepository.findByStatus(request.toStatus(), request.toPagination())
+        andExpect(status().isOk)
+            .andExpect(jsonPath("$.rooms").isArray)
+            .andExpect(jsonPath("$.rooms.length()").value(rooms.data.size))
+            .roomExcept(rooms)
+    }
+
+    private fun ResultActions.roomExcept(rooms: Pagination<Room>) {
+        rooms.data.forEachIndexed() { index, room ->
+            andExpect(jsonPath("$.rooms[$index].id").value(room.roomId!!.value))
+                .andExpect(jsonPath("$.rooms[$index].name").value(room.name))
+                .andExpect(jsonPath("$.rooms[$index].game.id").value(room.game.id!!.value))
+                .andExpect(jsonPath("$.rooms[$index].host.id").value(room.host.id.value))
+                .andExpect(jsonPath("$.rooms[$index].isLocked").value(room.isLocked))
+                .andExpect(jsonPath("$.rooms[$index].currentPlayers").value(room.players.size))
+                .andExpect(jsonPath("$.rooms[$index].maxPlayers").value(room.maxPlayers))
+                .andExpect(jsonPath("$.rooms[$index].minPlayers").value(room.minPlayers))
+        }
+    }
+
     private fun createRoom(request: TestCreateRoomRequest): ResultActions =
         mockMvc.perform(
             post("/rooms")
@@ -133,17 +180,16 @@ class RoomControllerTest @Autowired constructor(
 
     private fun givenTheHostCreatePublicRoom(host: User): Room {
         testRoom = createRoom(host)
-        return  testRoom
+        return testRoom
     }
 
     private fun givenTheHostCreateRoomWithPassword(host: User, password: String): Room {
         testRoom = createRoom(host, password)
         return testRoom
-
     }
 
-    private fun Room.whenUserJoinTheRoom(user: User, password: String? = null):ResultActions{
-        val request = joinRoomRequest(password);
+    private fun Room.whenUserJoinTheRoom(user: User, password: String? = null): ResultActions {
+        val request = joinRoomRequest(password)
         val joinUser = mockOidcUser(user)
         return joinRoom(request, joinUser)
     }
@@ -191,7 +237,7 @@ class RoomControllerTest @Autowired constructor(
         )
     )
 
-    private fun createRoom(host : User, password: String? = null): Room = roomRepository.createRoom(
+    private fun createRoom(host: User, password: String? = null): Room = roomRepository.createRoom(
         Room(
             game = testGame,
             host = Player(Player.Id(host.id!!.value), host.nickname),
@@ -229,5 +275,4 @@ class RoomControllerTest @Autowired constructor(
         TestJoinRoomRequest(
             password = password
         )
-
 }
