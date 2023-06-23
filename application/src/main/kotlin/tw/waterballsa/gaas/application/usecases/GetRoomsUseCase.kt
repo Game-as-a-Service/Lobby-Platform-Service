@@ -19,6 +19,10 @@ class GetRoomsUseCase(
         val page: Int,
         val offset: Int
     )
+
+    interface GetRoomsPresenter {
+        fun present(rooms: Pagination<Room>)
+    }
 }
 
 private fun GetRoomsUseCase.Request.toPagination(): Pagination<Any> =

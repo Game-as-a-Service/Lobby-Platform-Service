@@ -1,12 +1,12 @@
 package tw.waterballsa.gaas.spring.controllers.presenter
 
 import tw.waterballsa.gaas.application.model.Pagination
-import tw.waterballsa.gaas.application.usecases.GetRoomsPresenter
+import tw.waterballsa.gaas.application.usecases.GetRoomsUseCase
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.spring.controllers.viewmodel.GetRoomsViewModel
 
-class GetRoomsPresenter : GetRoomsPresenter {
+class GetRoomsPresenter : GetRoomsUseCase.GetRoomsPresenter {
     lateinit var viewModel: GetRoomsViewModel
         private set
 
