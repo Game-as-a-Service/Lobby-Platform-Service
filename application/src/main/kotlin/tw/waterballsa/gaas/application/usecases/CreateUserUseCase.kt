@@ -4,7 +4,7 @@ import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.events.UserCreatedEvent
-import java.util.UUID
+import java.util.UUID.randomUUID
 import javax.inject.Named
 
 @Named
@@ -22,7 +22,7 @@ class CreateUserUseCase(
                 eventBus.broadcast(event)
             }
 
-            user.doesNotHaveIdentity(request.identityProviderId) -> {
+            !user.hasIdentity(request.identityProviderId) -> {
                 user = user.addIdentity(request.identityProviderId)
                 userRepository.update(user)
             }
@@ -32,13 +32,13 @@ class CreateUserUseCase(
     class Request(
         val email: String,
         val identityProviderId: String,
-    ) {
-        fun toUser(): User = User(
-            email = email,
-            nickname = "user_${UUID.randomUUID()}",
-            identities = listOf(identityProviderId)
-        )
-    }
+    )
+
+    private fun Request.toUser(): User = User(
+        email = email,
+        nickname = "user_${randomUUID()}",
+        identities = listOf(identityProviderId)
+    )
 }
 
 fun User.toUserCreatedEvent(): UserCreatedEvent = UserCreatedEvent(id!!, email, nickname)

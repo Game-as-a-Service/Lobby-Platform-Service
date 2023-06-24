@@ -8,9 +8,9 @@ import tw.waterballsa.gaas.domain.User
 class UserData(
     @Id
     var id: String? = null,
-    var email: String? = null,
-    var nickname: String? = null,
-    var identities: List<String>? = null
+    val email: String? = null,
+    val nickname: String? = null,
+    val identities: List<String>? = null,
 ) {
 
     fun toDomain(): User =

@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
@@ -21,7 +22,12 @@ abstract class AbstractSpringBootTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
 
-    protected val mockUser: User = mockDefaultUser()
+    protected val mockUser: User = User(
+        User.Id("1"),
+        "user@example.com",
+        "user-437b200d-da9c-449e-b147-114b4822b5aa",
+        listOf("google-oauth2|102527320242660434908")
+    )
 
     protected fun <T> ResultActions.getBody(type: Class<T>): T =
         andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
@@ -34,17 +40,13 @@ abstract class AbstractSpringBootTest {
     protected fun MockHttpServletRequestBuilder.withJson(request: Any): MockHttpServletRequestBuilder =
         contentType(APPLICATION_JSON).content(request.toJson())
 
-    protected fun mockDefaultUser(): User =
-        User(User.Id("1"),
-            "user@example.com",
-            "user-437b200d-da9c-449e-b147-114b4822b5aa",
-            listOf("google-oauth2|102527320242660434908")
-        )
+    protected fun MockHttpServletRequestBuilder.withJwt(jwt: Jwt): MockHttpServletRequestBuilder =
+        with(jwt().jwt(jwt))
 
-    protected fun mockJwt(subject: String, email: String): Jwt =
-        Jwt.withTokenValue("mock-token")
-            .header("alg", "none")
-            .subject(subject)
-            .claim("email", email)
-            .build()
+    protected fun MockHttpServletRequestBuilder.withIdentityProviderId(identityProviderId: String): MockHttpServletRequestBuilder =
+        with(jwt().jwt {
+            it.subject(identityProviderId)
+            it.claim("email", mockUser.email)
+        })
+
 }

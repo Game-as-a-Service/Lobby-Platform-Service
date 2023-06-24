@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.oauth2.jwt.Jwt
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -17,9 +16,8 @@ class OAuth2ControllerTest @Autowired constructor(
     val userRepository: UserRepository,
 ) : AbstractSpringBootTest() {
 
-    val email = "user@example.com"
-    val googleIdentityProviderId = "google-oauth2|102527320242660434908"
-    val discordIdentityProviderId = "discord|102527320242660434908"
+    private final val googleIdentityProviderId = "google-oauth2|102527320242660434908"
+    private final val discordIdentityProviderId = "discord|102527320242660434908"
 
     @BeforeEach
     fun cleanUp() {
@@ -27,55 +25,47 @@ class OAuth2ControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenInvalidJwtSubject_whenUserLogin_thenShouldLoginFailed() {
-        givenInvalidJwt()
-            .whenUserLogin()
+    fun whenUserLoginWithInvalidJwt_thenShouldLoginFailed() {
+        whenUserLoginWithInvalidJwt()
             .thenShouldLoginFailed()
     }
 
     @Test
-    fun givenOldEmail_andOldIdentityProviderId_whenUserLogin_thenLoginSuccessfully() {
-        givenGoogleOAuth2Jwt()
-            .whenUserLogin()
+    fun givenUserHasLoggedInViaGoogle_whenUserLoginWithGoogleOAuth2Jwt_thenLoginSuccessfully() {
+        givenUserHasLoggedInViaGoogle()
+        whenUserLogin(googleIdentityProviderId)
             .thenLoginSuccessfully()
     }
 
     @Test
-    fun givenOldEmail_andNewIdentityProviderId_whenUserLogin_thenSaveNewIdentityProviderId() {
-        givenDiscordOAuth2Jwt()
-            .whenUserLogin()
-            .thenSaveNewIdentityProviderId()
+    fun givenUserHasLoggedInViaGoogle_whenUserLoginWithDiscordOAuth2Jwt_thenUserHaveNewIdentity() {
+        givenUserHasLoggedInViaGoogle()
+        whenUserLogin(discordIdentityProviderId)
+            .thenUserHaveNewIdentity()
     }
 
     @Test
-    fun givenNewEmail_andNewIdentityProviderId_whenUserLogin_thenCreateNewUser() {
-        givenJwt(googleIdentityProviderId, email)
-            .whenUserLogin()
+    fun whenUserLoginWithNewIdentity_thenCreateNewUser() {
+        whenUserLogin(googleIdentityProviderId)
             .thenCreateNewUser()
     }
 
-    private fun givenInvalidJwt(): Jwt =
-        Jwt("invalid_token",
+    private fun givenUserHasLoggedInViaGoogle(): User =
+        userRepository.createUser(mockUser)
+
+    private fun whenUserLoginWithInvalidJwt(): ResultActions {
+        val invalidJwt = Jwt(
+            "invalid_token",
             null,
             null,
             mapOf("alg" to "none"),
-            mapOf("no_email" to "none"))
-
-    private fun givenGoogleOAuth2Jwt(): Jwt {
-        userRepository.createUser(mockUser)
-        return givenJwt(googleIdentityProviderId, mockUser.email)
+            mapOf("no_email" to "none")
+        )
+        return mockMvc.perform(get("/").withJwt(invalidJwt))
     }
 
-    private fun givenDiscordOAuth2Jwt(): Jwt {
-        userRepository.createUser(mockUser)
-        return givenJwt(discordIdentityProviderId, mockUser.email)
-    }
-
-    private fun givenJwt(identityProviderId: String, email: String): Jwt =
-        mockJwt(identityProviderId, email)
-
-    private fun Jwt.whenUserLogin(): ResultActions =
-        mockMvc.perform(get("/").with(jwt().jwt(this)))
+    private fun whenUserLogin(identityProviderId: String): ResultActions =
+        mockMvc.perform(get("/").withIdentityProviderId(identityProviderId))
 
     private fun ResultActions.thenShouldLoginFailed() {
         this.andExpect(status().isBadRequest)
@@ -85,16 +75,16 @@ class OAuth2ControllerTest @Autowired constructor(
         this.andExpect(status().isOk)
     }
 
-    private fun ResultActions.thenSaveNewIdentityProviderId() {
+    private fun ResultActions.thenUserHaveNewIdentity() {
         thenLoginSuccessfully()
-        userRepository.findByEmail(email)!!
+        userRepository.findByEmail(mockUser.email)!!
             .thenSaveIdentityProviderId(googleIdentityProviderId)
             .thenSaveIdentityProviderId(discordIdentityProviderId)
     }
 
     private fun ResultActions.thenCreateNewUser() {
         thenLoginSuccessfully()
-        userRepository.findByEmail(email)!!
+        userRepository.findByEmail(mockUser.email)!!
             .thenCreateNickname()
             .thenSaveIdentityProviderId(googleIdentityProviderId)
     }

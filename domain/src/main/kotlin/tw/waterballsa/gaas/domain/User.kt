@@ -13,10 +13,6 @@ class User(
         return identities.contains(identityProviderId)
     }
 
-    fun doesNotHaveIdentity(identityProviderId: String): Boolean {
-        return !hasIdentity(identityProviderId)
-    }
-
     fun addIdentity(identityProviderId: String): User =
         User(id, email, nickname, identities + identityProviderId)
 }
