@@ -22,18 +22,18 @@ abstract class AbstractSpringBootTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
 
-    protected val mockUser: User = User(
+    final val mockUser: User = User(
         User.Id("1"),
         "user@example.com",
         "user-437b200d-da9c-449e-b147-114b4822b5aa",
         mutableListOf("google-oauth2|102527320242660434908")
     )
 
-    protected fun mockJwt(subject: String, email: String): Jwt =
+    final fun String.toJwt(): Jwt =
         Jwt.withTokenValue("mock-token")
             .header("alg", "none")
-            .subject(subject)
-            .claim("email", email)
+            .subject(this)
+            .claim("email", mockUser.email)
             .build()
 
     protected fun <T> ResultActions.getBody(type: Class<T>): T =
@@ -49,11 +49,5 @@ abstract class AbstractSpringBootTest {
 
     protected fun MockHttpServletRequestBuilder.withJwt(jwt: Jwt): MockHttpServletRequestBuilder =
         with(jwt().jwt(jwt))
-
-    protected fun MockHttpServletRequestBuilder.withIdentityProviderId(identityProviderId: String): MockHttpServletRequestBuilder =
-        with(jwt().jwt {
-            it.subject(identityProviderId)
-            it.claim("email", mockUser.email)
-        })
 
 }
