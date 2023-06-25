@@ -11,6 +11,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tw.waterballsa.gaas.application.model.Pagination
@@ -129,6 +130,29 @@ class RoomControllerTest @Autowired constructor(
         givenWaitingRooms(userB, userC)
         request.whenUserAVisitLobby(userA)
             .thenShouldHaveRooms(request)
+    }
+
+    @Test
+    fun givenExistingRoom_RoomOwnerCloseRoom_ShouldSuccess() {
+        val host = testUser
+        val room = givenTheHostCreatePublicRoom(host)
+
+        mockMvc.perform(
+            delete("/rooms/${room.roomId!!.value}")
+                .with(oidcLogin().oidcUser(mockOidcUser(host)))
+        ).andExpect(status().isNoContent)
+    }
+
+    @Test
+    fun givenExistingRoom_NonRoomOwnerCloseRoom_ShouldFail() {
+        val host = testUser
+        val room = givenTheHostCreatePublicRoom(host)
+        val userA = createUser("2", "test2@mail.com", "not_a_room_owner")
+
+        mockMvc.perform(
+            delete("/rooms/${room.roomId!!.value}")
+                .with(oidcLogin().oidcUser(mockOidcUser(userA)))
+        ).andExpect(status().isBadRequest)
     }
 
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =

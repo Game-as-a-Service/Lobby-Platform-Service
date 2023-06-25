@@ -5,10 +5,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.web.bind.annotation.*
-import tw.waterballsa.gaas.application.usecases.CreateRoomUsecase
-import tw.waterballsa.gaas.application.usecases.GetRoomsUseCase
-import tw.waterballsa.gaas.application.usecases.JoinRoomUsecase
-import tw.waterballsa.gaas.application.usecases.Presenter
+import tw.waterballsa.gaas.application.usecases.*
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.events.CreatedRoomEvent
@@ -27,7 +24,9 @@ import javax.validation.constraints.Positive
 class RoomController(
     private val createRoomUsecase: CreateRoomUsecase,
     private val joinRoomUsecase: JoinRoomUsecase,
-    private val getRoomsUseCase: GetRoomsUseCase
+    private val getRoomsUseCase: GetRoomsUseCase,
+    private val closeRoomsUseCase: CloseRoomUsecase,
+
 ) {
     @PostMapping
     fun createRoom(
@@ -62,6 +61,24 @@ class RoomController(
         val presenter = GetRoomsPresenter()
         getRoomsUseCase.execute(request.toRequest(), presenter)
         return presenter.viewModel
+    }
+
+    @DeleteMapping("/{roomId}")
+    @ResponseStatus(NO_CONTENT)
+    fun closeRoom(
+        @AuthenticationPrincipal principal: OidcUser,
+        @PathVariable roomId: String,
+    ) {
+        val joinerId = principal.subject ?: throw PlatformException("User id must exist.")
+        closeRoomsUseCase.execute(CloseRoomRequest(roomId).toRequest(joinerId))
+    }
+
+    class CloseRoomRequest(private val roomId: String) {
+        fun toRequest(userId: String): CloseRoomUsecase.Request =
+            CloseRoomUsecase.Request(
+                roomId = roomId,
+                userId = userId,
+            )
     }
 
     class CreateRoomRequest(
