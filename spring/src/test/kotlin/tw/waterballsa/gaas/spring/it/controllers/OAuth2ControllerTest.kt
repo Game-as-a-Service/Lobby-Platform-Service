@@ -52,7 +52,7 @@ class OAuth2ControllerTest @Autowired constructor(
     fun givenUserHasLoggedInViaGoogle_whenUserLoginWithDiscordOAuth2Jwt_thenUserHaveNewIdentity() {
         givenUserHasLoggedInViaGoogle()
         whenUserLogin(discordOAuth2Jwt)
-            .thenUserHaveNewIdentity()
+            .thenUserHaveNewIdentity(googleIdentityProviderId, discordIdentityProviderId)
     }
 
     @Test
@@ -75,10 +75,10 @@ class OAuth2ControllerTest @Autowired constructor(
         andExpect(status().isOk)
     }
 
-    private fun ResultActions.thenUserHaveNewIdentity() {
+    private fun ResultActions.thenUserHaveNewIdentity(vararg identityProviderIds: String) {
         thenLoginSuccessfully()
         userRepository.findByEmail(mockUser.email)
-            ?.thenWouldHaveIdentityProviderIds(googleIdentityProviderId, discordIdentityProviderId)
+            ?.thenWouldHaveIdentityProviderIds(*identityProviderIds)
     }
 
     private fun ResultActions.thenCreateNewUser() {

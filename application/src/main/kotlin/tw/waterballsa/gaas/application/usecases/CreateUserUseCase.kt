@@ -15,14 +15,16 @@ class CreateUserUseCase(
     fun execute(request: Request) {
         val user = userRepository.findByEmail(request.email)
 
-        when {
-            user == null -> request.toUser().createUser()
-            !user.hasIdentity(request.identityProviderId) -> user.addUserIdentity(request.identityProviderId)
+        with (request) {
+            when {
+                user == null -> createUser()
+                !user.hasIdentity(identityProviderId) -> user.addUserIdentity(identityProviderId)
+            }
         }
     }
 
-    private fun User.createUser() {
-        val user = userRepository.createUser(this)
+    private fun Request.createUser() {
+        val user = userRepository.createUser(toUser())
         val event = user.toUserCreatedEvent()
         eventBus.broadcast(event)
     }
