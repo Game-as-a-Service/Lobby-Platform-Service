@@ -23,7 +23,7 @@ class CloseRoomUsecase(private val roomRepository: RoomRepository) {
 
     private fun Room.validateRoomHost(userId: Room.Player.Id) {
         if (host.id != userId) {
-            throw PlatformException("not a host")
+            throw PlatformException("Player($userId) is not the host")
         }
     }
 
