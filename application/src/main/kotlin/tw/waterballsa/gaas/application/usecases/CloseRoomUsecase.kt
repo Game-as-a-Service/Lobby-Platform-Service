@@ -2,7 +2,7 @@ package tw.waterballsa.gaas.application.usecases
 
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.domain.Room
-import tw.waterballsa.gaas.exceptions.NotFoundException
+import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.exceptions.PlatformException
 import javax.inject.Named
 
@@ -22,7 +22,7 @@ class CloseRoomUsecase(private val roomRepository: RoomRepository) {
 
     private fun findRoomById(roomId: Room.Id) =
         roomRepository.findById(roomId)
-            ?: throw NotFoundException.notFound(Room::class).id(roomId)
+            ?: throw notFound(Room::class).id(roomId)
 
     private fun Room.validateRoomHost(userId: Room.Player.Id) {
         if (host.id != userId)
