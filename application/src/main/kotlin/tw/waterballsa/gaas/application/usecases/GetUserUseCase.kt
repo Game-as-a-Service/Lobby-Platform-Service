@@ -9,6 +9,17 @@ import javax.inject.Named
 class GetUserUseCase(
     private val userRepository: UserRepository,
 ) {
-    fun execute(id: User.Id): User =
-        userRepository.findById(id) ?: throw notFound(User::class).id(id)
+    fun execute(request: Request, presenter: Presenter) {
+        with(request) {
+            val user = userRepository.findByEmail(email)
+                ?: throw notFound(User::class).identifyBy("email", email)
+            presenter.present(user)
+        }
+    }
+
+    class Request(val email: String)
+
+    interface Presenter {
+        fun present(user: User)
+    }
 }
