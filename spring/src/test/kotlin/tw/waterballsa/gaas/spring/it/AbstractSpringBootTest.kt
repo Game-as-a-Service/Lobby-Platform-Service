@@ -29,6 +29,13 @@ abstract class AbstractSpringBootTest {
         mutableListOf("google-oauth2|102527320242660434908")
     )
 
+    protected fun mockJwt(subject: String, email: String): Jwt =
+        Jwt.withTokenValue("mock-token")
+            .header("alg", "none")
+            .subject(subject)
+            .claim("email", email)
+            .build()
+
     protected fun <T> ResultActions.getBody(type: Class<T>): T =
         andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
 

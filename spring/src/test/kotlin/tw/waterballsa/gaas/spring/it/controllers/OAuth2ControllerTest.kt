@@ -19,6 +19,14 @@ class OAuth2ControllerTest @Autowired constructor(
     private final val googleIdentityProviderId = "google-oauth2|102527320242660434908"
     private final val discordIdentityProviderId = "discord|102527320242660434908"
 
+    val invalidJwt = Jwt(
+        "invalid_token",
+        null,
+        null,
+        mapOf("alg" to "none"),
+        mapOf("no_email" to "none")
+    )
+
     @BeforeEach
     fun cleanUp() {
         userRepository.deleteAll()
@@ -26,46 +34,35 @@ class OAuth2ControllerTest @Autowired constructor(
 
     @Test
     fun whenUserLoginWithInvalidJwt_thenShouldLoginFailed() {
-        whenUserLoginWithInvalidJwt()
+        whenUserLogin(invalidJwt)
             .thenShouldLoginFailed()
     }
 
     @Test
     fun givenUserHasLoggedInViaGoogle_whenUserLoginWithGoogleOAuth2Jwt_thenLoginSuccessfully() {
         givenUserHasLoggedInViaGoogle()
-        whenUserLogin(googleIdentityProviderId)
+        whenUserLogin(mockJwt(googleIdentityProviderId, mockUser.email))
             .thenLoginSuccessfully()
     }
 
     @Test
     fun givenUserHasLoggedInViaGoogle_whenUserLoginWithDiscordOAuth2Jwt_thenUserHaveNewIdentity() {
         givenUserHasLoggedInViaGoogle()
-        whenUserLogin(discordIdentityProviderId)
+        whenUserLogin(mockJwt(discordIdentityProviderId, mockUser.email))
             .thenUserHaveNewIdentity()
     }
 
     @Test
-    fun whenUserLoginWithNewIdentity_thenCreateNewUser() {
-        whenUserLogin(googleIdentityProviderId)
+    fun whenUserLoginAtTheFirstTime_thenCreateNewUser() {
+        whenUserLogin(mockJwt(googleIdentityProviderId, mockUser.email))
             .thenCreateNewUser()
     }
 
     private fun givenUserHasLoggedInViaGoogle(): User =
         userRepository.createUser(mockUser)
 
-    private fun whenUserLoginWithInvalidJwt(): ResultActions {
-        val invalidJwt = Jwt(
-            "invalid_token",
-            null,
-            null,
-            mapOf("alg" to "none"),
-            mapOf("no_email" to "none")
-        )
-        return mockMvc.perform(get("/").withJwt(invalidJwt))
-    }
-
-    private fun whenUserLogin(identityProviderId: String): ResultActions =
-        mockMvc.perform(get("/").withIdentityProviderId(identityProviderId))
+    private fun whenUserLogin(jwt: Jwt): ResultActions =
+        mockMvc.perform(get("/").withJwt(jwt))
 
     private fun ResultActions.thenShouldLoginFailed() {
         this.andExpect(status().isBadRequest)
@@ -84,9 +81,9 @@ class OAuth2ControllerTest @Autowired constructor(
 
     private fun ResultActions.thenCreateNewUser() {
         thenLoginSuccessfully()
-        userRepository.findByEmail(mockUser.email)!!
-            .thenCreateNickname()
-            .thenSaveIdentityProviderId(googleIdentityProviderId)
+        userRepository.findByEmail(mockUser.email)
+            ?.thenNickNameShouldBeRandomName()
+            ?.thenSaveIdentityProviderId(googleIdentityProviderId)
     }
 
     private fun User.thenSaveIdentityProviderId(identityProviderId: String): User {
@@ -96,7 +93,7 @@ class OAuth2ControllerTest @Autowired constructor(
         return this
     }
 
-    private fun User.thenCreateNickname(): User {
+    private fun User.thenNickNameShouldBeRandomName(): User {
         assertThat(this).isNotNull
         assertThat(nickname).startsWith("user_")
         return this
