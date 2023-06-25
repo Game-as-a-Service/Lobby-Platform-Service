@@ -22,7 +22,7 @@ class OAuth2ControllerTest @Autowired constructor(
     private final val googleOAuth2Jwt = googleIdentityProviderId.toJwt()
     private final val discordOAuth2Jwt = discordIdentityProviderId.toJwt()
 
-    val invalidJwt = Jwt(
+    private final val invalidJwt = Jwt(
         "invalid_token",
         null,
         null,
@@ -84,17 +84,19 @@ class OAuth2ControllerTest @Autowired constructor(
     private fun ResultActions.thenCreateNewUser() {
         thenLoginSuccessfully()
         userRepository.findByEmail(mockUser.email)
-            ?.thenNickNameShouldBeRandomName()
-            ?.thenWouldHaveIdentityProviderIds(googleIdentityProviderId)
+            .thenNickNameShouldBeRandomName()
+            .thenWouldHaveIdentityProviderIds(googleIdentityProviderId)
     }
 
-    private fun User.thenWouldHaveIdentityProviderIds(vararg identityProviderIds: String): User {
-        assertThat(identities).containsAll(identityProviderIds.toList())
+    private fun User?.thenWouldHaveIdentityProviderIds(vararg identityProviderIds: String): User {
+        assertThat(this).isNotNull
+        assertThat(this!!.identities).containsAll(identityProviderIds.toList())
         return this
     }
 
-    private fun User.thenNickNameShouldBeRandomName(): User {
-        assertThat(nickname).startsWith("user_")
+    private fun User?.thenNickNameShouldBeRandomName(): User {
+        assertThat(this).isNotNull
+        assertThat(this!!.nickname).startsWith("user_")
         return this
     }
 

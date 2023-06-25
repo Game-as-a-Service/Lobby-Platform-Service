@@ -16,11 +16,8 @@ class CreateUserUseCase(
         val user = userRepository.findByEmail(request.email)
 
         when {
-            user == null ->
-                request.toUser().createUser()
-
-            !user.hasIdentity(request.identityProviderId) ->
-                user.addUserIdentity(request.identityProviderId)
+            user == null -> request.toUser().createUser()
+            !user.hasIdentity(request.identityProviderId) -> user.addUserIdentity(request.identityProviderId)
         }
     }
 

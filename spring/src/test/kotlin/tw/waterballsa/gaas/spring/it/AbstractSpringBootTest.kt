@@ -22,14 +22,14 @@ abstract class AbstractSpringBootTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
 
-    final val mockUser: User = User(
+    protected final val mockUser: User = User(
         User.Id("1"),
         "user@example.com",
         "user-437b200d-da9c-449e-b147-114b4822b5aa",
         mutableListOf("google-oauth2|102527320242660434908")
     )
 
-    final fun String.toJwt(): Jwt =
+    protected final fun String.toJwt(): Jwt =
         Jwt.withTokenValue("mock-token")
             .header("alg", "none")
             .subject(this)
