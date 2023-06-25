@@ -10,9 +10,11 @@ import javax.inject.Named
 @Named
 class CloseRoomUsecase(private val roomRepository: RoomRepository) {
     fun execute(request: Request) {
-        val room = findRoomById(Room.Id(request.roomId))
-        room.validateRoomHost(Room.Player.Id(request.userId))
-        room.deleteRoom()
+        with(request) {
+            val room = findRoomById(Room.Id(roomId))
+            room.validateRoomHost(Room.Player.Id(userId))
+            room.deleteRoom()
+        }
     }
 
     data class Request(
