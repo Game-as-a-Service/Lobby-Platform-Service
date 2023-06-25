@@ -133,7 +133,7 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenExistingRoom_RoomHostCloseRoom_ShouldSuccess() {
+    fun givenHostCreatedRoom_whenHostCloseRoom_ShouldSuccess() {
         val host = testUser
         val room = givenTheHostCreatePublicRoom(host)
 
@@ -144,7 +144,7 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenExistingRoom_NonRoomHostCloseRoom_ShouldFail() {
+    fun givenHostCreatedRoom_whenNonHostPlayerCloseRoom_ShouldFail() {
         val host = testUser
         val room = givenTheHostCreatePublicRoom(host)
         val userA = createUser("2", "test2@mail.com", "not_a_room_host")
