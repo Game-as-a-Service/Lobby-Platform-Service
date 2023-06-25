@@ -133,7 +133,7 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenExistingRoom_RoomOwnerCloseRoom_ShouldSuccess() {
+    fun givenExistingRoom_RoomHostCloseRoom_ShouldSuccess() {
         val host = testUser
         val room = givenTheHostCreatePublicRoom(host)
 
@@ -144,10 +144,10 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenExistingRoom_NonRoomOwnerCloseRoom_ShouldFail() {
+    fun givenExistingRoom_NonRoomHostCloseRoom_ShouldFail() {
         val host = testUser
         val room = givenTheHostCreatePublicRoom(host)
-        val userA = createUser("2", "test2@mail.com", "not_a_room_owner")
+        val userA = createUser("2", "test2@mail.com", "not_a_room_host")
 
         mockMvc.perform(
             delete("/rooms/${room.roomId!!.value}")
