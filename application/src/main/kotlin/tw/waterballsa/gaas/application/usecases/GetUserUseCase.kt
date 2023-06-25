@@ -6,15 +6,14 @@ import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import javax.inject.Named
 
 @Named
-class GetUserMeUseCase(
+class GetUserUseCase(
     private val userRepository: UserRepository,
 ) {
     fun execute(request: Request, presenter: Presenter) {
         with(request) {
-            when (val user = userRepository.findByEmail(email)) {
-                null -> throw notFound(User::class).identifyBy("email", email)
-                else -> presenter.present(user)
-            }
+            val user = userRepository.findByEmail(email)
+                ?: throw notFound(User::class).identifyBy("email", email)
+            presenter.present(user)
         }
     }
 

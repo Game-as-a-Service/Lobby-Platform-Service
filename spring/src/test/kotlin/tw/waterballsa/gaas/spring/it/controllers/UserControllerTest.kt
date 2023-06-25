@@ -21,26 +21,26 @@ class UserControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenUserCreated_whenGetUserMe_thenShouldReturnUserInfo() {
-        givenUserCreated()
-            .whenGetUserMe()
+    fun givenUserHasLoggedIn_whenGetUserSelf_thenGetUserSuccessfully() {
+        givenUserHasLoggedIn()
+            .whenGetUserSelf()
             .thenGetUserSuccessfully()
     }
 
     @Test
-    fun givenUserNotCreated_whenGetUserMe_thenUserNotFound() {
-        givenUserNotCreated()
-            .whenGetUserMe()
+    fun givenUserDoesNotLogIn_whenGetUserSelf_thenUserNotFound() {
+        givenUserDoesNotLogIn()
+            .whenGetUserSelf()
             .thenUserNotFound()
     }
 
-    private fun givenUserNotCreated(): User = this.mockUser
+    private fun givenUserDoesNotLogIn(): User = this.mockUser
 
-    private fun givenUserCreated(): User {
+    private fun givenUserHasLoggedIn(): User {
         return userRepository.createUser(mockUser)
     }
 
-    private fun User.whenGetUserMe(): ResultActions {
+    private fun User.whenGetUserSelf(): ResultActions {
         val jwt = identities.first().toJwt()
         return mockMvc.perform(get("/users/me").withJwt(jwt))
     }

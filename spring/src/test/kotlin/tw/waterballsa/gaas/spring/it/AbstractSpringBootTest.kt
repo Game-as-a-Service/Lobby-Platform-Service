@@ -22,7 +22,7 @@ abstract class AbstractSpringBootTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
 
-    protected var mockUser: User = User(
+    protected final val mockUser: User = User(
         User.Id("1"),
         "user@example.com",
         "user-437b200d-da9c-449e-b147-114b4822b5aa",

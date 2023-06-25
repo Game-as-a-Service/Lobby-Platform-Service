@@ -5,24 +5,23 @@ import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import tw.waterballsa.gaas.application.usecases.GetUserMeUseCase
-import tw.waterballsa.gaas.domain.User
-import tw.waterballsa.gaas.spring.controllers.presenter.GetUserMePresenter
-import tw.waterballsa.gaas.spring.controllers.viewmodel.GetUserMeViewModel
+import tw.waterballsa.gaas.application.usecases.GetUserUseCase
+import tw.waterballsa.gaas.spring.controllers.presenter.GetUserPresenter
+import tw.waterballsa.gaas.spring.controllers.viewmodel.GetUserViewModel
 
 @RestController
 @RequestMapping("/users")
 class UserController(
-    private val getUserMeUseCase: GetUserMeUseCase
+    private val getUserUseCase: GetUserUseCase
 ) {
     @GetMapping("/me")
-    fun getUserMe(@AuthenticationPrincipal principal: Jwt): GetUserMeViewModel {
+    fun getUser(@AuthenticationPrincipal principal: Jwt): GetUserViewModel {
         val request = principal.toRequest()
-        val presenter = GetUserMePresenter()
-        getUserMeUseCase.execute(request, presenter)
+        val presenter = GetUserPresenter()
+        getUserUseCase.execute(request, presenter)
         return presenter.viewModel
     }
 }
 
-private fun Jwt.toRequest(): GetUserMeUseCase.Request =
-    GetUserMeUseCase.Request(claims["email"] as String)
+private fun Jwt.toRequest(): GetUserUseCase.Request =
+    GetUserUseCase.Request(claims["email"] as String)
