@@ -24,6 +24,10 @@ class Room(
         return this.password.equals(password)
     }
 
+    fun isFull(): Boolean {
+        return players.size >= maxPlayers
+    }
+
     @JvmInline
     value class Id(val value: String)
 
