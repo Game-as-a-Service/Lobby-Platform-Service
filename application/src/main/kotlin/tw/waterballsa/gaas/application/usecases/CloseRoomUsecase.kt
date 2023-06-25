@@ -17,11 +17,6 @@ class CloseRoomUsecase(private val roomRepository: RoomRepository) {
         }
     }
 
-    data class Request(
-        val roomId: String,
-        val userId: String,
-    )
-
     private fun findRoomById(roomId: Room.Id) =
         roomRepository.findById(roomId)
             ?: throw notFound(Room::class).id(roomId)
@@ -35,4 +30,9 @@ class CloseRoomUsecase(private val roomRepository: RoomRepository) {
     private fun Room.deleteRoom() {
         roomId?.let { roomRepository.deleteById(it) }
     }
+
+    data class Request(
+        val roomId: String,
+        val userId: String,
+    )
 }
