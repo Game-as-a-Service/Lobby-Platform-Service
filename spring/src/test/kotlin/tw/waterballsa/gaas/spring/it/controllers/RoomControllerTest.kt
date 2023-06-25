@@ -34,6 +34,7 @@ class RoomControllerTest @Autowired constructor(
     val gameRegistrationRepository: GameRegistrationRepository
 ) : AbstractSpringBootTest() {
 
+    lateinit var testUser: User
     lateinit var testGame: GameRegistration
     lateinit var testRoom: Room
 

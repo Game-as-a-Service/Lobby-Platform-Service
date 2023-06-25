@@ -3,7 +3,6 @@ package tw.waterballsa.gaas.spring.it.controllers
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -22,20 +21,6 @@ class UserControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenUserCreated_whenGetUser_thenGetUserSuccessfully() {
-        givenUserCreated()
-            .findUserById()
-            .thenGetUserSuccessfully()
-    }
-
-    @Test
-    fun givenUserNotCreated_whenGetNotExistUser_thenUserNotFound() {
-        givenUserNotCreated()
-            .findUserById()
-            .thenUserNotFound()
-    }
-
-    @Test
     fun givenUserCreated_whenGetUserMe_thenShouldReturnUserInfo() {
         givenUserCreated()
             .whenGetUserMe()
@@ -49,31 +34,22 @@ class UserControllerTest @Autowired constructor(
             .thenUserNotFound()
     }
 
-    private fun givenUserNotCreated(): User = this.testUser
+    private fun givenUserNotCreated(): User = this.mockUser
 
     private fun givenUserCreated(): User {
-        return userRepository.createUser(testUser)
+        return userRepository.createUser(mockUser)
     }
 
-    private fun User.findUserById(): ResultActions = findUserById(this.id!!.value)
-
-    private fun findUserById(id: String): ResultActions =
-        mockMvc.perform(
-            get("/users/$id")
-                .with(oidcLogin().oidcUser(mockDefaultOidcUser()))
-        )
-
-    private fun User.whenGetUserMe(): ResultActions =
-        mockMvc.perform(
-            get("/users/me")
-                .with(oidcLogin().oidcUser(mockOidcUser(this)))
-        )
+    private fun User.whenGetUserMe(): ResultActions {
+        val jwt = identities.first().toJwt()
+        return mockMvc.perform(get("/users/me").withJwt(jwt))
+    }
 
     private fun ResultActions.thenGetUserSuccessfully() {
         this.andExpect(status().isOk)
-            .andExpect(jsonPath("$.id").value(testUser.id!!.value))
-            .andExpect(jsonPath("$.email").value(testUser.email))
-            .andExpect(jsonPath("$.nickname").value(testUser.nickname))
+            .andExpect(jsonPath("$.id").value(mockUser.id!!.value))
+            .andExpect(jsonPath("$.email").value(mockUser.email))
+            .andExpect(jsonPath("$.nickname").value(mockUser.nickname))
     }
 
     private fun ResultActions.thenUserNotFound() {

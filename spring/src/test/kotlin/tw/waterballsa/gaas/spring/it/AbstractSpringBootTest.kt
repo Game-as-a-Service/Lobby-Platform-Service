@@ -12,10 +12,6 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
 import tw.waterballsa.gaas.domain.User
-import org.springframework.security.oauth2.core.oidc.OidcIdToken
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
-import org.springframework.security.oauth2.core.oidc.user.OidcUser
-import java.time.Instant
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -26,7 +22,7 @@ abstract class AbstractSpringBootTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
 
-    protected final val mockUser: User = User(
+    protected var mockUser: User = User(
         User.Id("1"),
         "user@example.com",
         "user-437b200d-da9c-449e-b147-114b4822b5aa",
@@ -39,7 +35,6 @@ abstract class AbstractSpringBootTest {
             .subject(this)
             .claim("email", mockUser.email)
             .build()
-    protected var testUser = User(User.Id("1"), "user@example.com", "winner5566")
 
     protected fun <T> ResultActions.getBody(type: Class<T>): T =
         andReturn().response.contentAsString.let { objectMapper.readValue(it, type) }
@@ -55,21 +50,4 @@ abstract class AbstractSpringBootTest {
     protected fun MockHttpServletRequestBuilder.withJwt(jwt: Jwt): MockHttpServletRequestBuilder =
         with(jwt().jwt(jwt))
 
-    protected fun mockDefaultOidcUser(): OidcUser {
-        return mockOidcUser(testUser)
-    }
-
-    protected fun mockOidcUser(mockUser: User): OidcUser {
-        val idToken = OidcIdToken(
-            "token",
-            Instant.now(),
-            Instant.now().plusSeconds(60),
-            mapOf(
-                "sub" to mockUser.id!!.value,
-                "name" to mockUser.nickname,
-                "email" to mockUser.email
-            )
-        )
-        return DefaultOidcUser(emptyList(), idToken)
-    }
 }
