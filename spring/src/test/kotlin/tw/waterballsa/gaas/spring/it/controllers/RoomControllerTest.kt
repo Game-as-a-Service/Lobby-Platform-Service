@@ -133,7 +133,7 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenRoomIsNotFull_whenUserTriesToJoin_ThenShouldSucceed() {
+    fun givenRoomIsNotFull_whenUserJoinRoom_ThenShouldSucceed() {
         val userA = testUser
         val userB = createUser("2", "test2@mail.com", "1st_join_user")
         givenTheHostCreatePublicRoom(userA)
@@ -142,7 +142,7 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenRoomIsFull_whenUserTriesToJoin_ThenShouldFail() {
+    fun givenRoomIsFull_whenUserJoinRoom_ThenShouldFail() {
         val host = testUser
         val userB = createUser("2", "test2@mail.com", "1st_join_user")
         val userC = createUser("3", "test3@mail.com", "2nd_join_user")
