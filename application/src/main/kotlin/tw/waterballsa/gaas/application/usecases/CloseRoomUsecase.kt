@@ -25,8 +25,9 @@ class CloseRoomUsecase(private val roomRepository: RoomRepository) {
             ?: throw notFound(Room::class).id(roomId)
 
     private fun Room.validateRoomHost(userId: Room.Player.Id) {
-        if (host.id != userId)
+        if (host.id != userId) {
             throw PlatformException("not a host")
+        }
     }
 
     private fun Room.deleteRoom() {
