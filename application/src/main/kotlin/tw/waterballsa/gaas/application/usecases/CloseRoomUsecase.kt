@@ -13,7 +13,7 @@ class CloseRoomUsecase(private val roomRepository: RoomRepository) {
         with(request) {
             val room = findRoomById(Room.Id(roomId))
             room.validateRoomHost(Room.Player.Id(userId))
-            room.deleteRoom()
+            roomRepository.deleteById(Room.Id(roomId))
         }
     }
 
@@ -25,10 +25,6 @@ class CloseRoomUsecase(private val roomRepository: RoomRepository) {
         if (host.id != userId) {
             throw PlatformException("Player($userId) is not the host")
         }
-    }
-
-    private fun Room.deleteRoom() {
-        roomId?.let { roomRepository.deleteById(it) }
     }
 
     data class Request(
