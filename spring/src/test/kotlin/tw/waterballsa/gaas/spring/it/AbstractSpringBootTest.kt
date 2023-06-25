@@ -26,7 +26,7 @@ abstract class AbstractSpringBootTest {
         User.Id("1"),
         "user@example.com",
         "user-437b200d-da9c-449e-b147-114b4822b5aa",
-        listOf("google-oauth2|102527320242660434908")
+        mutableListOf("google-oauth2|102527320242660434908")
     )
 
     protected fun <T> ResultActions.getBody(type: Class<T>): T =

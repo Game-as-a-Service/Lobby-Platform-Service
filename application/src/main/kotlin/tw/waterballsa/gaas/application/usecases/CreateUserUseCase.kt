@@ -23,7 +23,7 @@ class CreateUserUseCase(
             }
 
             !user.hasIdentity(request.identityProviderId) -> {
-                user = user.addIdentity(request.identityProviderId)
+                user.addIdentity(request.identityProviderId)
                 userRepository.update(user)
             }
         }
@@ -37,7 +37,7 @@ class CreateUserUseCase(
     private fun Request.toUser(): User = User(
         email = email,
         nickname = "user_${randomUUID()}",
-        identities = listOf(identityProviderId)
+        identities = mutableListOf(identityProviderId)
     )
 }
 

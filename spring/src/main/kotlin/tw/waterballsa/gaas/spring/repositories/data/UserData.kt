@@ -10,7 +10,7 @@ class UserData(
     var id: String? = null,
     val email: String? = null,
     val nickname: String? = null,
-    val identities: List<String>? = null,
+    val identities: MutableList<String> = mutableListOf()
 ) {
 
     fun toDomain(): User =
@@ -18,7 +18,7 @@ class UserData(
             User.Id(id!!),
             email!!,
             nickname!!,
-            identities!!
+            identities
         )
 }
 

@@ -4,7 +4,7 @@ class User(
     val id: Id? = null,
     val email: String = "",
     val nickname: String = "",
-    val identities: List<String> = emptyList(),
+    val identities: MutableList<String> = mutableListOf()
 ) {
     @JvmInline
     value class Id(val value: String)
@@ -13,6 +13,7 @@ class User(
         return identities.contains(identityProviderId)
     }
 
-    fun addIdentity(identityProviderId: String): User =
-        User(id, email, nickname, identities + identityProviderId)
+    fun addIdentity(identityProviderId: String) {
+        identities.add(identityProviderId)
+    }
 }
