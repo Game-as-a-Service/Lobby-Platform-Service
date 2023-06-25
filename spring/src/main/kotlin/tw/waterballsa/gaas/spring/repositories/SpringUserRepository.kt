@@ -25,4 +25,10 @@ class SpringUserRepository(
 
     override fun findAllById(ids: Collection<User.Id>): List<User> =
         userDAO.findAllById(ids.map(User.Id::value)).map(UserData::toDomain)
+
+    override fun findByEmail(email: String): User? =
+        userDAO.findByEmail(email)?.toDomain()
+
+    override fun update(user: User): User =
+        userDAO.save(user.toData()).toDomain()
 }

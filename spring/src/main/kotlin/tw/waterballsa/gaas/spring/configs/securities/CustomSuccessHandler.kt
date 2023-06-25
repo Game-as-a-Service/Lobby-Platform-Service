@@ -25,8 +25,10 @@ class CustomSuccessHandler(
     ) {
         authentication as OAuth2AuthenticationToken
 
-        val email = authentication.principal.let { it as OidcUser }.email
-        createUserUseCase.execute(CreateUserUseCase.Request(email))
+        val oidcUser = authentication.principal.let { it as OidcUser }
+        createUserUseCase.execute(
+            CreateUserUseCase.Request(oidcUser.email, oidcUser.subject)
+        )
 
         val accessTokenValue = authorizedClientService.loadAuthorizedClient<OAuth2AuthorizedClient>(
             authentication.authorizedClientRegistrationId,

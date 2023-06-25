@@ -8,15 +8,17 @@ import tw.waterballsa.gaas.domain.User
 class UserData(
     @Id
     var id: String? = null,
-    private var email: String? = null,
-    var nickname: String? = null
+    val email: String = "",
+    val nickname: String = "",
+    val identities: List<String> = emptyList(),
 ) {
 
     fun toDomain(): User =
         User(
             User.Id(id!!),
-            email!!,
-            nickname!!
+            email,
+            nickname,
+            identities.toMutableList()
         )
 }
 
@@ -24,5 +26,6 @@ fun User.toData(): UserData =
     UserData(
         id = id?.value,
         email = email,
-        nickname = nickname
+        nickname = nickname,
+        identities = identities
     )

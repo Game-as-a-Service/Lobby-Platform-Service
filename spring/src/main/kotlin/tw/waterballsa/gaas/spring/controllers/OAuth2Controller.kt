@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.core.oidc.OidcIdToken
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.util.UriComponentsBuilder
@@ -23,9 +24,9 @@ class OAuth2Controller(
     private lateinit var frontendUrl: String
 
     @GetMapping
-    fun home(@AuthenticationPrincipal principal: OidcUser?): String {
+    fun home(@AuthenticationPrincipal principal: Jwt): String {
         createUserUseCase.execute(principal.toRequest())
-        return principal?.idToken?.tokenValue ?: "index"
+        return principal.tokenValue ?: "index"
     }
 
     @GetMapping("/login-successfully")
@@ -43,6 +44,8 @@ class OAuth2Controller(
     }
 }
 
-private fun OidcUser?.toRequest(): CreateUserUseCase.Request = CreateUserUseCase.Request(
-    this?.userInfo?.email ?: throw PlatformException("User email is null")
-)
+fun Jwt.toRequest(): CreateUserUseCase.Request =
+    CreateUserUseCase.Request(
+        email = claims["email"] as String? ?: throw PlatformException("JWT email should exist."),
+        identityProviderId = subject ?: throw PlatformException("JWT subject should exist.")
+    )

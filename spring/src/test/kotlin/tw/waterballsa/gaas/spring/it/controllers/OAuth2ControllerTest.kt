@@ -4,11 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.oauth2.core.oidc.OidcIdToken
-import org.springframework.security.oauth2.core.oidc.OidcUserInfo
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
-import org.springframework.security.oauth2.core.oidc.user.OidcUser
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -20,63 +16,88 @@ class OAuth2ControllerTest @Autowired constructor(
     val userRepository: UserRepository,
 ) : AbstractSpringBootTest() {
 
+    private final val googleIdentityProviderId = "google-oauth2|102527320242660434908"
+    private final val discordIdentityProviderId = "discord|102527320242660434908"
+
+    private final val googleOAuth2Jwt = googleIdentityProviderId.toJwt()
+    private final val discordOAuth2Jwt = discordIdentityProviderId.toJwt()
+
+    private final val invalidJwt = Jwt(
+        "invalid_token",
+        null,
+        null,
+        mapOf("alg" to "none"),
+        mapOf("no_email" to "none")
+    )
+
     @BeforeEach
     fun cleanUp() {
         userRepository.deleteAll()
     }
 
     @Test
-    fun givenInvalidUserInfo_whenUserLogin_thenShouldLoginFailed() {
-        givenInvalidUserInfo()
-            .whenLogin()
+    fun whenUserLoginWithInvalidJwt_thenShouldLoginFailed() {
+        whenUserLogin(invalidJwt)
             .thenShouldLoginFailed()
     }
 
     @Test
-    fun givenNewUser_whenUserLogin_thenCreateUser() {
-        givenNewUserInfo().assertUserNotExists()
-            .whenLogin()
-            .thenShouldLoginSuccessfully()
+    fun givenUserHasLoggedInViaGoogle_whenUserLoginWithGoogleOAuth2Jwt_thenLoginSuccessfully() {
+        givenUserHasLoggedInViaGoogle()
+        whenUserLogin(googleOAuth2Jwt)
+            .thenLoginSuccessfully()
     }
 
     @Test
-    fun givenOldUser_whenUserLogin_thenShouldLoginSuccessfully() {
-        givenOldUserInfo().assertUserExists()
-            .whenLogin()
-            .thenShouldLoginSuccessfully()
+    fun givenUserHasLoggedInViaGoogle_whenUserLoginWithDiscordOAuth2Jwt_thenUserHaveNewIdentity() {
+        givenUserHasLoggedInViaGoogle()
+        whenUserLogin(discordOAuth2Jwt)
+            .thenUserHaveNewIdentity(googleIdentityProviderId, discordIdentityProviderId)
     }
 
-    private fun givenInvalidUserInfo(): OidcUser = givenUserInfo(null)
-
-    private fun givenNewUserInfo(): OidcUser = givenUserInfo(OidcUserInfo(mapOf("email" to "user@example.com")))
-
-    private fun givenOldUserInfo(): OidcUser {
-        val userInfo = givenUserInfo(OidcUserInfo(mapOf("email" to "other@example.com")))
-        userRepository.createUser(User(email = userInfo.email))
-        return userInfo
+    @Test
+    fun whenUserLoginAtTheFirstTime_thenCreateNewUser() {
+        whenUserLogin(googleOAuth2Jwt)
+            .thenCreateNewUser()
     }
 
-    private fun givenUserInfo(oidcUserInfo: OidcUserInfo?): OidcUser = DefaultOidcUser(
-        listOf(),
-        OidcIdToken("token", null, null, mapOf("sub" to "my_sub")),
-        oidcUserInfo
-    )
+    private fun givenUserHasLoggedInViaGoogle(): User =
+        userRepository.createUser(mockUser)
 
-    private fun OidcUser.assertUserExists(): OidcUser = this.also {
-        assertThat(userRepository.existsUserByEmail(userInfo.email)).isTrue()
-    }
+    private fun whenUserLogin(jwt: Jwt): ResultActions =
+        mockMvc.perform(get("/").withJwt(jwt))
 
-    private fun OidcUser.assertUserNotExists(): OidcUser = this.also {
-        assertThat(userRepository.existsUserByEmail(userInfo.email)).isFalse()
-    }
-
-    private fun OidcUser.whenLogin(): ResultActions =
-        mockMvc.perform(get("/").with(oidcLogin().oidcUser(this)))
-
-    private fun ResultActions.thenShouldLoginSuccessfully(): ResultActions =
-        andExpect(status().isOk)
-
-    private fun ResultActions.thenShouldLoginFailed(): ResultActions =
+    private fun ResultActions.thenShouldLoginFailed() {
         andExpect(status().isBadRequest)
+    }
+
+    private fun ResultActions.thenLoginSuccessfully() {
+        andExpect(status().isOk)
+    }
+
+    private fun ResultActions.thenUserHaveNewIdentity(vararg identityProviderIds: String) {
+        thenLoginSuccessfully()
+        userRepository.findByEmail(mockUser.email)
+            ?.thenWouldHaveIdentityProviderIds(*identityProviderIds)
+    }
+
+    private fun ResultActions.thenCreateNewUser() {
+        thenLoginSuccessfully()
+        userRepository.findByEmail(mockUser.email)
+            .thenNickNameShouldBeRandomName()
+            .thenWouldHaveIdentityProviderIds(googleIdentityProviderId)
+    }
+
+    private fun User?.thenWouldHaveIdentityProviderIds(vararg identityProviderIds: String): User {
+        assertThat(this).isNotNull
+        assertThat(this!!.identities).containsAll(identityProviderIds.toList())
+        return this
+    }
+
+    private fun User?.thenNickNameShouldBeRandomName(): User {
+        assertThat(this).isNotNull
+        assertThat(this!!.nickname).startsWith("user_")
+        return this
+    }
 
 }
