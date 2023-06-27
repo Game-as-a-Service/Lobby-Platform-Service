@@ -15,7 +15,7 @@ class CreateUserUseCase(
     fun execute(request: Request) {
         val user = userRepository.findByEmail(request.email)
 
-        with (request) {
+        with(request) {
             when {
                 user == null -> createUser()
                 !user.hasIdentity(identityProviderId) -> user.addUserIdentity(identityProviderId)
@@ -42,7 +42,7 @@ class CreateUserUseCase(
     private fun Request.toUser(): User = User(
         email = email,
         nickname = "user_${randomUUID()}",
-        identities = mutableListOf(identityProviderId)
+        identities = mutableListOf(identityProviderId),
     )
 }
 

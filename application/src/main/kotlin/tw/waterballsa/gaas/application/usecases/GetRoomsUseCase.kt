@@ -17,7 +17,7 @@ class GetRoomsUseCase(
     class Request(
         val status: Room.Status,
         val page: Int,
-        val offset: Int
+        val offset: Int,
     )
 
     interface GetRoomsPresenter {

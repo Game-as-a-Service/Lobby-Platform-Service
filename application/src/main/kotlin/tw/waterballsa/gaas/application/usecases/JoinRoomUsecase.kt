@@ -14,8 +14,8 @@ import javax.inject.Named
 class JoinRoomUsecase(
     private val roomRepository: RoomRepository,
     private val userRepository: UserRepository,
-    private val eventBus: EventBus
-){
+    private val eventBus: EventBus,
+) {
 
     fun execute(request: Request) {
         with(request) {
@@ -30,7 +30,7 @@ class JoinRoomUsecase(
             ?: throw notFound(Room::class).id(roomId)
 
     private fun Room.validateRoomPassword(password: String?) {
-        if(isLocked && !isPasswordCorrect(password)){
+        if (isLocked && !isPasswordCorrect(password)) {
             throw PlatformException("wrong password")
         }
     }
