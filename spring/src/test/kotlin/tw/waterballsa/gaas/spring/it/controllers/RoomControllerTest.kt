@@ -1,5 +1,6 @@
 package tw.waterballsa.gaas.spring.it.controllers
 
+import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -21,11 +22,13 @@ import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.Room.Player
 import tw.waterballsa.gaas.domain.User
+import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 import tw.waterballsa.gaas.spring.models.TestCreateRoomRequest
 import tw.waterballsa.gaas.spring.models.TestGetRoomsRequest
 import tw.waterballsa.gaas.spring.models.TestJoinRoomRequest
 import java.time.Instant.now
+import kotlin.reflect.KClass
 
 
 class RoomControllerTest @Autowired constructor(
@@ -96,7 +99,7 @@ class RoomControllerTest @Autowired constructor(
         val userB = createUser("2", "test2@mail.com", "winner1122")
         givenTheHostCreatePublicRoom(userA)
             .whenUserJoinTheRoom(userB)
-            .thenJoinRoomSuccessfully()
+            .thenActionSuccessfully()
     }
 
     @Test
@@ -107,7 +110,7 @@ class RoomControllerTest @Autowired constructor(
         val userB = createUser("2", "test2@mail.com", "winner1122")
         givenTheHostCreateRoomWithPassword(userA, password)
             .whenUserJoinTheRoom(userB, errorPassword)
-            .thenJoinRoomFailed()
+            .thenShouldFail("wrong password")
     }
 
     @Test
@@ -117,7 +120,7 @@ class RoomControllerTest @Autowired constructor(
         val userB = createUser("2", "test2@mail.com", "winner1122")
         givenTheHostCreateRoomWithPassword(userA, password)
             .whenUserJoinTheRoom(userB, password)
-            .thenJoinRoomSuccessfully()
+            .thenActionSuccessfully()
     }
 
     @Test
@@ -138,7 +141,7 @@ class RoomControllerTest @Autowired constructor(
         val userB = createUser("2", "test2@mail.com", "1st_join_user")
         givenTheHostCreatePublicRoom(userA)
             .whenUserJoinTheRoom(userB)
-            .thenJoinRoomSuccessfully()
+            .thenActionSuccessfully()
     }
 
     @Test
@@ -155,6 +158,66 @@ class RoomControllerTest @Autowired constructor(
         val userE = createUser("5", "test5@mail.com", "4th_join_user")
         room.whenUserJoinTheRoom(userE)
             .andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun givenPlayerAIsNotReadyInRoomA_WhenPlayerAGetReady_ThenShouldPlayerABeReady() {
+        val userA = testUser
+        val roomA = createRoom(userA)
+
+        whenUserGetReadyFor(roomA, userA)
+            .thenActionSuccessfully()
+
+        assertRoomPlayerGetReady(roomA, userA)
+    }
+
+    @Test
+    fun givenPlayerAIsNotInRoom_WhenPlayerAGetReady_ThenShouldFail() {
+        val userA = testUser
+        val userB = createUser("2", "test2@mail.com", "winner1122")
+        val roomB = createRoom(userB)
+
+        whenUserGetReadyFor(roomB, userA)
+            .thenShouldFail("Player not joined")
+    }
+
+    @Test
+    fun givenPlayerAAndNoRoomsInTheLobby_WhenUserAGetReady_ThenShouldFail() {
+        val userA = testUser
+        val notExistsRoom = notExistsRoom()
+
+        whenUserGetReadyFor(notExistsRoom, userA)
+            .thenShouldBeNotFound(Room::class)
+    }
+
+    @Test
+    fun givePlayerAIsReadyInRoomA_WhenPlayerACancelReady_ThenShouldPlayerABeUnready() {
+        val userA = testUser
+        val roomA = createRoom(host = userA, hostReady = true)
+
+        whenUserCancelReadyFor(roomA, userA)
+            .thenActionSuccessfully()
+
+        assertRoomPlayerNotReady(roomA, userA)
+    }
+
+    @Test
+    fun givenPlayerAIsNotInRoom_WhenPlayerACancelReady_ThenShouldFail() {
+        val userA = testUser
+        val userB = createUser("2", "test2@mail.com", "winner1122")
+        val roomB = createRoom(userB)
+
+        whenUserCancelReadyFor(roomB, userA)
+            .thenShouldFail("Player not joined")
+    }
+
+    @Test
+    fun givenPlayerAAndNoRoomsInLobby_WhenPlayerACancelReady_ThenShouldFail() {
+        val userA = testUser
+        val roomB = notExistsRoom()
+
+        whenUserCancelReadyFor(roomB, userA)
+            .thenShouldBeNotFound(Room::class)
     }
 
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
@@ -220,6 +283,14 @@ class RoomControllerTest @Autowired constructor(
         return joinRoom(request, joinUser)
     }
 
+    private fun whenUserGetReadyFor(room: Room, user: User): ResultActions = mockMvc.perform(
+        post("/rooms/${room.roomId!!.value}/players/me:ready").withJwt(user.id!!.value.toJwt())
+    )
+
+    private fun whenUserCancelReadyFor(room: Room, user: User): ResultActions = mockMvc.perform(
+        post("/rooms/${room.roomId!!.value}/players/me:cancel").withJwt(user.id!!.value.toJwt())
+    )
+
     private fun ResultActions.thenCreateRoomSuccessfully(request: TestCreateRoomRequest) {
         request.let {
             andExpect(status().isCreated)
@@ -236,14 +307,32 @@ class RoomControllerTest @Autowired constructor(
         }
     }
 
-    private fun ResultActions.thenJoinRoomSuccessfully() {
+    private fun ResultActions.thenActionSuccessfully() {
         andExpect(status().isOk)
             .andExpect(jsonPath("$.message").value("success"))
     }
 
-    private fun ResultActions.thenJoinRoomFailed() {
+    private fun ResultActions.thenShouldFail(message: String) {
         andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.message").value("wrong password"))
+            .andExpect(jsonPath("$.message").value(message))
+    }
+
+    private fun<T: Any> ResultActions.thenShouldBeNotFound(resourceType: KClass<T>) {
+        andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.message").value(notFound(resourceType).shortMessage().message))
+    }
+    private fun notExistsRoom(): Room{
+        val notExistRoomHost = Player(Player.Id(""), "")
+        return Room(
+            roomId = Room.Id("not-exist-room-id"),
+            game = testGame,
+            host = notExistRoomHost,
+            players = mutableListOf(notExistRoomHost),
+            maxPlayers = testGame.maxPlayers,
+            minPlayers = testGame.minPlayers,
+            name = "My Room",
+            status = Room.Status.WAITING
+        )
     }
 
     private fun createUser(id: String, email: String, nickname: String): User =
@@ -263,18 +352,19 @@ class RoomControllerTest @Autowired constructor(
         )
     )
 
-    private fun createRoom(host: User, password: String? = null): Room = roomRepository.createRoom(
-        Room(
-            game = testGame,
-            host = Player(Player.Id(host.id!!.value), host.nickname),
-            players = mutableListOf(Player(Player.Id(host.id!!.value), host.nickname)),
-            maxPlayers = testGame.maxPlayers,
-            minPlayers = testGame.minPlayers,
-            name = "My Room",
-            status = Room.Status.WAITING,
-            password = password
+    private fun createRoom(host: User, password: String? = null, hostReady: Boolean = false): Room =
+        roomRepository.createRoom(
+            Room(
+                game = testGame,
+                host = Player(Player.Id(host.id!!.value), host.nickname),
+                players = mutableListOf(Player(Player.Id(host.id!!.value), host.nickname, hostReady)),
+                maxPlayers = testGame.maxPlayers,
+                minPlayers = testGame.minPlayers,
+                name = "My Room",
+                status = Room.Status.WAITING,
+                password = password
+            )
         )
-    )
 
     private fun createRoomRequest(password: String? = null): TestCreateRoomRequest =
         TestCreateRoomRequest(
@@ -301,4 +391,18 @@ class RoomControllerTest @Autowired constructor(
         TestJoinRoomRequest(
             password = password
         )
+
+    private fun assertRoomPlayerGetReady(room: Room, user: User) {
+        val player = roomRepository.findById(room.roomId!!)
+            ?.players?.find { it.id.value == user.id!!.value }
+        assertThat(player).isNotNull
+        assertThat(player!!.readiness).isEqualTo(true)
+    }
+
+    private fun assertRoomPlayerNotReady(room: Room, user: User) {
+        val player = roomRepository.findById(room.roomId!!)
+            ?.players?.find { it.id.value == user.id!!.value }
+        assertThat(player).isNotNull
+        assertThat(player!!.readiness).isEqualTo(false)
+    }
 }
