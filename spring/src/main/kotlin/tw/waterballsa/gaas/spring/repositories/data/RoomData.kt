@@ -53,9 +53,9 @@ class RoomData(
         )
 
     class PlayerData(
-        var playerId: String,
-        var nickname: String,
-        var readiness: Boolean
+        val playerId: String,
+        val nickname: String,
+        val readiness: Boolean
     ) {
         companion object {
             fun Room.Player.toData(): PlayerData = PlayerData(id.value, nickname, readiness)

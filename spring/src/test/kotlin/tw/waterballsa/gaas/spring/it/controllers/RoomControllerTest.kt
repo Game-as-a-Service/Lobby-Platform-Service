@@ -319,7 +319,7 @@ class RoomControllerTest @Autowired constructor(
 
     private fun<T: Any> ResultActions.thenShouldBeNotFound(resourceType: KClass<T>) {
         andExpect(status().isNotFound)
-            .andExpect(jsonPath("$.message").value(notFound(resourceType).shortMessage().message))
+            .andExpect(jsonPath("$.message").value("${resourceType.simpleName} not found"))
     }
     private fun notExistsRoom(): Room{
         val notExistRoomHost = Player(Player.Id(""), "")
