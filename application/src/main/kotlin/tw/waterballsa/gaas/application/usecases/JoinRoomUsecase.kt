@@ -21,6 +21,7 @@ class JoinRoomUsecase(
         with(request) {
             val room = findRoomById(Room.Id(roomId))
             room.validateRoomPassword(password)
+            room.validateFullRoom()
             room.joinPlayer(userId)
         }
     }
@@ -32,6 +33,12 @@ class JoinRoomUsecase(
     private fun Room.validateRoomPassword(password: String?) {
         if (isLocked && !isPasswordCorrect(password)) {
             throw PlatformException("wrong password")
+        }
+    }
+
+    private fun Room.validateFullRoom() {
+        if (isFull()) {
+            throw PlatformException("The room (${roomId}) is full. Please select another room or try again later.")
         }
     }
 

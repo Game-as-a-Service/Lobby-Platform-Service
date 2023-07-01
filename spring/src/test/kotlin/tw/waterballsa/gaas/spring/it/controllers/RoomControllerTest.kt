@@ -47,6 +47,7 @@ class RoomControllerTest @Autowired constructor(
     @AfterEach
     fun cleanUp() {
         roomRepository.deleteAll()
+        userRepository.deleteAll()
     }
 
     @Test
@@ -129,6 +130,31 @@ class RoomControllerTest @Autowired constructor(
         givenWaitingRooms(userB, userC)
         request.whenUserAVisitLobby(userA)
             .thenShouldHaveRooms(request)
+    }
+
+    @Test
+    fun givenRoomIsNotFull_whenUserJoinRoom_ThenShouldSucceed() {
+        val userA = testUser
+        val userB = createUser("2", "test2@mail.com", "1st_join_user")
+        givenTheHostCreatePublicRoom(userA)
+            .whenUserJoinTheRoom(userB)
+            .thenJoinRoomSuccessfully()
+    }
+
+    @Test
+    fun givenRoomIsFull_whenUserJoinRoom_ThenShouldFail() {
+        val host = testUser
+        val userB = createUser("2", "test2@mail.com", "1st_join_user")
+        val userC = createUser("3", "test3@mail.com", "2nd_join_user")
+        val userD = createUser("4", "test4@mail.com", "3rd_join_user")
+        val room = givenTheHostCreatePublicRoom(host)
+        room.whenUserJoinTheRoom(userB)
+        room.whenUserJoinTheRoom(userC)
+        room.whenUserJoinTheRoom(userD)
+
+        val userE = createUser("5", "test5@mail.com", "4th_join_user")
+        room.whenUserJoinTheRoom(userE)
+            .andExpect(status().isBadRequest)
     }
 
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
