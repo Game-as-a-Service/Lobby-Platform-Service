@@ -22,7 +22,6 @@ import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.Room.Player
 import tw.waterballsa.gaas.domain.User
-import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 import tw.waterballsa.gaas.spring.models.TestCreateRoomRequest
 import tw.waterballsa.gaas.spring.models.TestGetRoomsRequest

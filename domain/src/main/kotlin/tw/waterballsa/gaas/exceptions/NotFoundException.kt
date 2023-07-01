@@ -21,7 +21,7 @@ class NotFoundException private constructor(message: String) : PlatformException
 
             fun id(id: Any): NotFoundException = NotFoundException(id, resourceName)
 
-            fun shortMessage(): NotFoundException = NotFoundException("${resourceName.capitalize()} not found")
+            fun message(): NotFoundException = NotFoundException("${resourceName.capitalize()} not found")
         }
     }
 }

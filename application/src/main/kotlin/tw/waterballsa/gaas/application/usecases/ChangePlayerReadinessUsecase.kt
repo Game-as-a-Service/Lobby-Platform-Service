@@ -12,7 +12,7 @@ class ChangePlayerReadinessUsecase(
     fun execute(request: Request) {
         with(request) {
             val room = roomRepository.findById(roomId.toRoomId())
-                ?: throw notFound(Room::class).shortMessage()
+                ?: throw notFound(Room::class).message()
             room.changePlayerReadiness(userId.toRoomPlayerId(), readiness)
             roomRepository.update(room)
         }
