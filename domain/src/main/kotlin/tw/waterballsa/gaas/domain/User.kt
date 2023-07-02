@@ -9,6 +9,10 @@ class User(
     @JvmInline
     value class Id(val value: String)
 
+    fun updateNickname(nickname: String): User {
+        return User(id, email, nickname, identities)
+    }
+
     fun hasIdentity(identityProviderId: String): Boolean {
         return identities.contains(identityProviderId)
     }
