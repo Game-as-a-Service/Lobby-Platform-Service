@@ -7,7 +7,7 @@ import javax.inject.Named
 
 @Named
 class ChangePlayerReadinessUsecase(
-    private val roomRepository: RoomRepository
+    private val roomRepository: RoomRepository,
 ) {
     fun execute(request: Request) {
         with(request) {
@@ -25,7 +25,7 @@ class ChangePlayerReadinessUsecase(
     data class Request(
         val roomId: String,
         val userId: String,
-        val readiness: Boolean
+        val readiness: Boolean,
     ) {
         companion object {
             fun ready(roomId: String, userId: String): Request = Request(roomId, userId, true)

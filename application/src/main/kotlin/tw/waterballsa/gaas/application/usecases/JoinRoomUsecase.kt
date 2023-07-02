@@ -38,7 +38,7 @@ class JoinRoomUsecase(
 
     private fun Room.validateFullRoom() {
         if (isFull()) {
-            throw PlatformException("The room (${roomId}) is full. Please select another room or try again later.")
+            throw PlatformException("The room ($roomId) is full. Please select another room or try again later.")
         }
     }
 

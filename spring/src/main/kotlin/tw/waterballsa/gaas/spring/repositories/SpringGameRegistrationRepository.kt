@@ -7,13 +7,14 @@ import tw.waterballsa.gaas.domain.GameRegistration.Id
 import tw.waterballsa.gaas.spring.extensions.mapOrNull
 import tw.waterballsa.gaas.spring.repositories.dao.GameRegistrationDAO
 import tw.waterballsa.gaas.spring.repositories.data.GameRegistrationData
+import tw.waterballsa.gaas.spring.repositories.data.toData
 
 @Component
 class SpringGameRegistrationRepository(
     private val gameRegistrationDAO: GameRegistrationDAO
 ) : GameRegistrationRepository {
     override fun registerGame(gameRegistration: GameRegistration): GameRegistration =
-        gameRegistrationDAO.save(GameRegistrationData.toData(gameRegistration)).toDomain()
+        gameRegistrationDAO.save(gameRegistration.toData()).toDomain()
 
     override fun findGameRegistrationByUniqueName(uniqueName: String): GameRegistration? =
         gameRegistrationDAO.findByUniqueName(uniqueName)?.toDomain()

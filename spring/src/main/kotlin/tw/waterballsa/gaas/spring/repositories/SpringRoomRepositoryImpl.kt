@@ -4,22 +4,21 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import tw.waterballsa.gaas.application.model.Pagination
-import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.application.repositories.RoomRepository
-import tw.waterballsa.gaas.domain.GameRegistration
+import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
-import tw.waterballsa.gaas.domain.Room.Id
+import tw.waterballsa.gaas.domain.Room.*
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.spring.extensions.mapOrNull
 import tw.waterballsa.gaas.spring.repositories.dao.RoomDAO
 import tw.waterballsa.gaas.spring.repositories.data.RoomData
-import tw.waterballsa.gaas.spring.repositories.data.RoomData.Companion.toData
+import tw.waterballsa.gaas.spring.repositories.data.toData
 
 @Component
 class SpringRoomRepository(
     private val roomDAO: RoomDAO,
-    private val gameRegistrationRepository: GameRegistrationRepository,
+    private val userRepository: UserRepository
 ) : RoomRepository {
     override fun createRoom(room: Room): Room = roomDAO.save(room.toData()).toDomain()
 
@@ -31,32 +30,37 @@ class SpringRoomRepository(
 
     override fun existsByHostId(hostId: User.Id): Boolean = roomDAO.existsByHostId(hostId.value)
 
-    override fun update(room: Room): Room = roomDAO.save(room.toData()).toDomain(room.game, room.host, room.players)
+    override fun update(room: Room): Room = roomDAO.save(room.toData()).toDomain(room.players)
 
-    override fun findByStatus(status: Room.Status, page: Pagination<Any>): Pagination<Room> {
+    override fun findByStatus(status: Status, page: Pagination<Any>): Pagination<Room> {
         return roomDAO.findByStatus(status, page.toPageable())
-        .map { it.toDomain() }
-        .toPagination()
+            .map { it.toDomain() }
+            .toPagination()
     }
 
-    private fun RoomData.toDomain(): Room {
-        return Room(
+    private fun RoomData.toDomain(): Room =
+        Room(
             roomId = Id(id!!),
-            game = GameRegistration.Id(gameRegistrationId).toGameRegistration(),
-            host = players.find { it.playerId == hostId }!!.toDomain(),
-            players = players.map { it.toDomain() }.toMutableList(),
+            game = game.toDomain(),
+            host = host.toDomain(),
+            players = players.map(RoomData.PlayerData::toDomain).toMutableList(),
             maxPlayers = maxPlayers,
             minPlayers = minPlayers,
             name = name,
             password = password,
         )
-    }
 
-    private fun GameRegistration.Id.toGameRegistration(): GameRegistration =
-        gameRegistrationRepository.findById(this)
-            ?: throw notFound(GameRegistration::class).id(value)
-
+    private fun User.Id.toRoomPlayer(): Player =
+        userRepository.findById(this)
+            ?.toRoomPlayer()
+            ?: throw notFound(User::class).id(value)
 }
+
+private fun User.toRoomPlayer(): Player =
+    Player(
+        id = Player.Id(id!!.value),
+        nickname = nickname
+    )
 
 private fun Pagination<Any>.toPageable() = PageRequest.of(page, offset)
 
