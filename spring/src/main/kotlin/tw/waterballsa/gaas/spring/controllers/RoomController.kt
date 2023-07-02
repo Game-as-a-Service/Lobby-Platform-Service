@@ -88,10 +88,10 @@ class RoomController(
     @DeleteMapping("/{roomId}")
     @ResponseStatus(NO_CONTENT)
     fun closeRoom(
-        @AuthenticationPrincipal principal: OidcUser,
+        @AuthenticationPrincipal jwt: Jwt,
         @PathVariable roomId: String,
     ) {
-        val joinerId = principal.subject ?: throw PlatformException("User id must exist.")
+        val joinerId = jwt.subject ?: throw PlatformException("User id must exist.")
         val request = CloseRoomUsecase.Request(
             roomId = roomId,
             userId = joinerId,
