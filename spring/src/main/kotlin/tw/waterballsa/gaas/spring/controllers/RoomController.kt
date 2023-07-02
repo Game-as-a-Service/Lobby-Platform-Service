@@ -70,15 +70,11 @@ class RoomController(
         @PathVariable roomId: String,
     ) {
         val joinerId = principal.subject ?: throw PlatformException("User id must exist.")
-        closeRoomsUseCase.execute(CloseRoomRequest(roomId).toRequest(joinerId))
-    }
-
-    class CloseRoomRequest(private val roomId: String) {
-        fun toRequest(userId: String): CloseRoomUsecase.Request =
-            CloseRoomUsecase.Request(
-                roomId = roomId,
-                userId = userId,
-            )
+        val request = CloseRoomUsecase.Request(
+            roomId = roomId,
+            userId = joinerId,
+        )
+        closeRoomsUseCase.execute(request)
     }
 
     class CreateRoomRequest(
