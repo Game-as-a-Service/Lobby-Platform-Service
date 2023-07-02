@@ -45,7 +45,7 @@ class JoinRoomUsecase(
     private fun Room.joinPlayer(userId: String): Room {
         val player = findPlayerByUserId(User.Id(userId))
         addPlayer(player)
-        return roomRepository.joinRoom(this)
+        return roomRepository.update(this)
     }
 
     private fun findPlayerByUserId(userId: User.Id) =

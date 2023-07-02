@@ -4,11 +4,9 @@ import org.springframework.http.HttpStatus.*
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.*
-import tw.waterballsa.gaas.application.usecases.CreateRoomUsecase
-import tw.waterballsa.gaas.application.usecases.GetRoomsUseCase
-import tw.waterballsa.gaas.application.usecases.JoinRoomUsecase
-import tw.waterballsa.gaas.application.usecases.Presenter
+import tw.waterballsa.gaas.application.usecases.*
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.events.CreatedRoomEvent
@@ -17,6 +15,7 @@ import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.spring.controllers.RoomController.CreateRoomViewModel
 import tw.waterballsa.gaas.spring.controllers.presenter.GetRoomsPresenter
 import tw.waterballsa.gaas.spring.controllers.viewmodel.GetRoomsViewModel
+import tw.waterballsa.gaas.spring.controllers.viewmodel.PlatformViewModel
 import tw.waterballsa.gaas.spring.extensions.getEvent
 import javax.validation.Valid
 import javax.validation.constraints.Pattern
@@ -27,7 +26,8 @@ import javax.validation.constraints.Positive
 class RoomController(
     private val createRoomUsecase: CreateRoomUsecase,
     private val joinRoomUsecase: JoinRoomUsecase,
-    private val getRoomsUseCase: GetRoomsUseCase
+    private val getRoomsUseCase: GetRoomsUseCase,
+    private val changePlayerReadinessUsecase: ChangePlayerReadinessUsecase
 ) {
     @PostMapping
     fun createRoom(
@@ -46,10 +46,10 @@ class RoomController(
         @AuthenticationPrincipal principal: OidcUser,
         @PathVariable roomId: String,
         @RequestBody request: JoinRoomRequest
-    ): JoinRoomViewModel {
+    ): PlatformViewModel {
         val joinerId = principal.subject ?: throw PlatformException("User id must exist.")
         joinRoomUsecase.execute(request.toRequest(roomId, joinerId))
-        return JoinRoomViewModel("success")
+        return PlatformViewModel.success()
     }
 
     @GetMapping
@@ -62,6 +62,26 @@ class RoomController(
         val presenter = GetRoomsPresenter()
         getRoomsUseCase.execute(request.toRequest(), presenter)
         return presenter.viewModel
+    }
+
+    @PostMapping("/{roomId}/players/me:ready")
+    fun readyForRoom(
+        @PathVariable roomId: String,
+        @AuthenticationPrincipal jwt: Jwt
+    ): PlatformViewModel {
+        val request = ChangePlayerReadinessUsecase.Request.ready(roomId, jwt.subject)
+        changePlayerReadinessUsecase.execute(request)
+        return PlatformViewModel.success()
+    }
+
+    @PostMapping("/{roomId}/players/me:cancel")
+    fun cancelReadyForRoom(
+        @PathVariable roomId: String,
+        @AuthenticationPrincipal jwt: Jwt
+    ): PlatformViewModel {
+        val request = ChangePlayerReadinessUsecase.Request.cancelReady(roomId, jwt.subject)
+        changePlayerReadinessUsecase.execute(request)
+        return PlatformViewModel.success()
     }
 
     class CreateRoomRequest(
@@ -128,10 +148,6 @@ class RoomController(
                 password = password
             )
     }
-
-    data class JoinRoomViewModel(
-        val message: String
-    )
 
     class GetRoomsRequest(
         @field:Pattern(
