@@ -14,13 +14,14 @@ import javax.inject.Named
 class JoinRoomUsecase(
     private val roomRepository: RoomRepository,
     private val userRepository: UserRepository,
-    private val eventBus: EventBus
-){
+    private val eventBus: EventBus,
+) {
 
     fun execute(request: Request) {
         with(request) {
             val room = findRoomById(Room.Id(roomId))
             room.validateRoomPassword(password)
+            room.validateFullRoom()
             room.joinPlayer(userId)
         }
     }
@@ -30,15 +31,21 @@ class JoinRoomUsecase(
             ?: throw notFound(Room::class).id(roomId)
 
     private fun Room.validateRoomPassword(password: String?) {
-        if(isLocked && !isPasswordCorrect(password)){
+        if (isLocked && !isPasswordCorrect(password)) {
             throw PlatformException("wrong password")
+        }
+    }
+
+    private fun Room.validateFullRoom() {
+        if (isFull()) {
+            throw PlatformException("The room (${roomId}) is full. Please select another room or try again later.")
         }
     }
 
     private fun Room.joinPlayer(userId: String): Room {
         val player = findPlayerByUserId(User.Id(userId))
         addPlayer(player)
-        return roomRepository.joinRoom(this)
+        return roomRepository.update(this)
     }
 
     private fun findPlayerByUserId(userId: User.Id) =

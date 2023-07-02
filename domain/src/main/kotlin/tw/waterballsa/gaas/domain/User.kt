@@ -4,7 +4,7 @@ class User(
     val id: Id? = null,
     val email: String = "",
     val nickname: String = "",
-    val identities: MutableList<String> = mutableListOf()
+    val identities: MutableList<String> = mutableListOf(),
 ) {
     @JvmInline
     value class Id(val value: String)

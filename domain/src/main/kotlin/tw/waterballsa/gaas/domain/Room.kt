@@ -1,6 +1,7 @@
 package tw.waterballsa.gaas.domain
 
 import tw.waterballsa.gaas.domain.Room.Status.WAITING
+import tw.waterballsa.gaas.exceptions.PlatformException
 
 class Room(
     var roomId: Id? = null,
@@ -16,13 +17,26 @@ class Room(
     val isLocked: Boolean
         get() = !password.isNullOrEmpty()
 
-    fun addPlayer(player: Player){
+    fun addPlayer(player: Player) {
         players.add(player)
     }
 
-    fun isPasswordCorrect(password: String?): Boolean{
+    fun isPasswordCorrect(password: String?): Boolean {
         return this.password.equals(password)
     }
+
+    fun isFull(): Boolean = players.size >= maxPlayers
+
+    fun changePlayerReadiness(playerId: Player.Id, readiness: Boolean) {
+        val player = findPlayer(playerId) ?: throw PlatformException("Player not joined")
+        if (readiness) {
+            player.ready()
+        } else {
+            player.cancelReady()
+        }
+    }
+
+    private fun findPlayer(playerId: Player.Id): Player? = players.find { it.id == playerId }
 
     @JvmInline
     value class Id(val value: String)
@@ -34,7 +48,19 @@ class Room(
     class Player(
         val id: Id,
         val nickname: String,
+        readiness: Boolean = false
     ) {
+        var readiness: Boolean = readiness
+            private set
+
+        fun ready() {
+            readiness = true
+        }
+
+        fun cancelReady() {
+            readiness = false
+        }
+
         @JvmInline
         value class Id(val value: String)
     }

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+echo "Running Maven verify..."
+mvn verify
+
+# 檢查 Maven 命令的執行結果，如果驗證失敗，則禁止提交(commit)
+if [ $? -ne 0 ]; then
+    echo "Maven verify failed. Commit aborted."
+    exit 1
+fi
+
+# 添加已變更的檔案到暫存區
+git add .
+
+exit 0
+
+
