@@ -137,10 +137,8 @@ class RoomControllerTest @Autowired constructor(
         val host = testUser
         val room = givenTheHostCreatePublicRoom(host)
 
-        mockMvc.perform(
-            delete("/rooms/${room.roomId!!.value}")
-                .with(oidcLogin().oidcUser(mockOidcUser(host)))
-        ).andExpect(status().isNoContent)
+        deleteRoom(mockOidcUser(host), room.roomId!!.value)
+            .andExpect(status().isNoContent)
     }
 
     @Test
@@ -149,10 +147,8 @@ class RoomControllerTest @Autowired constructor(
         val room = givenTheHostCreatePublicRoom(host)
         val userA = createUser("2", "test2@mail.com", "not_a_room_host")
 
-        mockMvc.perform(
-            delete("/rooms/${room.roomId!!.value}")
-                .with(oidcLogin().oidcUser(mockOidcUser(userA)))
-        ).andExpect(status().isBadRequest)
+        deleteRoom(mockOidcUser(userA), room.roomId!!.value)
+            .andExpect(status().isBadRequest)
     }
 
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
@@ -200,6 +196,12 @@ class RoomControllerTest @Autowired constructor(
             post("/rooms/${testRoom.roomId!!.value}/players")
                 .with(oidcLogin().oidcUser(joinUser))
                 .withJson(request)
+        )
+
+    private fun deleteRoom(host: OidcUser, roomId: String): ResultActions =
+        mockMvc.perform(
+            delete("/rooms/${roomId}")
+                .with(oidcLogin().oidcUser(host))
         )
 
     private fun givenTheHostCreatePublicRoom(host: User): Room {
