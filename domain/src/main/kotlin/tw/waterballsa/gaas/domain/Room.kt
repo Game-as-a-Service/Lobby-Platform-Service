@@ -1,6 +1,7 @@
 package tw.waterballsa.gaas.domain
 
 import tw.waterballsa.gaas.domain.Room.Status.WAITING
+import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.exceptions.PlatformException
 
 class Room(
@@ -33,6 +34,17 @@ class Room(
             player.ready()
         } else {
             player.cancelReady()
+        }
+    }
+
+    fun kickPlayer(playerId: Player.Id) {
+        val player = findPlayer(playerId) ?: throw PlatformException("Player not joined")
+        players.remove(player)
+    }
+
+    fun checkHostIsValid(hostId: Player.Id) {
+        if (hostId != host.id) {
+            throw throw throw PlatformException("This Player is not host")
         }
     }
 

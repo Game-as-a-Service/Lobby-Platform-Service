@@ -239,6 +239,48 @@ class RoomControllerTest @Autowired constructor(
             .andExpect(status().isBadRequest)
     }
 
+    @Test
+    fun givenPlayerACreatedRoomPlayerBJoinRoom_whenPlayerAKickPlayerB_ShouldSuccess() {
+        val userA = testUser
+        val userB = createUser("2", "test2@mail.com", "winner1122")
+        val room = givenPlayerACreatedRoomPlayerBJoinRoom(userA, userB)
+        whenHostKickOtherPlayer(room, userA, userB)
+            .thenActionSuccessfully()
+    }
+
+    @Test
+    fun givenPlayerACreatedRoomPlayerBJoinRoom_whenPlayerAKickPlayerC_ShouldFail() {
+        val userA = testUser
+        val userB = createUser("2", "test2@mail.com", "winner1122")
+        val userC = createUser("3", "test3@mail.com", "winner1123")
+        val room = givenPlayerACreatedRoomPlayerBJoinRoom(userA, userB)
+        whenHostKickOtherPlayer(room, userA, userC)
+            .thenShouldFail("Player not joined")
+    }
+
+    @Test
+    fun givenPlayerACreatedRoomPlayerBJoinRoom_whenPlayerBKickHost_ShouldFail() {
+        val userA = testUser
+        val userB = createUser("2", "test2@mail.com", "winner1122")
+        val room = givenPlayerACreatedRoomPlayerBJoinRoom(userA, userB)
+        whenOtherPlayerKickHost(room, userA, userB)
+            .thenShouldFail("This Player is not host")
+    }
+
+    private fun whenHostKickOtherPlayer(room: Room, host: User, player: User): ResultActions = mockMvc.perform(
+        delete("/rooms/${room.roomId!!.value}/players/${player.id!!.value}").withJwt(host.id!!.value.toJwt())
+    )
+
+    private fun whenOtherPlayerKickHost(room: Room, host: User, player: User): ResultActions = mockMvc.perform(
+        delete("/rooms/${room.roomId!!.value}/players/${host.id!!.value}").withJwt(player.id!!.value.toJwt())
+    )
+
+    private fun givenPlayerACreatedRoomPlayerBJoinRoom(playerA: User, userB: User): Room {
+        val room = givenTheHostCreatePublicRoom(playerA)
+        room.whenUserJoinTheRoom(userB)
+        return room
+    }
+
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
@@ -342,11 +384,12 @@ class RoomControllerTest @Autowired constructor(
             .andExpect(jsonPath("$.message").value(message))
     }
 
-    private fun<T: Any> ResultActions.thenShouldBeNotFound(resourceType: KClass<T>) {
+    private fun <T : Any> ResultActions.thenShouldBeNotFound(resourceType: KClass<T>) {
         andExpect(status().isNotFound)
             .andExpect(jsonPath("$.message").value("${resourceType.simpleName} not found"))
     }
-    private fun notExistsRoom(): Room{
+
+    private fun notExistsRoom(): Room {
         val notExistRoomHost = Player(Player.Id(""), "")
         return Room(
             roomId = Room.Id("not-exist-room-id"),

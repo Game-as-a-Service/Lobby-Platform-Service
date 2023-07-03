@@ -28,7 +28,8 @@ class RoomController(
     private val joinRoomUsecase: JoinRoomUsecase,
     private val getRoomsUseCase: GetRoomsUseCase,
     private val closeRoomsUseCase: CloseRoomUsecase,
-    private val changePlayerReadinessUsecase: ChangePlayerReadinessUsecase
+    private val changePlayerReadinessUsecase: ChangePlayerReadinessUsecase,
+    private val hostKickPlayerUseCase: HostKickPlayerUseCase
 ) {
     @PostMapping
     fun createRoom(
@@ -99,6 +100,18 @@ class RoomController(
         closeRoomsUseCase.execute(request)
     }
 
+    @DeleteMapping("/{roomId}/players/{playerId}")
+    fun kickPlayers(
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable roomId: String,
+        @PathVariable playerId: String,
+    ): PlatformViewModel {
+        KickPlayerRequest(roomId, playerId, jwt.subject).let {
+            hostKickPlayerUseCase.execute(it.toRequest())
+        }
+        return PlatformViewModel.success()
+    }
+
     class CreateRoomRequest(
         private val name: String,
         private val gameId: String,
@@ -154,7 +167,7 @@ class RoomController(
     }
 
     class JoinRoomRequest(
-        val password: String? = null
+        private val password: String? = null
     ) {
         fun toRequest(roomId: String, userId: String): JoinRoomUsecase.Request =
             JoinRoomUsecase.Request(
@@ -180,6 +193,19 @@ class RoomController(
                 status = Room.Status.valueOf(status),
                 page = page,
                 offset = offset
+            )
+    }
+
+    class KickPlayerRequest(
+        private val roomId: String,
+        private val playerId: String,
+        private val hostId: String
+    ) {
+        fun toRequest(): HostKickPlayerUseCase.Request =
+            HostKickPlayerUseCase.Request(
+                roomId = Room.Id(roomId),
+                playerId = Room.Player.Id(playerId),
+                hostId = Room.Player.Id(hostId)
             )
     }
 }
