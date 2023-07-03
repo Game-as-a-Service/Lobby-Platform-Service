@@ -20,23 +20,6 @@ class GameRegistrationData(
     var frontEndUrl: String?,
     var backEndUrl: String?
 ) {
-    companion object {
-        fun toData(gameRegistration: GameRegistration): GameRegistrationData =
-            with(gameRegistration) {
-                GameRegistrationData(
-                    id = id?.value,
-                    uniqueName = uniqueName,
-                    displayName = displayName,
-                    shortDescription = shortDescription,
-                    rule = rule,
-                    imageUrl = imageUrl,
-                    minPlayers = minPlayers,
-                    maxPlayers = maxPlayers,
-                    frontEndUrl = frontEndUrl,
-                    backEndUrl = backEndUrl
-                )
-            }
-    }
 
     fun toDomain(): GameRegistration =
         GameRegistration(
@@ -52,3 +35,17 @@ class GameRegistrationData(
             backEndUrl!!
         )
 }
+
+fun GameRegistration.toData(): GameRegistrationData =
+    GameRegistrationData(
+        id = id?.value,
+        uniqueName = uniqueName,
+        displayName = displayName,
+        shortDescription = shortDescription,
+        rule = rule,
+        imageUrl = imageUrl,
+        minPlayers = minPlayers,
+        maxPlayers = maxPlayers,
+        frontEndUrl = frontEndUrl,
+        backEndUrl = backEndUrl
+    )
