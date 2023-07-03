@@ -12,6 +12,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tw.waterballsa.gaas.application.model.Pagination
@@ -219,6 +220,25 @@ class RoomControllerTest @Autowired constructor(
             .thenShouldBeNotFound(Room::class)
     }
 
+    @Test
+    fun givenHostCreatedRoom_whenHostCloseRoom_ShouldSuccess() {
+        val host = testUser
+        val room = givenTheHostCreatePublicRoom(host)
+
+        deleteRoom(host, room.roomId!!.value)
+            .andExpect(status().isNoContent)
+    }
+
+    @Test
+    fun givenHostCreatedRoom_whenNonHostPlayerCloseRoom_ShouldFail() {
+        val host = testUser
+        val room = givenTheHostCreatePublicRoom(host)
+        val userA = createUser("2", "test2@mail.com", "not_a_room_host")
+
+        deleteRoom(userA, room.roomId!!.value)
+            .andExpect(status().isBadRequest)
+    }
+
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
@@ -264,6 +284,12 @@ class RoomControllerTest @Autowired constructor(
             post("/rooms/${testRoom.roomId!!.value}/players")
                 .with(oidcLogin().oidcUser(joinUser))
                 .withJson(request)
+        )
+
+    private fun deleteRoom(user: User, roomId: String): ResultActions =
+        mockMvc.perform(
+            delete("/rooms/${roomId}")
+                .withJwt(user.id!!.value.toJwt())
         )
 
     private fun givenTheHostCreatePublicRoom(host: User): Room {

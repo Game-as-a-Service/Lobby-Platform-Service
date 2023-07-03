@@ -38,6 +38,10 @@ class SpringRoomRepository(
             .toPagination()
     }
 
+    override fun deleteById(roomId: Id) {
+        roomDAO.deleteById(roomId.value)
+    }
+
     private fun RoomData.toDomain(): Room =
         Room(
             roomId = Id(id!!),

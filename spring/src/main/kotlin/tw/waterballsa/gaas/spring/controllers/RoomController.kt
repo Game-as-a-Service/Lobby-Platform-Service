@@ -27,6 +27,7 @@ class RoomController(
     private val createRoomUsecase: CreateRoomUsecase,
     private val joinRoomUsecase: JoinRoomUsecase,
     private val getRoomsUseCase: GetRoomsUseCase,
+    private val closeRoomsUseCase: CloseRoomUsecase,
     private val changePlayerReadinessUsecase: ChangePlayerReadinessUsecase
 ) {
     @PostMapping
@@ -82,6 +83,20 @@ class RoomController(
         val request = ChangePlayerReadinessUsecase.Request.cancelReady(roomId, jwt.subject)
         changePlayerReadinessUsecase.execute(request)
         return PlatformViewModel.success()
+    }
+
+    @DeleteMapping("/{roomId}")
+    @ResponseStatus(NO_CONTENT)
+    fun closeRoom(
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable roomId: String,
+    ) {
+        val joinerId = jwt.subject ?: throw PlatformException("User id must exist.")
+        val request = CloseRoomUsecase.Request(
+            roomId = roomId,
+            userId = joinerId,
+        )
+        closeRoomsUseCase.execute(request)
     }
 
     class CreateRoomRequest(
