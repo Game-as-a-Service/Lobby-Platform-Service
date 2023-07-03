@@ -48,7 +48,7 @@ class Room(
     class Player(
         val id: Id,
         val nickname: String,
-        readiness: Boolean = false
+        readiness: Boolean = false,
     ) {
         var readiness: Boolean = readiness
             private set
