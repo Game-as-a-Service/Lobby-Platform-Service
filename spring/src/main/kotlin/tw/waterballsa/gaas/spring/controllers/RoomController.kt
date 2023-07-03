@@ -167,7 +167,7 @@ class RoomController(
     }
 
     class JoinRoomRequest(
-        private val password: String? = null
+        val password: String? = null
     ) {
         fun toRequest(roomId: String, userId: String): JoinRoomUsecase.Request =
             JoinRoomUsecase.Request(

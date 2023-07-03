@@ -1,7 +1,6 @@
 package tw.waterballsa.gaas.domain
 
 import tw.waterballsa.gaas.domain.Room.Status.WAITING
-import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.exceptions.PlatformException
 
 class Room(
