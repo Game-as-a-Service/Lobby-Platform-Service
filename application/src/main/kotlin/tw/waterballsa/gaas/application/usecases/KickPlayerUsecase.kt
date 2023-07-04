@@ -11,23 +11,15 @@ class KickPlayerUsecase(
 ) {
     fun execute(request: Request) {
         with(request) {
-            val room = roomRepository.findById(roomId) ?: throw notFound(Room::class).message()
-            room.kickPlayer(hostId, playerId)
+            val room = roomRepository.findById(Room.Id(roomId)) ?: throw notFound(Room::class).message()
+            room.kickPlayer(Room.Player.Id(hostId), Room.Player.Id(playerId))
             roomRepository.update(room)
         }
     }
 
     data class Request(
-        val roomId: Room.Id,
-        val hostId: Room.Player.Id,
-        val playerId: Room.Player.Id
-    ) {
-        companion object {
-            fun toRequest(roomId: String, hostId: String, playerId: String) = Request(
-                Room.Id(roomId),
-                Room.Player.Id(hostId),
-                Room.Player.Id(playerId)
-            )
-        }
-    }
+        val roomId: String,
+        val hostId: String,
+        val playerId: String
+    )
 }

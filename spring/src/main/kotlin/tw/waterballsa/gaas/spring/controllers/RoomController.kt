@@ -100,16 +100,15 @@ class RoomController(
         closeRoomsUseCase.execute(request)
     }
 
-    @DeleteMapping("/{roomId}/player/{playerId}")
-    fun kickPlayers(
+    @DeleteMapping("/{roomId}/players/{playerId}")
+    fun kickPlayer(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable roomId: String,
         @PathVariable playerId: String,
     ): PlatformViewModel {
         val hostId = jwt.subject
-        KickPlayerUsecase.Request.toRequest(roomId, hostId, playerId).let {
-            kickPlayerUseCase.execute(it)
-        }
+        val request = KickPlayerUsecase.Request(roomId, hostId, playerId)
+        kickPlayerUseCase.execute(request)
         return PlatformViewModel.success()
     }
 
