@@ -20,6 +20,6 @@ class KickPlayerUsecase(
     data class Request(
         val roomId: String,
         val hostId: String,
-        val playerId: String
+        val playerId: String,
     )
 }
