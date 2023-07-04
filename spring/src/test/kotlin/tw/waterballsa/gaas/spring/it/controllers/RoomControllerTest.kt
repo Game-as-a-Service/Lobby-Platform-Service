@@ -240,7 +240,7 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenHostACreatedRoomCAndPlayerBJoined_whenHostAKickPlayerB_thenPlayerBShouldBeNotInTheRoomC() {
+    fun givenHostACreatedRoomCAndPlayerBJoined_whenHostAKickPlayerB_thenHostAShouldInTheRoomC() {
         val hostA = testUser
         val playerB = createUser("2", "test2@mail.com", "winner1122")
         val roomC = givenHostCreatedRoomAndPlayerJoined(hostA, playerB)
@@ -251,7 +251,7 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenHostACreatedRoomC_whenHostAKickPlayerB_thenPlayerAShouldInTheRoomC() {
+    fun givenHostACreatedRoomC_whenHostAKickPlayerB_thenHostAShouldInTheRoomC() {
         val hostA = testUser
         val playerB = createUser("2", "test2@mail.com", "winner1122")
         val roomC = givenTheHostCreatePublicRoom(hostA)
@@ -262,7 +262,7 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenHostACreatedRoomCAndPlayerBJoined_whenHostBKickPlayerA_thenPlayerAAndPlayerBShouldInTheRoomC() {
+    fun givenHostACreatedRoomCAndPlayerBJoined_whenHostBKickPlayerA_thenHostAAndPlayerBShouldInTheRoomC() {
         val hostA = testUser
         val playerB = createUser("2", "test2@mail.com", "winner1122")
         val roomC = givenHostCreatedRoomAndPlayerJoined(hostA, playerB)
