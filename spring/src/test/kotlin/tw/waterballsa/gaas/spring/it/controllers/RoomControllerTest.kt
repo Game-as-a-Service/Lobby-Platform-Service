@@ -273,14 +273,12 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenHostAndPlayerBAndPlayerCAreInRoomD_WhenPlayerALeaveRoomD_ThenPlayerAShouldBeNotInRoomDAndHostIsChanged() {
+    fun givenHostAndPlayerBAndPlayerCAreInRoomD_WhenHostLeaveRoomD_ThenPreviousHostShouldBeNotInRoomDAndChangedNewHost() {
         val userA = testUser
-        val userB = createUser("2", "test2@mail.com", "winner1122")
-        val userC = createUser("3", "test3@mail.com", "winner0033")
         val host = userA.toRoomPlayer()
-        val playerB = userB.toRoomPlayer()
-        val playerC = userC.toRoomPlayer()
-        val roomD = givenHostAndPlayersAreInTheRoom(host, host, playerB, playerC)
+        val playerB = createUser("2", "test2@mail.com", "winner1122").toRoomPlayer()
+        val playerC = createUser("3", "test3@mail.com", "winner0033").toRoomPlayer()
+        val roomD =  givenHostAndPlayersAreInTheRoom(host, playerB, playerC)
         roomD.whenUserLeaveTheRoom(userA)
             .thenPlayerShouldBeNotInRoomAndHostIsChanged(host)
     }
@@ -355,7 +353,8 @@ class RoomControllerTest @Autowired constructor(
     }
 
     private fun givenHostAndPlayersAreInTheRoom(host: Player, vararg players: Player): Room {
-        testRoom = createRoom(host, players.toMutableList())
+        val combinedPlayers = (listOf(host) + players).toMutableList()
+        testRoom = createRoom(host, combinedPlayers)
         return testRoom
     }
 
@@ -414,20 +413,6 @@ class RoomControllerTest @Autowired constructor(
         val room = roomRepository.findById(testRoom.roomId!!)!!
         assertFalse(room.hasPlayer(player.id))
         assertFalse(room.isHost(player.id))
-    }
-
-    private fun notExistsRoom(): Room {
-        val notExistRoomHost = Player(Player.Id(""), "")
-        return Room(
-            roomId = Room.Id("not-exist-room-id"),
-            game = testGame,
-            host = notExistRoomHost,
-            players = mutableListOf(notExistRoomHost),
-            maxPlayers = testGame.maxPlayers,
-            minPlayers = testGame.minPlayers,
-            name = "My Room",
-            status = Room.Status.WAITING
-        )
     }
 
     private fun createUser(id: String, email: String, nickname: String): User =
