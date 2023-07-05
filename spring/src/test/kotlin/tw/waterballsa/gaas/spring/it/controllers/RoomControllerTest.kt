@@ -278,8 +278,9 @@ class RoomControllerTest @Autowired constructor(
         val host = userA.toRoomPlayer()
         val playerB = createUser("2", "test2@mail.com", "winner1122").toRoomPlayer()
         val playerC = createUser("3", "test3@mail.com", "winner0033").toRoomPlayer()
-        val roomD =  givenHostAndPlayersAreInTheRoom(host, playerB, playerC)
-        roomD.whenUserLeaveTheRoom(userA)
+
+        givenHostAndPlayersAreInTheRoom(host, playerB, playerC)
+            .whenUserLeaveTheRoom(userA)
             .thenPlayerShouldBeNotInRoomAndHostIsChanged(host)
     }
 
