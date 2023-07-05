@@ -165,7 +165,7 @@ class RoomControllerTest @Autowired constructor(
         val userA = testUser
         val roomA = createRoom(userA)
 
-        whenUserGetReadyFor(roomA, userA)
+        whenUserGetReadyFor(roomA.roomId!!, userA)
             .thenActionSuccessfully()
 
         assertRoomPlayerGetReady(roomA, userA)
@@ -177,16 +177,16 @@ class RoomControllerTest @Autowired constructor(
         val userB = createUser("2", "test2@mail.com", "winner1122")
         val roomB = createRoom(userB)
 
-        whenUserGetReadyFor(roomB, userA)
+        whenUserGetReadyFor(roomB.roomId!!, userA)
             .thenShouldFail("Player not joined")
     }
 
     @Test
     fun givenPlayerAAndNoRoomsInTheLobby_WhenUserAGetReady_ThenShouldFail() {
         val userA = testUser
-        val notExistsRoom = notExistsRoom()
+        val notExistsRoomId = Room.Id("not_exists_room")
 
-        whenUserGetReadyFor(notExistsRoom, userA)
+        whenUserGetReadyFor(notExistsRoomId, userA)
             .thenShouldBeNotFound(Room::class)
     }
 
@@ -195,7 +195,7 @@ class RoomControllerTest @Autowired constructor(
         val userA = testUser
         val roomA = createRoom(host = userA, hostReady = true)
 
-        whenUserCancelReadyFor(roomA, userA)
+        whenUserCancelReadyFor(roomA.roomId!!, userA)
             .thenActionSuccessfully()
 
         assertRoomPlayerNotReady(roomA, userA)
@@ -207,16 +207,16 @@ class RoomControllerTest @Autowired constructor(
         val userB = createUser("2", "test2@mail.com", "winner1122")
         val roomB = createRoom(userB)
 
-        whenUserCancelReadyFor(roomB, userA)
+        whenUserCancelReadyFor(roomB.roomId!!, userA)
             .thenShouldFail("Player not joined")
     }
 
     @Test
     fun givenPlayerAAndNoRoomsInLobby_WhenPlayerACancelReady_ThenShouldFail() {
         val userA = testUser
-        val roomB = notExistsRoom()
+        val roomId = Room.Id("not-exist-room-id")
 
-        whenUserCancelReadyFor(roomB, userA)
+        whenUserCancelReadyFor(roomId, userA)
             .thenShouldBeNotFound(Room::class)
     }
 
@@ -237,6 +237,39 @@ class RoomControllerTest @Autowired constructor(
 
         deleteRoom(userA, room.roomId!!.value)
             .andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun givenHostACreatedRoomCAndPlayerBJoined_whenHostAKickPlayerB_thenHostAShouldInTheRoomC() {
+        val hostA = testUser
+        val playerB = createUser("2", "test2@mail.com", "winner1122")
+        val roomC = givenHostCreatedRoomAndPlayerJoined(hostA, playerB)
+
+        roomC.whenKickPlayer(hostA, playerB)
+            .thenActionSuccessfully()
+            .thenPlayersShouldBeInTheRoom(roomC.roomId!!, hostA)
+    }
+
+    @Test
+    fun givenHostACreatedRoomC_whenHostAKickPlayerB_thenHostAShouldInTheRoomC() {
+        val hostA = testUser
+        val playerB = createUser("2", "test2@mail.com", "winner1122")
+        val roomC = givenTheHostCreatePublicRoom(hostA)
+
+        roomC.whenKickPlayer(hostA, playerB)
+            .thenShouldFail("Player not joined")
+            .thenPlayersShouldBeInTheRoom(roomC.roomId!!, hostA)
+    }
+
+    @Test
+    fun givenHostACreatedRoomCAndPlayerBJoined_whenHostBKickPlayerA_thenHostAAndPlayerBShouldInTheRoomC() {
+        val hostA = testUser
+        val playerB = createUser("2", "test2@mail.com", "winner1122")
+        val roomC = givenHostCreatedRoomAndPlayerJoined(hostA, playerB)
+
+        roomC.whenKickPlayer(playerB, hostA)
+            .thenShouldFail("This Player is not host")
+            .thenPlayersShouldBeInTheRoom(roomC.roomId!!, hostA, playerB)
     }
 
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
@@ -260,7 +293,7 @@ class RoomControllerTest @Autowired constructor(
     }
 
     private fun ResultActions.roomExcept(rooms: Pagination<Room>) {
-        rooms.data.forEachIndexed() { index, room ->
+        rooms.data.forEachIndexed { index, room ->
             andExpect(jsonPath("$.rooms[$index].id").value(room.roomId!!.value))
                 .andExpect(jsonPath("$.rooms[$index].name").value(room.name))
                 .andExpect(jsonPath("$.rooms[$index].game.id").value(room.game.id!!.value))
@@ -308,12 +341,12 @@ class RoomControllerTest @Autowired constructor(
         return joinRoom(request, joinUser)
     }
 
-    private fun whenUserGetReadyFor(room: Room, user: User): ResultActions = mockMvc.perform(
-        post("/rooms/${room.roomId!!.value}/players/me:ready").withJwt(user.id!!.value.toJwt())
+    private fun whenUserGetReadyFor(roomId: Room.Id, user: User): ResultActions = mockMvc.perform(
+        post("/rooms/${roomId.value}/players/me:ready").withJwt(user.id!!.value.toJwt())
     )
 
-    private fun whenUserCancelReadyFor(room: Room, user: User): ResultActions = mockMvc.perform(
-        post("/rooms/${room.roomId!!.value}/players/me:cancel").withJwt(user.id!!.value.toJwt())
+    private fun whenUserCancelReadyFor(roomId: Room.Id, user: User): ResultActions = mockMvc.perform(
+        post("/rooms/${roomId.value}/players/me:cancel").withJwt(user.id!!.value.toJwt())
     )
 
     private fun ResultActions.thenCreateRoomSuccessfully(request: TestCreateRoomRequest) {
@@ -332,32 +365,19 @@ class RoomControllerTest @Autowired constructor(
         }
     }
 
-    private fun ResultActions.thenActionSuccessfully() {
-        andExpect(status().isOk)
+    private fun ResultActions.thenActionSuccessfully(): ResultActions {
+        return andExpect(status().isOk)
             .andExpect(jsonPath("$.message").value("success"))
     }
 
-    private fun ResultActions.thenShouldFail(message: String) {
-        andExpect(status().isBadRequest)
+    private fun ResultActions.thenShouldFail(message: String): ResultActions {
+        return andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value(message))
     }
 
-    private fun<T: Any> ResultActions.thenShouldBeNotFound(resourceType: KClass<T>) {
+    private fun <T : Any> ResultActions.thenShouldBeNotFound(resourceType: KClass<T>) {
         andExpect(status().isNotFound)
             .andExpect(jsonPath("$.message").value("${resourceType.simpleName} not found"))
-    }
-    private fun notExistsRoom(): Room{
-        val notExistRoomHost = Player(Player.Id(""), "")
-        return Room(
-            roomId = Room.Id("not-exist-room-id"),
-            game = testGame,
-            host = notExistRoomHost,
-            players = mutableListOf(notExistRoomHost),
-            maxPlayers = testGame.maxPlayers,
-            minPlayers = testGame.minPlayers,
-            name = "My Room",
-            status = Room.Status.WAITING
-        )
     }
 
     private fun createUser(id: String, email: String, nickname: String): User =
@@ -418,16 +438,32 @@ class RoomControllerTest @Autowired constructor(
         )
 
     private fun assertRoomPlayerGetReady(room: Room, user: User) {
-        val player = roomRepository.findById(room.roomId!!)
-            ?.players?.find { it.id.value == user.id!!.value }
+        val player = findRoomById(room.roomId!!)!!.players.find { it.id.value == user.id!!.value }
         assertThat(player).isNotNull
         assertThat(player!!.readiness).isEqualTo(true)
     }
 
     private fun assertRoomPlayerNotReady(room: Room, user: User) {
-        val player = roomRepository.findById(room.roomId!!)
-            ?.players?.find { it.id.value == user.id!!.value }
+        val player = findRoomById(room.roomId!!)!!.players.find { it.id.value == user.id!!.value }
         assertThat(player).isNotNull
         assertThat(player!!.readiness).isEqualTo(false)
     }
+
+    private fun Room.whenKickPlayer(host: User, player: User): ResultActions = mockMvc.perform(
+        delete("/rooms/${roomId!!.value}/players/${player.id!!.value}").withJwt(host.id!!.value.toJwt())
+    )
+
+    private fun givenHostCreatedRoomAndPlayerJoined(host: User, player: User): Room {
+        val room = givenTheHostCreatePublicRoom(host)
+        room.whenUserJoinTheRoom(player)
+        return room
+    }
+
+    private fun findRoomById(roomId: Room.Id): Room? =
+        roomRepository.findById(roomId)
+
+    private fun ResultActions.thenPlayersShouldBeInTheRoom(roomId: Room.Id, vararg users: User) =
+        findRoomById(roomId)!!.players.map { it.id.value }.let {
+            assertThat(it).containsAll(users.map { user -> user.id!!.value })
+        }
 }

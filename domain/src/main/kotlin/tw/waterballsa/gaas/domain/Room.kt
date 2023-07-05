@@ -36,6 +36,14 @@ class Room(
         }
     }
 
+    fun kickPlayer(hostId: Player.Id, playerId: Player.Id) {
+        if (hostId != host.id) {
+            throw throw throw PlatformException("This Player is not host")
+        }
+        val player = findPlayer(playerId) ?: throw PlatformException("Player not joined")
+        players.remove(player)
+    }
+
     private fun findPlayer(playerId: Player.Id): Player? = players.find { it.id == playerId }
 
     @JvmInline
