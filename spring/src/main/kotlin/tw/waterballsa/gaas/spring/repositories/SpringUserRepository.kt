@@ -16,6 +16,7 @@ class SpringUserRepository(
         userDAO.findById(id.value).mapOrNull(UserData::toDomain)
 
     override fun existsUserByEmail(email: String): Boolean = userDAO.existsByEmail(email)
+
     override fun existsUserByNickname(nickname: String): Boolean =
         userDAO.existsByNickname(nickname)
 
