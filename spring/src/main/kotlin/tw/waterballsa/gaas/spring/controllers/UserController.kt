@@ -32,7 +32,7 @@ class UserController(
         val request = updateUserRequest.toRequest(principal.email!!)
         val presenter = UpdateUserPresenter()
         updateUserUseCase.execute(request, presenter)
-        return presenter.getViewModel()
+        return presenter.viewModel
     }
 }
 

@@ -7,7 +7,8 @@ import tw.waterballsa.gaas.spring.controllers.viewmodel.UpdateUserViewModel
 import tw.waterballsa.gaas.spring.extensions.getEvent
 
 class UpdateUserPresenter : Presenter {
-    private lateinit var viewModel: UpdateUserViewModel
+    lateinit var viewModel: UpdateUserViewModel
+        private set
 
     override fun present(vararg events: DomainEvent) {
         viewModel = events.getEvent(UserUpdatedEvent::class)!!.toViewModel()
@@ -15,7 +16,5 @@ class UpdateUserPresenter : Presenter {
 
     private fun UserUpdatedEvent.toViewModel(): UpdateUserViewModel =
         UpdateUserViewModel(id, email, nickname)
-
-    fun getViewModel(): UpdateUserViewModel = viewModel
 
 }
