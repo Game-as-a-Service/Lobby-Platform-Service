@@ -17,7 +17,7 @@ class UpdateUserUseCase(
         with(request) {
             validateNicknameDuplicated(nickname)
             val user = findUserByEmail(email)
-            user.updateNickname(nickname)
+            user.changeNickname(nickname)
             val updatedUser = userRepository.update(user)
 
             val event = updatedUser.toUserUpdatedEvent()

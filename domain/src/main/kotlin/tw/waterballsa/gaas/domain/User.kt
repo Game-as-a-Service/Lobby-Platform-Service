@@ -11,15 +11,19 @@ class User(
     @JvmInline
     value class Id(val value: String)
 
-    private val nicknameByteSizeMinimum: Int = 4
-    private val nicknameByteSizeMaximum: Int = 16
+    companion object {
+        private const val NICKNAME_MINIMUM_BYTE_SIZE = 4
+        private const val NICKNAME_MAXIMUM_BYTE_SIZE = 16
+    }
 
-    fun updateNickname(nickname: String) {
-        if (nickname.toByteArray().size < nicknameByteSizeMinimum) {
+    fun changeNickname(nickname: String) {
+        val nicknameByteSize = nickname.toByteArray().size
+
+        if (nicknameByteSize < NICKNAME_MINIMUM_BYTE_SIZE) {
             throw PlatformException("invalid nickname: too short")
         }
 
-        if (nickname.toByteArray().size > nicknameByteSizeMaximum) {
+        if (nicknameByteSize > NICKNAME_MAXIMUM_BYTE_SIZE) {
             throw PlatformException("invalid nickname: too long")
         }
 

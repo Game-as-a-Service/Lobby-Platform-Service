@@ -13,7 +13,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.spring.controllers.UpdateUserRequest
-import tw.waterballsa.gaas.spring.controllers.viewmodel.PlatformViewModel
 import tw.waterballsa.gaas.spring.controllers.viewmodel.UpdateUserViewModel
 import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 
@@ -41,39 +40,39 @@ class UserControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenUserNickname_whenUpdateEnglishNickname_thenShouldUpdateNickname() {
-        givenUserNickname()
-            .whenUpdateUserSelf(UpdateUserRequest("my nick name"))
-            .thenShouldUpdateNickname("my nick name")
+    fun givenUserNamedNeverever_whenChangeUserNicknameToMyNickName_thenUserNicknameShouldBeMyNickName() {
+        givenUserNickname("Neverever")
+            .whenChangeUserNickname(UpdateUserRequest("my nick name"))
+            .thenUserNicknameShouldBeChanged("my nick name")
     }
 
     @Test
-    fun givenUserNickname_whenUpdateChineseNickname_thenShouldUpdateNickname() {
-        givenUserNickname()
-            .whenUpdateUserSelf(UpdateUserRequest("周杰倫"))
-            .thenShouldUpdateNickname("周杰倫")
+    fun givenUserNamedNeverever_whenChangeUserNicknameTo周杰倫_thenUserNicknameShouldBe周杰倫() {
+        givenUserNickname("Neverever")
+            .whenChangeUserNickname(UpdateUserRequest("周杰倫"))
+            .thenUserNicknameShouldBeChanged("周杰倫")
     }
 
     @Test
-    fun givenUserNickname_whenUpdateShortNickname_thenShouldUpdateNicknameFailed() {
-        givenUserNickname()
-            .whenUpdateUserSelf(UpdateUserRequest("abc"))
-            .thenShouldUpdateNicknameFailed("too short")
+    fun givenUserNamedNeverever_whenChangeUserNicknameTooShort_thenShouldChangeNicknameFailed() {
+        givenUserNickname("Neverever")
+            .whenChangeUserNickname(UpdateUserRequest("abc"))
+            .thenShouldChangeNicknameFailed("invalid nickname: too short")
     }
 
     @Test
-    fun givenUserNickname_whenUpdateLongNickname_thenShouldUpdateNicknameFailed() {
-        givenUserNickname()
-            .whenUpdateUserSelf(UpdateUserRequest("This is a very long nickname"))
-            .thenShouldUpdateNicknameFailed("too long")
+    fun givenUserNamedNeverever_whenChangeUserNicknameTooLong_thenShouldChangeNicknameFailed() {
+        givenUserNickname("Neverever")
+            .whenChangeUserNickname(UpdateUserRequest("This is a very long nickname"))
+            .thenShouldChangeNicknameFailed("invalid nickname: too long")
     }
 
     @Test
-    fun givenUserNickname_whenUpdateDuplicateNickname_thenShouldUpdateNicknameFailed() {
-        val userA = givenUserNickname()
-        givenAnotherUserNickname()
-            .whenUpdateUserSelf(UpdateUserRequest(userA.nickname))
-            .thenShouldUpdateNicknameFailed("duplicated")
+    fun givenUserNamedNeverever_whenAnotherUserChangeToNeverever_thenShouldChangeNicknameFailed() {
+        givenUserNickname("Neverever")
+        givenAnotherUserNickname("周杰倫")
+            .whenChangeUserNickname(UpdateUserRequest("Neverever"))
+            .thenShouldChangeNicknameFailed("invalid nickname: duplicated")
     }
 
     private fun givenUserDoesNotLogIn(): User = this.mockUser
@@ -82,13 +81,13 @@ class UserControllerTest @Autowired constructor(
         return userRepository.createUser(mockUser)
     }
 
-    private fun givenUserNickname(): User {
-        val user = User(User.Id("1"), "userA@example.com", "Neverever", mockUser.identities)
+    private fun givenUserNickname(nickname: String): User {
+        val user = User(null, "userA@example.com", nickname, mockUser.identities)
         return userRepository.createUser(user)
     }
 
-    private fun givenAnotherUserNickname(): User {
-        val user = User(User.Id("2"), "userB@example.com", "周杰倫", mockUser.identities)
+    private fun givenAnotherUserNickname(nickname: String): User {
+        val user = User(null, "userB@example.com", nickname, mockUser.identities)
         return userRepository.createUser(user)
     }
 
@@ -96,7 +95,7 @@ class UserControllerTest @Autowired constructor(
         return mockMvc.perform(get("/users/me").withJwt(toJwt()))
     }
 
-    private fun User.whenUpdateUserSelf(updateUserRequest: UpdateUserRequest): ResultActions =
+    private fun User.whenChangeUserNickname(updateUserRequest: UpdateUserRequest): ResultActions =
         mockMvc.perform(
             put("/users/me")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -119,7 +118,7 @@ class UserControllerTest @Autowired constructor(
             .andExpect(jsonPath("$.nickname").doesNotExist())
     }
 
-    private fun ResultActions.thenShouldUpdateNickname(nickname: String) {
+    private fun ResultActions.thenUserNicknameShouldBeChanged(nickname: String) {
         val userViewModel = andExpect(status().isOk)
             .getBody(UpdateUserViewModel::class.java)
 
@@ -128,11 +127,9 @@ class UserControllerTest @Autowired constructor(
             .also { assertThat(it!!.nickname).isEqualTo(nickname) }
     }
 
-    private fun ResultActions.thenShouldUpdateNicknameFailed(message: String) {
+    private fun ResultActions.thenShouldChangeNicknameFailed(message: String) {
         andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.message").exists())
-            .getBody(PlatformViewModel::class.java)
-            .also { assertThat(it.message).contains(message) }
+            .andExpect(jsonPath("$.message").value(message))
     }
 
 }
