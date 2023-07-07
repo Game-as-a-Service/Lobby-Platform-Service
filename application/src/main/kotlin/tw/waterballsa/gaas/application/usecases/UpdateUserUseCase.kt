@@ -16,10 +16,9 @@ class UpdateUserUseCase(
     fun execute(request: Request, presenter: Presenter) {
         with(request) {
             validateNicknameDuplicated(nickname)
-            validateNicknameLength(nickname)
             val user = findUserByEmail(email)
-            val updatedUser = user.updateNickname(request.nickname)
-            userRepository.update(updatedUser)
+            user.updateNickname(nickname)
+            val updatedUser = userRepository.update(user)
 
             val event = updatedUser.toUserUpdatedEvent()
             presenter.present(event)
@@ -30,15 +29,6 @@ class UpdateUserUseCase(
     private fun validateNicknameDuplicated(nickname: String) {
         if (userRepository.existsUserByNickname(nickname)) {
             throw PlatformException("invalid nickname: duplicated")
-        }
-    }
-
-    private fun validateNicknameLength(nickname: String) {
-        if (nickname.toByteArray().size < 4) {
-            throw PlatformException("invalid nickname: too short")
-        }
-        if (nickname.toByteArray().size > 16) {
-            throw PlatformException("invalid nickname: too long")
         }
     }
 
