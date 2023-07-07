@@ -29,7 +29,7 @@ class UserController(
         @AuthenticationPrincipal principal: Jwt,
         @RequestBody updateUserRequest: UpdateUserRequest,
     ): UpdateUserViewModel {
-        val request = updateUserRequest.toRequest(principal.email!!)
+        val request = updateUserRequest.toRequest(principal.email)
         val presenter = UpdateUserPresenter()
         updateUserUseCase.execute(request, presenter)
         return presenter.viewModel
@@ -37,7 +37,7 @@ class UserController(
 }
 
 private fun Jwt.toRequest(): GetUserUseCase.Request =
-    GetUserUseCase.Request(email!!)
+    GetUserUseCase.Request(email)
 
 data class UpdateUserRequest(val nickname: String) {
 
