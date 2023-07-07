@@ -11,7 +11,7 @@ import javax.inject.Named
 @Named
 class UpdateUserUseCase(
     private val userRepository: UserRepository,
-    private val eventBus: EventBus
+    private val eventBus: EventBus,
 ) {
     fun execute(request: Request, presenter: Presenter) {
         with(request) {
