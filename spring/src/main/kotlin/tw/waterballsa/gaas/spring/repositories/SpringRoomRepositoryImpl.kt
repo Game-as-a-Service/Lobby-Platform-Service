@@ -42,6 +42,10 @@ class SpringRoomRepository(
         roomDAO.deleteById(roomId.value)
     }
 
+    override fun leaveRoom(room: Room) {
+        roomDAO.save(room.toData())
+    }
+
     private fun RoomData.toDomain(): Room =
         Room(
             roomId = Id(id!!),

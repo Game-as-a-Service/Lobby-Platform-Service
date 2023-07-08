@@ -6,7 +6,7 @@ import tw.waterballsa.gaas.exceptions.PlatformException
 class Room(
     var roomId: Id? = null,
     val game: GameRegistration,
-    val host: Player,
+    var host: Player,
     val players: MutableList<Player>,
     val maxPlayers: Int,
     val minPlayers: Int,
@@ -42,6 +42,18 @@ class Room(
         }
         val player = findPlayer(playerId) ?: throw PlatformException("Player not joined")
         players.remove(player)
+    }
+
+    fun leaveRoom(playerId: Player.Id) {
+        players.removeIf { it.id == playerId }
+        if (playerId == host.id) {
+            changeHost()
+        }
+    }
+
+    private fun changeHost() {
+        players.firstOrNull()
+            ?.let { host = it }
     }
 
     private fun findPlayer(playerId: Player.Id): Player? = players.find { it.id == playerId }

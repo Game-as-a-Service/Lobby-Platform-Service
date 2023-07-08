@@ -1,18 +1,18 @@
 package tw.waterballsa.gaas.spring.it.controllers
 
-import org.assertj.core.api.Assertions.*
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.oauth2.core.oidc.OidcIdToken
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin
 import org.springframework.test.web.servlet.ResultActions
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tw.waterballsa.gaas.application.model.Pagination
@@ -272,6 +272,18 @@ class RoomControllerTest @Autowired constructor(
             .thenPlayersShouldBeInTheRoom(roomC.roomId!!, hostA, playerB)
     }
 
+    @Test
+    fun givenHostAndPlayerBAndPlayerCAreInRoomD_WhenHostLeaveRoomD_ThenPreviousHostShouldBeNotInRoomDAndChangedNewHost() {
+        val userA = testUser
+        val host = userA.toRoomPlayer()
+        val playerB = createUser("2", "test2@mail.com", "winner1122").toRoomPlayer()
+        val playerC = createUser("3", "test3@mail.com", "winner0033").toRoomPlayer()
+
+        givenHostAndPlayersAreInTheRoom(host, playerB, playerC)
+            .whenUserLeaveTheRoom(userA)
+            .thenPlayerShouldBeNotInRoomAndHostIsChanged(host)
+    }
+
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
@@ -325,6 +337,12 @@ class RoomControllerTest @Autowired constructor(
                 .withJwt(user.id!!.value.toJwt())
         )
 
+    private fun leaveRoom(leaveUser: Jwt): ResultActions =
+        mockMvc.perform(
+            delete("/rooms/${testRoom.roomId!!.value}/players/me")
+                .withJwt(leaveUser)
+        )
+
     private fun givenTheHostCreatePublicRoom(host: User): Room {
         testRoom = createRoom(host)
         return testRoom
@@ -332,6 +350,12 @@ class RoomControllerTest @Autowired constructor(
 
     private fun givenTheHostCreateRoomWithPassword(host: User, password: String): Room {
         testRoom = createRoom(host, password)
+        return testRoom
+    }
+
+    private fun givenHostAndPlayersAreInTheRoom(host: Player, vararg players: Player): Room {
+        val combinedPlayers = (listOf(host) + players).toMutableList()
+        testRoom = createRoom(host, combinedPlayers)
         return testRoom
     }
 
@@ -348,6 +372,11 @@ class RoomControllerTest @Autowired constructor(
     private fun whenUserCancelReadyFor(roomId: Room.Id, user: User): ResultActions = mockMvc.perform(
         post("/rooms/${roomId.value}/players/me:cancel").withJwt(user.id!!.value.toJwt())
     )
+
+    private fun Room.whenUserLeaveTheRoom(user: User): ResultActions {
+        val leaveUser = user.id!!.value.toJwt()
+        return leaveRoom(leaveUser)
+    }
 
     private fun ResultActions.thenCreateRoomSuccessfully(request: TestCreateRoomRequest) {
         request.let {
@@ -380,6 +409,13 @@ class RoomControllerTest @Autowired constructor(
             .andExpect(jsonPath("$.message").value("${resourceType.simpleName} not found"))
     }
 
+    private fun ResultActions.thenPlayerShouldBeNotInRoomAndHostIsChanged(player: Player) {
+        andExpect(status().isNoContent)
+        val room = roomRepository.findById(testRoom.roomId!!)!!
+        assertFalse(room.hasPlayer(player.id))
+        assertFalse(room.isHost(player.id))
+    }
+
     private fun createUser(id: String, email: String, nickname: String): User =
         userRepository.createUser(User(User.Id(id), email, nickname))
 
@@ -403,6 +439,20 @@ class RoomControllerTest @Autowired constructor(
                 game = testGame,
                 host = Player(Player.Id(host.id!!.value), host.nickname),
                 players = mutableListOf(Player(Player.Id(host.id!!.value), host.nickname, hostReady)),
+                maxPlayers = testGame.maxPlayers,
+                minPlayers = testGame.minPlayers,
+                name = "My Room",
+                status = Room.Status.WAITING,
+                password = password
+            )
+        )
+
+    private fun createRoom(host: Player, players: MutableList<Player>, password: String? = null): Room =
+        roomRepository.createRoom(
+            Room(
+                game = testGame,
+                host = host,
+                players = players,
                 maxPlayers = testGame.maxPlayers,
                 minPlayers = testGame.minPlayers,
                 name = "My Room",
@@ -466,4 +516,13 @@ class RoomControllerTest @Autowired constructor(
         findRoomById(roomId)!!.players.map { it.id.value }.let {
             assertThat(it).containsAll(users.map { user -> user.id!!.value })
         }
+
+    private fun User.toRoomPlayer(): Player =
+        Player(Player.Id(id!!.value), nickname)
+
+    private fun Room.hasPlayer(playerId: Player.Id): Boolean =
+        players.any { it.id == playerId }
+
+    private fun Room.isHost(playerId: Player.Id): Boolean =
+        host.id == playerId
 }

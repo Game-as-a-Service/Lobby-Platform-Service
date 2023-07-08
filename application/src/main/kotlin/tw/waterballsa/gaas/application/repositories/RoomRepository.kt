@@ -12,4 +12,5 @@ interface RoomRepository {
     fun update(room: Room): Room
     fun findByStatus(status: Room.Status, page: Pagination<Any>): Pagination<Room>
     fun deleteById(roomId: Room.Id)
+    fun leaveRoom(room: Room)
 }
