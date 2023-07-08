@@ -16,6 +16,9 @@ class User(
         private const val NICKNAME_MAXIMUM_BYTE_SIZE = 16
     }
 
+    constructor(email: String, nickname: String, identities: MutableList<String> ) :
+            this(null, email, nickname, identities)
+
     fun changeNickname(nickname: String) {
         val nicknameByteSize = nickname.toByteArray().size
 

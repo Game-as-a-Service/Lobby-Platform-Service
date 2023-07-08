@@ -45,7 +45,7 @@ class OAuth2Controller(
 }
 
 val Jwt.email: String
-    get() = claims["email"]?.let { it as String }
+    get() = claims["email"]?.toString()
         ?: throw PlatformException("JWT email should exist.")
 
 val Jwt.identityProviderId: String

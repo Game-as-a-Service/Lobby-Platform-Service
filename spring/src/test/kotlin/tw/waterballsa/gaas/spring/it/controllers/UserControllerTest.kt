@@ -82,12 +82,12 @@ class UserControllerTest @Autowired constructor(
     }
 
     private fun givenUserNickname(nickname: String): User {
-        val user = User(null, "userA@example.com", nickname, mockUser.identities)
+        val user = User("userA@example.com", nickname, mockUser.identities)
         return userRepository.createUser(user)
     }
 
     private fun givenAnotherUserNickname(nickname: String): User {
-        val user = User(null, "userB@example.com", nickname, mockUser.identities)
+        val user = User("userB@example.com", nickname, mockUser.identities)
         return userRepository.createUser(user)
     }
 
@@ -102,7 +102,6 @@ class UserControllerTest @Autowired constructor(
                 .content(updateUserRequest.toJson())
                 .withJwt(toJwt())
         )
-
 
     private fun ResultActions.thenGetUserSuccessfully() {
         this.andExpect(status().isOk)
@@ -119,10 +118,10 @@ class UserControllerTest @Autowired constructor(
     }
 
     private fun ResultActions.thenUserNicknameShouldBeChanged(nickname: String) {
-        val userViewModel = andExpect(status().isOk)
+        val user = andExpect(status().isOk)
             .getBody(UpdateUserViewModel::class.java)
 
-        userRepository.findById(userViewModel.id)
+        userRepository.findById(user.id)
             .also { assertThat(it).isNotNull }
             .also { assertThat(it!!.nickname).isEqualTo(nickname) }
     }
