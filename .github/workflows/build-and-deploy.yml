@@ -34,9 +34,10 @@ jobs:
       
       # Dump GitHub Context
       - name: Dump GitHub Context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo -e "```\n$GITHUB_CONTEXT\n```" >> $GITHUB_STEP_SUMMARY
+        run: |
+          echo "```" >> $GITHUB_STEP_SUMMARY
+          echo "${{ toJson(github) }}" >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
 
       # Publish Artifact
       - name: Upload Artifact
