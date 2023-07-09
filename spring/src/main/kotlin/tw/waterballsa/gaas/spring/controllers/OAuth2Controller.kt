@@ -8,8 +8,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.core.oidc.OidcIdToken
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.ui.set
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.servlet.mvc.support.RedirectAttributes
+import org.springframework.web.servlet.view.RedirectView
 import org.springframework.web.util.UriComponentsBuilder
 import tw.waterballsa.gaas.application.usecases.CreateUserUseCase
 import tw.waterballsa.gaas.exceptions.PlatformException
@@ -33,6 +37,12 @@ class OAuth2Controller(
     fun loginSuccessfully(@AuthenticationPrincipal principal: OidcUser): ResponseEntity<Any> {
         sendTokenToFrontend(principal.idToken)
         return ResponseEntity.status(FOUND).header(LOCATION, "/").build()
+    }
+
+    @GetMapping("/login")
+    fun login(@RequestParam type: String, redirectAttributes: RedirectAttributes): RedirectView{
+        redirectAttributes["type"] = type
+        return RedirectView("oauth2/authorization/auth0")
     }
 
     private fun sendTokenToFrontend(oidcIdToken: OidcIdToken) {
