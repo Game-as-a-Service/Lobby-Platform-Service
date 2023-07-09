@@ -44,8 +44,13 @@ class OAuth2Controller(
     }
 }
 
+val Jwt.email: String
+    get() = claims["email"]?.toString()
+        ?: throw PlatformException("JWT email should exist.")
+
+val Jwt.identityProviderId: String
+    get() = subject
+        ?: throw PlatformException("JWT subject should exist.")
+
 private fun Jwt.toRequest(): CreateUserUseCase.Request =
-    CreateUserUseCase.Request(
-        email = claims["email"] as String? ?: throw PlatformException("JWT email should exist."),
-        identityProviderId = subject ?: throw PlatformException("JWT subject should exist.")
-    )
+    CreateUserUseCase.Request(email, identityProviderId)
