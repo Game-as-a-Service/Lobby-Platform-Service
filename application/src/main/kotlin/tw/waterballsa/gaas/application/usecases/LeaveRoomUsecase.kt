@@ -10,7 +10,7 @@ import javax.inject.Named
 @Named
 class LeaveRoomUsecase(
     private val roomRepository: RoomRepository,
-    private val eventBus: EventBus
+    private val eventBus: EventBus,
 ) {
 
     fun execute(request: LeaveRoomUsecase.Request) {
@@ -27,7 +27,6 @@ class LeaveRoomUsecase(
 
     data class Request(
         val roomId: String,
-        val playerId: String
+        val playerId: String,
     )
-
 }

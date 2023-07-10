@@ -12,7 +12,6 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames
 import org.springframework.security.oauth2.core.oidc.OidcScopes
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames
-import org.springframework.security.web.savedrequest.DefaultSavedRequest
 import org.springframework.security.web.util.UrlUtils.buildFullRequestUrl
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.util.CollectionUtils
@@ -110,9 +109,8 @@ class CustomOAuthorizationRequestResolver(
     override fun resolve(request: HttpServletRequest): OAuth2AuthorizationRequest? {
         val registrationId = resolveRegistrationId(request) ?: return null
         val redirectUriAction = request.getAction("login")
-        val originalRequest = request.session.getAttribute("SPRING_SECURITY_SAVED_REQUEST") as DefaultSavedRequest
         val identityProviders = IdentityProvider.values().map { it.queryParam }
-        val targetIdentityProvider = originalRequest.parameterMap["type"]?.find { it in identityProviders }
+        val targetIdentityProvider = request.parameterMap["type"]?.find { it in identityProviders }
         authorizationRequestCustomizer = Consumer {
             it.parameters { params ->
                 params["connection"] = targetIdentityProvider ?: "google-oauth2"

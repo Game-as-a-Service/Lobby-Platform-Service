@@ -10,11 +10,9 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
-import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import tw.waterballsa.gaas.application.usecases.CreateUserUseCase
-import javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED
 
 @EnableWebSecurity
 class SecurityConfig(
@@ -28,7 +26,7 @@ class SecurityConfig(
         http
             .csrf().disable()
             .authorizeHttpRequests()
-            .antMatchers("/health", "/walking-skeleton").permitAll()
+            .antMatchers("/login", "/health", "/walking-skeleton").permitAll()
             .antMatchers("/swagger-ui/**", "/favicon.ico").permitAll()
             .anyRequest().authenticated()
             .and()
@@ -45,10 +43,7 @@ class SecurityConfig(
             .userInfoEndpoint().oidcUserService(oidcUserService())
             .and()
             .and()
-            .oauth2ResourceServer().jwt().and()
-            .and()
-            .exceptionHandling()
-            .authenticationEntryPoint(redirectToLoginEndPoint())
+            .oauth2ResourceServer().jwt()
 
         return http.build()
     }
@@ -67,11 +62,4 @@ class SecurityConfig(
         }
     }
 
-    private fun redirectToLoginEndPoint(): AuthenticationEntryPoint =
-        AuthenticationEntryPoint { request, response, _ ->
-            when (request.requestURI) {
-                "/login" -> response.sendRedirect("/oauth2/authorization/auth0")
-                else -> response.sendError(SC_UNAUTHORIZED)
-            }
-        }
 }
