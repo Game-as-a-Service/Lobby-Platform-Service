@@ -3,7 +3,6 @@ package tw.waterballsa.gaas.spring.controllers
 import org.springframework.http.HttpStatus.*
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.*
 import tw.waterballsa.gaas.application.usecases.*
@@ -34,11 +33,11 @@ class RoomController(
 ) {
     @PostMapping
     fun createRoom(
-        @AuthenticationPrincipal principal: OidcUser,
-        @RequestBody @Valid request: CreateRoomRequest
+            @AuthenticationPrincipal jwt: Jwt,
+            @RequestBody @Valid request: CreateRoomRequest
     ): ResponseEntity<Any> {
         val presenter = CreateRoomPresenter()
-        createRoomUsecase.execute(request.toRequest(principal.subject), presenter)
+        createRoomUsecase.execute(request.toRequest(jwt.subject), presenter)
         return presenter.viewModel
             ?.let { ResponseEntity.status(CREATED).body(it) }
             ?: ResponseEntity.noContent().build()
@@ -46,11 +45,11 @@ class RoomController(
 
     @PostMapping("/{roomId}/players")
     fun joinRoom(
-        @AuthenticationPrincipal principal: OidcUser,
+        @AuthenticationPrincipal jwt: Jwt,
         @PathVariable roomId: String,
         @RequestBody request: JoinRoomRequest
     ): PlatformViewModel {
-        val joinerId = principal.subject ?: throw PlatformException("User id must exist.")
+        val joinerId = jwt.subject ?: throw PlatformException("User id must exist.")
         joinRoomUsecase.execute(request.toRequest(roomId, joinerId))
         return PlatformViewModel.success()
     }
