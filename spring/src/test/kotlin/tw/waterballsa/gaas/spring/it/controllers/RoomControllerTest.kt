@@ -7,7 +7,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.oauth2.jwt.Jwt
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -283,7 +282,7 @@ class RoomControllerTest @Autowired constructor(
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
-                .with(jwt().jwt(mockUserJwt(joinUser)))
+                .withJwt(mockUserJwt(joinUser))
                 .param("status", status)
                 .param("page", page.toString())
                 .param("offset", offset.toString())
@@ -316,21 +315,21 @@ class RoomControllerTest @Autowired constructor(
     private fun createRoom(request: TestCreateRoomRequest): ResultActions =
         mockMvc.perform(
             post("/rooms")
-                .with(jwt().jwt(mockUserJwt(testUser)))
+                .withJwt(mockUserJwt(testUser))
                 .withJson(request)
         )
 
     private fun joinRoom(request: TestJoinRoomRequest, jwt: Jwt): ResultActions =
         mockMvc.perform(
             post("/rooms/${testRoom.roomId!!.value}/players")
-                .with(jwt().jwt(jwt))
+                .withJwt(jwt)
                 .withJson(request)
         )
 
     private fun deleteRoom(jwt: Jwt, roomId: String): ResultActions =
         mockMvc.perform(
             delete("/rooms/${roomId}")
-                .with(jwt().jwt(jwt))
+                .withJwt(jwt)
         )
 
     private fun leaveRoom(leaveUser: Jwt): ResultActions =
