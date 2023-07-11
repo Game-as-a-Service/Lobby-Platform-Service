@@ -29,6 +29,7 @@ import tw.waterballsa.gaas.spring.models.TestGetRoomsRequest
 import tw.waterballsa.gaas.spring.models.TestJoinRoomRequest
 import java.time.Instant.now
 import kotlin.reflect.KClass
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 
 
 class RoomControllerTest @Autowired constructor(
@@ -480,6 +481,10 @@ class RoomControllerTest @Autowired constructor(
 
         val idToken = OidcIdToken("token", now(), now().plusSeconds(60), claims)
         return DefaultOidcUser(emptyList(), idToken)
+    }
+
+    private fun mockUserJwt(user: User): Jwt {
+        return user.id!!.value.toJwt()
     }
 
     private fun joinRoomRequest(password: String? = null): TestJoinRoomRequest =
