@@ -18,11 +18,20 @@ class JoinRoomUsecase(
 ) {
 
     fun execute(request: Request) {
-        with(request) {
-            val room = findRoomById(Room.Id(roomId))
-            room.validateRoomPassword(password)
-            room.validateFullRoom()
-            room.joinPlayer(userId)
+        val (roomId, userId, password) = request
+        val room = findRoomById(Room.Id(roomId))
+        validateUserJoinedRoom(userId)
+        room.run {
+            validateRoomPassword(password)
+            validateFullRoom()
+            joinPlayer(userId)
+        }
+    }
+
+    private fun validateUserJoinedRoom(userId: String) {
+        val hasJoined = roomRepository.hasPlayerJoinedRoom(User.Id(userId))
+        if (hasJoined) {
+            throw PlatformException("Player($userId) has joined another room.")
         }
     }
 
