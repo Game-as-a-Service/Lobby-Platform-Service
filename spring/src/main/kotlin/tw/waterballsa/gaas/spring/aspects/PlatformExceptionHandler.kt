@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus.*
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import tw.waterballsa.gaas.exceptions.ForbiddenException
 import tw.waterballsa.gaas.exceptions.NotFoundException
 import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.spring.controllers.viewmodel.PlatformViewModel
@@ -17,5 +18,9 @@ class PlatformExceptionHandler {
     @ResponseStatus(BAD_REQUEST)
     @ExceptionHandler(PlatformException::class)
     fun badRequest(exception: PlatformException): PlatformViewModel = PlatformViewModel(exception.message!!)
+
+    @ResponseStatus(FORBIDDEN)
+    @ExceptionHandler(ForbiddenException::class)
+    fun forbidden(exception: ForbiddenException): PlatformViewModel = PlatformViewModel(exception.message!!)
 
 }
