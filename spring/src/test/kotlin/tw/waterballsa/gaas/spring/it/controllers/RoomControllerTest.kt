@@ -289,12 +289,12 @@ class RoomControllerTest @Autowired constructor(
     @Test
     @DisplayName(
         """
-        Given: Player A has already joined a room B
+        Given: Player A has already joined the room B
         When: Player A join another room C
         Then: Should fail
     """
     )
-    fun testUserJoinTwoRoomsAtSameTime() {
+    fun testUserJoinedAnotherRoom() {
         val userA = testUser
         val userB = createUser("2", "test2@mail.com", "winner1122")
         val userC = createUser("3", "test3@mail.com", "winner1123")
@@ -305,7 +305,7 @@ class RoomControllerTest @Autowired constructor(
 
         givenTheHostCreatePublicRoom(userC)
             .whenUserJoinTheRoom(userB)
-            .thenShouldFail("Can only join a single room at same time")
+            .thenShouldFail("Player(${userB.id!!.value}) has joined another room.")
     }
 
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =

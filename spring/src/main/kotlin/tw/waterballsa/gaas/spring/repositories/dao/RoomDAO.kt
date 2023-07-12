@@ -12,6 +12,6 @@ import tw.waterballsa.gaas.spring.repositories.data.RoomData.PlayerData
 interface RoomDAO : MongoRepository<RoomData, String> {
     fun existsByHostId(hostId: String): Boolean
     fun findByStatus(status: Room.Status, pageable: Pageable): Page<RoomData>
-    fun existsByPlayersContaining(players: List<PlayerData>): Boolean
+    fun existsByPlayersContaining(players: Collection<PlayerData>): Boolean
 }
 

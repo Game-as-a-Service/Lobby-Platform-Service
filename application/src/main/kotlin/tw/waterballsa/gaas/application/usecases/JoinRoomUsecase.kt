@@ -20,7 +20,7 @@ class JoinRoomUsecase(
     fun execute(request: Request) {
         val (roomId, userId, password) = request
         val room = findRoomById(Room.Id(roomId))
-        validateUserJoinSingleRoom(userId)
+        validateUserJoinedRoom(userId)
         room.run {
             validateRoomPassword(password)
             validateFullRoom()
@@ -28,10 +28,10 @@ class JoinRoomUsecase(
         }
     }
 
-    private fun validateUserJoinSingleRoom(userId: String) {
-        val isJoined = roomRepository.hasPlayerJoinedRoom(User.Id(userId))
-        if (isJoined) {
-            throw PlatformException("Can only join a single room at same time")
+    private fun validateUserJoinedRoom(userId: String) {
+        val hasJoined = roomRepository.hasPlayerJoinedRoom(User.Id(userId))
+        if (hasJoined) {
+            throw PlatformException("Player($userId) has joined another room.")
         }
     }
 
