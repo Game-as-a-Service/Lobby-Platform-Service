@@ -36,10 +36,10 @@ class RoomData(
             password = password
         )
 
-    class PlayerData(
+    data class PlayerData(
         val id: String,
         val nickname: String,
-        private val readiness: Boolean
+        val readiness: Boolean
     ) {
         fun toDomain(): Room.Player =
             Room.Player(Room.Player.Id(id), nickname, readiness)

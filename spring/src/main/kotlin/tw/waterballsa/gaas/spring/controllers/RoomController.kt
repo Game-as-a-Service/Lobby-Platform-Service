@@ -3,7 +3,6 @@ package tw.waterballsa.gaas.spring.controllers
 import org.springframework.http.HttpStatus.*
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.*
 import tw.waterballsa.gaas.application.usecases.*
@@ -34,7 +33,7 @@ class RoomController(
 ) {
     @PostMapping
     fun createRoom(
-        @AuthenticationPrincipal principal: OidcUser,
+        @AuthenticationPrincipal principal: Jwt,
         @RequestBody @Valid request: CreateRoomRequest
     ): ResponseEntity<Any> {
         val presenter = CreateRoomPresenter()
@@ -46,7 +45,7 @@ class RoomController(
 
     @PostMapping("/{roomId}/players")
     fun joinRoom(
-        @AuthenticationPrincipal principal: OidcUser,
+        @AuthenticationPrincipal principal: Jwt,
         @PathVariable roomId: String,
         @RequestBody request: JoinRoomRequest
     ): PlatformViewModel {

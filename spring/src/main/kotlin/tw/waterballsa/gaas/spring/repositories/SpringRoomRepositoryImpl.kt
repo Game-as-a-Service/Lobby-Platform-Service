@@ -13,6 +13,7 @@ import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.spring.extensions.mapOrNull
 import tw.waterballsa.gaas.spring.repositories.dao.RoomDAO
 import tw.waterballsa.gaas.spring.repositories.data.RoomData
+import tw.waterballsa.gaas.spring.repositories.data.RoomData.PlayerData
 import tw.waterballsa.gaas.spring.repositories.data.toData
 
 @Component
@@ -32,11 +33,10 @@ class SpringRoomRepository(
 
     override fun update(room: Room): Room = roomDAO.save(room.toData()).toDomain(room.players)
 
-    override fun findByStatus(status: Status, page: Pagination<Any>): Pagination<Room> {
-        return roomDAO.findByStatus(status, page.toPageable())
+    override fun findByStatus(status: Status, page: Pagination<Any>): Pagination<Room> =
+        roomDAO.findByStatus(status, page.toPageable())
             .map { it.toDomain() }
             .toPagination()
-    }
 
     override fun deleteById(roomId: Id) {
         roomDAO.deleteById(roomId.value)
@@ -46,12 +46,15 @@ class SpringRoomRepository(
         roomDAO.save(room.toData())
     }
 
+    override fun hasPlayerJoinedRoom(playerId: User.Id): Boolean =
+        roomDAO.existsByPlayersContaining(listOf(playerId.toPlayerData()))
+
     private fun RoomData.toDomain(): Room =
         Room(
             roomId = Id(id!!),
             game = game.toDomain(),
             host = host.toDomain(),
-            players = players.map(RoomData.PlayerData::toDomain).toMutableList(),
+            players = players.map(PlayerData::toDomain).toMutableList(),
             maxPlayers = maxPlayers,
             minPlayers = minPlayers,
             name = name,
@@ -61,6 +64,11 @@ class SpringRoomRepository(
     private fun User.Id.toRoomPlayer(): Player =
         userRepository.findById(this)
             ?.toRoomPlayer()
+            ?: throw notFound(User::class).id(value)
+
+    private fun User.Id.toPlayerData(): PlayerData =
+        userRepository.findById(this)
+            ?.let { PlayerData(it.id!!.value, it.nickname, false) }
             ?: throw notFound(User::class).id(value)
 }
 
