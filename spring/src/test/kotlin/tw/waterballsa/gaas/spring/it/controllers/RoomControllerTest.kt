@@ -29,6 +29,7 @@ import tw.waterballsa.gaas.spring.models.TestGetRoomsRequest
 import tw.waterballsa.gaas.spring.models.TestJoinRoomRequest
 import java.time.Instant.now
 import kotlin.reflect.KClass
+import tw.waterballsa.gaas.exceptions.ForbiddenException.Companion.Message
 
 
 class RoomControllerTest @Autowired constructor(
@@ -284,6 +285,25 @@ class RoomControllerTest @Autowired constructor(
             .thenPlayerShouldBeNotInRoomAndHostIsChanged(host)
     }
 
+    @Test
+    fun giveHostAndPlayerBAreInRoomC_WhenHostGetRoomCInfo_ThenShouldReturnRoomCInfoSuccessfully() {
+        val userA = testUser
+        val host = userA.toRoomPlayer()
+        val playerB = createUser("2", "test2@mail.com", "winner1122").toRoomPlayer()
+        givenHostAndPlayersAreInTheRoom(host, playerB)
+            .whenUserGetTheRoom(userA)
+            .thenReturnRoomInfo()
+    }
+
+    @Test
+    fun giveUserANotInRoomB_WhenUserAGetRoomBInfo_ThenShouldNotReceiveRoomBInfo(){
+        val userA = testUser
+        val host = createUser("2", "test2@mail.com", "winner1122").toRoomPlayer()
+        givenHostAndPlayersAreInTheRoom(host)
+            .whenUserGetTheRoom(userA)
+            .thenShouldNotReceiveRoomInfo(Message.NOT_IN_ROOM.toString())
+    }
+
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
@@ -343,6 +363,12 @@ class RoomControllerTest @Autowired constructor(
                 .withJwt(leaveUser)
         )
 
+    private fun getRoom(user: Jwt): ResultActions =
+        mockMvc.perform(
+            get("/rooms/${testRoom.roomId!!.value}")
+                .withJwt(user)
+        )
+
     private fun givenTheHostCreatePublicRoom(host: User): Room {
         testRoom = createRoom(host)
         return testRoom
@@ -377,6 +403,8 @@ class RoomControllerTest @Autowired constructor(
         val leaveUser = user.id!!.value.toJwt()
         return leaveRoom(leaveUser)
     }
+
+    private fun Room.whenUserGetTheRoom(user: User) = getRoom(user.id!!.value.toJwt())
 
     private fun ResultActions.thenCreateRoomSuccessfully(request: TestCreateRoomRequest) {
         request.let {
@@ -414,6 +442,38 @@ class RoomControllerTest @Autowired constructor(
         val room = roomRepository.findById(testRoom.roomId!!)!!
         assertFalse(room.hasPlayer(player.id))
         assertFalse(room.isHost(player.id))
+    }
+
+    private fun ResultActions.thenReturnRoomInfo() {
+        val room = roomRepository.findById(testRoom.roomId!!)!!
+        room.let {
+            andExpect(status().isOk)
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.id").value(it.roomId!!.value))
+                .andExpect(jsonPath("$.name").value(it.name))
+                .andExpect(jsonPath("$.game.id").value(it.game.id!!.value))
+                .andExpect(jsonPath("$.game.name").value(it.game.displayName))
+                .andExpect(jsonPath("$.host.id").value(it.host.id!!.value))
+                .andExpect(jsonPath("$.host.nickname").value(it.host.nickname))
+                .andExpect(jsonPath("$.host.isReady").value(it.host.readiness))
+                .andExpect(jsonPath("$.isLocked").value(!it.password.isNullOrEmpty()))
+                .andExpect(jsonPath("$.status").value(it.status.toString()))
+                .andExpect(jsonPath("$.currentPlayers").value(2))
+                .andExpect(jsonPath("$.minPlayers").value(it.minPlayers))
+                .andExpect(jsonPath("$.maxPlayers").value(it.maxPlayers))
+                .andExpect(jsonPath("$.players").isArray())
+
+            it.players.forEachIndexed { index, player ->
+                andExpect(jsonPath("$.players[$index].id").value(player.id!!.value))
+                    .andExpect(jsonPath("$.players[$index].nickname").value(player.nickname))
+                    .andExpect(jsonPath("$.players[$index].isReady").value(player.readiness))
+            }
+        }
+    }
+
+    private fun ResultActions.thenShouldNotReceiveRoomInfo(message: String): ResultActions {
+        return andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.message").value(message))
     }
 
     private fun createUser(id: String, email: String, nickname: String): User =

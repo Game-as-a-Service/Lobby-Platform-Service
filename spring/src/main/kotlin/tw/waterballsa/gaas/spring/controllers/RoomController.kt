@@ -13,7 +13,9 @@ import tw.waterballsa.gaas.events.CreatedRoomEvent
 import tw.waterballsa.gaas.events.DomainEvent
 import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.spring.controllers.RoomController.CreateRoomViewModel
+import tw.waterballsa.gaas.spring.controllers.presenter.GetRoomPresenter
 import tw.waterballsa.gaas.spring.controllers.presenter.GetRoomsPresenter
+import tw.waterballsa.gaas.spring.controllers.viewmodel.GetRoomViewModel
 import tw.waterballsa.gaas.spring.controllers.viewmodel.GetRoomsViewModel
 import tw.waterballsa.gaas.spring.controllers.viewmodel.PlatformViewModel
 import tw.waterballsa.gaas.spring.extensions.getEvent
@@ -30,7 +32,8 @@ class RoomController(
     private val closeRoomsUseCase: CloseRoomUsecase,
     private val changePlayerReadinessUsecase: ChangePlayerReadinessUsecase,
     private val kickPlayerUseCase: KickPlayerUsecase,
-    private val leaveRoomUsecase: LeaveRoomUsecase
+    private val leaveRoomUsecase: LeaveRoomUsecase,
+    private val getRoomUsecase: GetRoomUsecase
 ) {
     @PostMapping
     fun createRoom(
@@ -123,6 +126,18 @@ class RoomController(
         leaveRoomUsecase.execute(LeaveRoomUsecase.Request(roomId, leaverId))
     }
 
+    @GetMapping("/{roomId}")
+    fun getRoom(
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable roomId: String,
+    ): GetRoomViewModel {
+        val userId = jwt.subject ?: throw PlatformException("User id must exist.")
+        val request = GetRoomUsecase.Request(roomId, userId)
+        val presenter = GetRoomPresenter()
+        getRoomUsecase.execute(request, presenter)
+        return presenter.viewModel
+    }
+
     class CreateRoomRequest(
         private val name: String,
         private val gameId: String,
@@ -206,6 +221,7 @@ class RoomController(
                 offset = offset
             )
     }
+
 }
 
 private fun GameRegistration.toView(): CreateRoomViewModel.Game =

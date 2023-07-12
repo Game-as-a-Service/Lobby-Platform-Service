@@ -36,6 +36,9 @@ class Room(
         }
     }
 
+    fun hasPlayer(playerId: Player.Id): Boolean =
+        players.any { it.id == playerId }
+
     fun kickPlayer(hostId: Player.Id, playerId: Player.Id) {
         if (hostId != host.id) {
             throw throw throw PlatformException("This Player is not host")
