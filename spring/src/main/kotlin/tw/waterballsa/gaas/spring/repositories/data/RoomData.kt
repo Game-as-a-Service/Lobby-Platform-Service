@@ -36,7 +36,7 @@ class RoomData(
             password = password
         )
 
-    class PlayerData(
+    data class PlayerData(
         val id: String,
         val nickname: String,
         private val readiness: Boolean

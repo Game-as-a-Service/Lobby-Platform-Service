@@ -13,4 +13,5 @@ interface RoomRepository {
     fun findByStatus(status: Room.Status, page: Pagination<Any>): Pagination<Room>
     fun deleteById(roomId: Room.Id)
     fun leaveRoom(room: Room)
+    fun hasPlayerJoinedRoom(playerId: User.Id): Boolean
 }

@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.oauth2.jwt.Jwt
@@ -23,6 +24,7 @@ import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 import tw.waterballsa.gaas.spring.models.TestCreateRoomRequest
 import tw.waterballsa.gaas.spring.models.TestGetRoomsRequest
 import tw.waterballsa.gaas.spring.models.TestJoinRoomRequest
+import java.util.UUID.*
 import kotlin.reflect.KClass
 
 
@@ -51,29 +53,29 @@ class RoomControllerTest @Autowired constructor(
     @Test
     fun givenUserIsInTheLobby_WhenUserCreateARoom_ThenShouldSucceed() {
         val request = createRoomRequest()
-        createRoom(request)
+        createRoom(testUser, request)
             .thenCreateRoomSuccessfully(request)
     }
 
     @Test
     fun givenUserIsInTheLobby_WhenUserCreateARoomWithValidPassword_ThenShouldSucceed() {
         val request = createRoomRequest("1234")
-        createRoom(request)
+        createRoom(testUser, request)
             .thenCreateRoomSuccessfully(request)
     }
 
     @Test
     fun givenUserIsInTheLobby_WhenUserCreateARoomWithInValidPassword_ThenShouldFail() {
-        createRoom(createRoomRequest("12345"))
+        createRoom(testUser, createRoomRequest("12345"))
             .andExpect(status().isBadRequest)
 
-        createRoom(createRoomRequest("abcd"))
+        createRoom(testUser, createRoomRequest("abcd"))
             .andExpect(status().isBadRequest)
 
-        createRoom(createRoomRequest("1a2b"))
+        createRoom(testUser, createRoomRequest("1a2b"))
             .andExpect(status().isBadRequest)
 
-        createRoom(createRoomRequest("qaz"))
+        createRoom(testUser, createRoomRequest("qaz"))
             .andExpect(status().isBadRequest)
     }
 
@@ -81,9 +83,9 @@ class RoomControllerTest @Autowired constructor(
     @Test
     fun givenUserAlreadyCreatedARoom_WhenUserCreateAnotherRoom_ThenShouldFail() {
         val request = createRoomRequest("1234")
-        createRoom(request)
+        createRoom(testUser, request)
             .thenCreateRoomSuccessfully(request)
-        createRoom(request)
+        createRoom(testUser, request)
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value("A user can only create one room at a time."))
     }
@@ -279,6 +281,28 @@ class RoomControllerTest @Autowired constructor(
             .thenPlayerShouldBeNotInRoomAndHostIsChanged(host)
     }
 
+    @Test
+    @DisplayName(
+        """
+        Given: Player A has already joined the room B
+        When: Player A join another room C
+        Then: Should fail
+    """
+    )
+    fun testUserJoinedAnotherRoom() {
+        val userA = testUser
+        val userB = createUser("2", "test2@mail.com", "winner1122")
+        val userC = createUser("3", "test3@mail.com", "winner1123")
+
+        givenTheHostCreatePublicRoom(userA)
+            .whenUserJoinTheRoom(userB)
+            .thenActionSuccessfully()
+
+        givenTheHostCreatePublicRoom(userC)
+            .whenUserJoinTheRoom(userB)
+            .thenShouldFail("Player(${userB.id!!.value}) has joined another room.")
+    }
+
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
@@ -288,8 +312,8 @@ class RoomControllerTest @Autowired constructor(
                 .param("offset", offset.toString())
         )
 
-    private fun givenWaitingRooms(vararg users: User) =
-        users.forEach { givenTheHostCreatePublicRoom(it) }
+    private fun givenWaitingRooms(vararg users: User): Unit =
+        users.forEach(::givenTheHostCreatePublicRoom)
 
     private fun ResultActions.thenShouldHaveRooms(request: TestGetRoomsRequest) {
         val rooms = roomRepository.findByStatus(request.toStatus(), request.toPagination())
@@ -312,17 +336,17 @@ class RoomControllerTest @Autowired constructor(
         }
     }
 
-    private fun createRoom(request: TestCreateRoomRequest): ResultActions =
+    private fun createRoom(user: User, request: TestCreateRoomRequest): ResultActions =
         mockMvc.perform(
             post("/rooms")
                 .withJwt(mockUserJwt(testUser))
                 .withJson(request)
         )
 
-    private fun joinRoom(request: TestJoinRoomRequest, jwt: Jwt): ResultActions =
+    private fun User.joinRoom(roomId: String, request: TestJoinRoomRequest): ResultActions =
         mockMvc.perform(
-            post("/rooms/${testRoom.roomId!!.value}/players")
-                .withJwt(jwt)
+            post("/rooms/$roomId/players")
+                .withJwt(mockUserJwt(this))
                 .withJson(request)
         )
 
@@ -354,11 +378,8 @@ class RoomControllerTest @Autowired constructor(
         return testRoom
     }
 
-    private fun Room.whenUserJoinTheRoom(user: User, password: String? = null): ResultActions {
-        val request = joinRoomRequest(password)
-        val jwt = mockUserJwt(user)
-        return joinRoom(request, jwt)
-    }
+    private fun Room.whenUserJoinTheRoom(user: User, password: String? = null): ResultActions =
+        user.joinRoom(roomId!!.value, joinRoomRequest(password))
 
     private fun whenUserGetReadyFor(roomId: Room.Id, user: User): ResultActions = mockMvc.perform(
         post("/rooms/${roomId.value}/players/me:ready").withJwt(user.id!!.value.toJwt())
@@ -436,7 +457,7 @@ class RoomControllerTest @Autowired constructor(
                 players = mutableListOf(Player(Player.Id(host.id!!.value), host.nickname, hostReady)),
                 maxPlayers = testGame.maxPlayers,
                 minPlayers = testGame.minPlayers,
-                name = "My Room",
+                name = "Room-${randomUUID().toString().take(5)}",
                 status = Room.Status.WAITING,
                 password = password
             )
