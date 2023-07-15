@@ -1,3 +1,8 @@
 package tw.waterballsa.gaas.exceptions
 
-open class PlatformException(message: String) : RuntimeException(message)
+import tw.waterballsa.gaas.exceptions.enums.PlatformError
+
+open class PlatformException(
+    val platformError: PlatformError,
+    message: String,
+) : RuntimeException(message)

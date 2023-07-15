@@ -1,27 +1,40 @@
 package tw.waterballsa.gaas.exceptions
 
+import tw.waterballsa.gaas.exceptions.enums.PlatformError
 import java.util.*
 import kotlin.reflect.KClass
 
-class NotFoundException private constructor(message: String) : PlatformException(message) {
-    private constructor(id: Any, identifierName: String, resourceName: String) : this(
-        "Resource (${resourceName.capitalize()}) not found ($identifierName = $id).",
+class NotFoundException private constructor(
+    platformError: PlatformError,
+    message: String,
+) : PlatformException(platformError, message) {
+
+    private constructor(platformError: PlatformError, id: Any, identifierName: String, resourceName: String) : this(
+        platformError = platformError,
+        message = "Resource (${resourceName.capitalize()}) not found ($identifierName = $id).",
     )
 
-    private constructor(id: Any, resourceName: String) : this(id, "id", resourceName)
+    private constructor(platformError: PlatformError, id: Any, resourceName: String) :
+        this(platformError, id, "id", resourceName)
 
     companion object {
-        fun <T : Any> notFound(resourceType: KClass<T>): NotFoundExceptionBuilder = notFound(resourceType.simpleName!!)
+        fun <T : Any> notFound(platformError: PlatformError, resourceType: KClass<T>): NotFoundExceptionBuilder =
+            notFound(platformError, resourceType.simpleName!!)
 
-        fun notFound(resourceName: String): NotFoundExceptionBuilder = NotFoundExceptionBuilder(resourceName)
+        fun notFound(platformError: PlatformError, resourceName: String): NotFoundExceptionBuilder =
+            NotFoundExceptionBuilder(platformError, resourceName)
 
-        class NotFoundExceptionBuilder(private val resourceName: String) {
+        class NotFoundExceptionBuilder(
+            private val platformError: PlatformError,
+            private val resourceName: String,
+        ) {
             fun identifyBy(identifierName: String, id: Any): NotFoundException =
-                NotFoundException(identifierName, resourceName)
+                NotFoundException(platformError, identifierName, resourceName)
 
-            fun id(id: Any): NotFoundException = NotFoundException(id, resourceName)
+            fun id(id: Any): NotFoundException = NotFoundException(platformError, id, resourceName)
 
-            fun message(): NotFoundException = NotFoundException("${resourceName.capitalize()} not found")
+            fun message(): NotFoundException =
+                NotFoundException(platformError, "${resourceName.capitalize()} not found")
         }
     }
 }

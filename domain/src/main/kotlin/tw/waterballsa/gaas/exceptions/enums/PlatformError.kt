@@ -1,0 +1,28 @@
+package tw.waterballsa.gaas.exceptions.enums
+
+enum class PlatformError(
+    val code: String,
+) {
+    DEFAULT_PLATFORM_ERROR("D000"),
+
+    CLIENT_INVALID("C001"),
+    CLIENT_AUTHORIZATION_INVALID("C002"),
+
+    JWT_ERROR("J001"),
+
+    GAME_NOT_FOUND("G001"),
+    GAME_EXISTS("G002"),
+    GAME_CREATE_ERROR("G003"),
+
+    USER_NOT_FOUND("U001"),
+    USER_INPUT_INVALID("U002"),
+
+    ROOM_NOT_FOUND("R001"),
+    ROOM_PASSWORD_INCORRECT("R002"),
+    ROOM_FULL("R003"),
+
+    PLAYER_NOT_FOUND("P001"),
+    PLAYER_NOT_HOST("P002"),
+    PLAYER_JOIN_ROOM_ERROR("P003"),
+    PLAYER_CREATE_ROOM_ERROR("P004"),
+}

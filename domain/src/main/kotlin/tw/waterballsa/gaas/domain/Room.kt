@@ -2,6 +2,8 @@ package tw.waterballsa.gaas.domain
 
 import tw.waterballsa.gaas.domain.Room.Status.WAITING
 import tw.waterballsa.gaas.exceptions.PlatformException
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_NOT_FOUND
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_NOT_HOST
 
 class Room(
     var roomId: Id? = null,
@@ -28,7 +30,8 @@ class Room(
     fun isFull(): Boolean = players.size >= maxPlayers
 
     fun changePlayerReadiness(playerId: Player.Id, readiness: Boolean) {
-        val player = findPlayer(playerId) ?: throw PlatformException("Player not joined")
+        val player =
+            findPlayer(playerId) ?: throw PlatformException(PLAYER_NOT_FOUND, "Player not joined")
         if (readiness) {
             player.ready()
         } else {
@@ -37,11 +40,16 @@ class Room(
     }
 
     fun kickPlayer(hostId: Player.Id, playerId: Player.Id) {
-        if (hostId != host.id) {
-            throw throw throw PlatformException("This Player is not host")
-        }
-        val player = findPlayer(playerId) ?: throw PlatformException("Player not joined")
+        validateRoomHost(hostId)
+        val player =
+            findPlayer(playerId) ?: throw PlatformException(PLAYER_NOT_FOUND, "Player not joined")
         players.remove(player)
+    }
+
+    fun validateRoomHost(userId: Player.Id) {
+        if (host.id != userId) {
+            throw PlatformException(PLAYER_NOT_HOST, "Player(${userId.value}) is not the host")
+        }
     }
 
     fun leaveRoom(playerId: Player.Id) {

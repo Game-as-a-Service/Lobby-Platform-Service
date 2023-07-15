@@ -10,6 +10,7 @@ import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.Room.*
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.USER_NOT_FOUND
 import tw.waterballsa.gaas.spring.extensions.mapOrNull
 import tw.waterballsa.gaas.spring.repositories.dao.RoomDAO
 import tw.waterballsa.gaas.spring.repositories.data.RoomData
@@ -64,12 +65,12 @@ class SpringRoomRepository(
     private fun User.Id.toRoomPlayer(): Player =
         userRepository.findById(this)
             ?.toRoomPlayer()
-            ?: throw notFound(User::class).id(value)
+            ?: throw notFound(USER_NOT_FOUND, User::class).id(value)
 
     private fun User.Id.toPlayerData(): PlayerData =
         userRepository.findById(this)
             ?.let { PlayerData(it.id!!.value, it.nickname, false) }
-            ?: throw notFound(User::class).id(value)
+            ?: throw notFound(USER_NOT_FOUND, User::class).id(value)
 }
 
 private fun User.toRoomPlayer(): Player =
