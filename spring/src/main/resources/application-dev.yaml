@@ -18,6 +18,7 @@ spring:
               - openid
               - profile
               - email
+              - offline_access
             redirect-uri: http://localhost:8087/login/oauth2/code/auth0
         provider:
           auth0:
@@ -30,6 +31,8 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: https://dev-1l0ixjw8yohsluoi.us.auth0.com/
+          audiences:
+            - https://api.gaas.waterballsa.tw
 
 server:
   port: 8087
