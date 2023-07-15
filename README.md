@@ -31,13 +31,13 @@ Lobby-Platform-Service 是一個遊戲大廳平台的後端，提供API和服務
 - build tool：Maven 
 - CI / CD工具： GitHub Actions
 - 部屬環境：AWS EC2 
-- ATDD -- 驗收驅動開發，已使用者功能使用的角度寫e2e測試。
+- ATDD -- 驗收驅動開發，以使用者功能使用的角度寫e2e測試。
 - Clean Architecture -- 乾淨架構
 
 ## Installation
 如果你想在本地運行該項目，你需要做以下幾件事：
 ```
-### 克隆项目到本地
+### 克隆項目到本地
 git clone https://github.com/Game-as-a-Service/Lobby-Platform-Service.git
 
 ### 進入到項目目錄：
@@ -46,7 +46,7 @@ cd Lobby-Platform-Service
 ### 安裝 
 mvn clean install 
 
-### 啟動，找到spring裡的
+### 啟動，找到spring目錄裡的
 LobbyPlatformApplication.kt
 
 ### 在瀏覽器打開：
@@ -66,7 +66,7 @@ http://localhost:8087/swagger-ui/index.html
 - application：
 
 
-- domain：包含應用程序的核心業務邏輯和實體類，例如領域模型、服務實現類和倉儲等。
+- domain：包含應用程序的核心業務邏輯和實體類，例如領域模型、服務實現類等。
 
 
 - spring：包含應用程序的業務邏輯和應用程序的入口點，例如Web應用程序的控制器、服務和客戶端等。 包含應用程序的Spring配置和依賴項，例如數據訪問、事務管理和Web MVC等。
