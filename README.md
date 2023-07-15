@@ -22,17 +22,24 @@ Lobby-Platform-Service 是一個遊戲大廳平台的後端，提供API和服務
 - [後端API：swagger](https://api.gaas.waterballsa.tw/swagger-ui/index.html#/)
   API文檔使用swagger，在API文檔中，你可以找到關於如何使用平台API的詳細信息，包括API調用的參數、請求和響應格式等。
 
-##  Tech Stack
-
-- 後端框架：Spring Boot 
-- 後端語言：Kotlin 
-- 數據庫：Mongodb 
-- API文件：Swagger 
-- build tool：Maven 
-- CI / CD工具： GitHub Actions
-- 部屬環境：AWS EC2 
+## Environment
+- JDK 1.17 + 
+- Maven 3.5 + 
+- IntelliJ IDEA  2023.2 + 
+- Mongodb  4.0.2 +
+- 部屬環境：AWS EC2
 - ATDD -- 驗收驅動開發，以使用者功能使用的角度寫e2e測試。
 - Clean Architecture -- 乾淨架構
+
+##  Tech Stack
+
+| Tech Stack                       | Version | Description                                            |
+|----------------------------------|:-------:|--------------------------------------------------------|
+| Spring Boot                      | 2.7.10  | Spring Boot 是一個個基於Java 的開源框架。 主要是為了簡化Spring框架，並做到自動配置。 |
+| Spring-boot-starter-data-mongodb |    -    | Spring Boot連結Mongodb的服務的套件                             |
+| Springdoc-openapi                |    -    | Spring 整合 swagger的服務套件                                 |
+| Docker                           |    -    | 一種Container實現的技術                                       |
+
 
 ## Installation
 如果你想在本地運行該項目，你需要做以下幾件事：
