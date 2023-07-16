@@ -33,11 +33,11 @@ class RoomController(
 ) {
     @PostMapping
     fun createRoom(
-        @AuthenticationPrincipal principal: Jwt,
-        @RequestBody @Valid request: CreateRoomRequest
+            @AuthenticationPrincipal jwt: Jwt,
+            @RequestBody @Valid request: CreateRoomRequest
     ): ResponseEntity<Any> {
         val presenter = CreateRoomPresenter()
-        createRoomUsecase.execute(request.toRequest(principal.subject), presenter)
+        createRoomUsecase.execute(request.toRequest(jwt.subject), presenter)
         return presenter.viewModel
             ?.let { ResponseEntity.status(CREATED).body(it) }
             ?: ResponseEntity.noContent().build()
@@ -45,11 +45,11 @@ class RoomController(
 
     @PostMapping("/{roomId}/players")
     fun joinRoom(
-        @AuthenticationPrincipal principal: Jwt,
+        @AuthenticationPrincipal jwt: Jwt,
         @PathVariable roomId: String,
         @RequestBody request: JoinRoomRequest
     ): PlatformViewModel {
-        val joinerId = principal.subject ?: throw PlatformException("User id must exist.")
+        val joinerId = jwt.subject ?: throw PlatformException("User id must exist.")
         joinRoomUsecase.execute(request.toRequest(roomId, joinerId))
         return PlatformViewModel.success()
     }

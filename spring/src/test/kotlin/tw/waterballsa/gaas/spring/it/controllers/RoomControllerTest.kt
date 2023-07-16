@@ -7,11 +7,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.oauth2.core.oidc.OidcIdToken
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
-import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.oauth2.jwt.Jwt
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -28,7 +24,6 @@ import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 import tw.waterballsa.gaas.spring.models.TestCreateRoomRequest
 import tw.waterballsa.gaas.spring.models.TestGetRoomsRequest
 import tw.waterballsa.gaas.spring.models.TestJoinRoomRequest
-import java.time.Instant.now
 import java.util.UUID.*
 import kotlin.reflect.KClass
 
@@ -311,7 +306,7 @@ class RoomControllerTest @Autowired constructor(
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
-                .with(oidcLogin().oidcUser(mockOidcUser(joinUser)))
+                .withJwt(mockUserJwt(joinUser))
                 .param("status", status)
                 .param("page", page.toString())
                 .param("offset", offset.toString())
@@ -344,21 +339,21 @@ class RoomControllerTest @Autowired constructor(
     private fun createRoom(user: User, request: TestCreateRoomRequest): ResultActions =
         mockMvc.perform(
             post("/rooms")
-                .withJwt(user.id!!.value.toJwt())
+                .withJwt(mockUserJwt(testUser))
                 .withJson(request)
         )
 
     private fun User.joinRoom(roomId: String, request: TestJoinRoomRequest): ResultActions =
         mockMvc.perform(
             post("/rooms/$roomId/players")
-                .withJwt(id!!.value.toJwt())
+                .withJwt(mockUserJwt(this))
                 .withJson(request)
         )
 
     private fun deleteRoom(user: User, roomId: String): ResultActions =
         mockMvc.perform(
             delete("/rooms/${roomId}")
-                .withJwt(user.id!!.value.toJwt())
+                .withJwt(mockUserJwt(user))
         )
 
     private fun leaveRoom(leaveUser: Jwt): ResultActions =
@@ -491,16 +486,8 @@ class RoomControllerTest @Autowired constructor(
             minPlayers = testGame.minPlayers,
         )
 
-    private fun mockOidcUser(user: User): OidcUser {
-        val claims: Map<String, Any> =
-            mapOf(
-                "sub" to user.id!!.value,
-                "name" to user.nickname,
-                "email" to user.email
-            )
-
-        val idToken = OidcIdToken("token", now(), now().plusSeconds(60), claims)
-        return DefaultOidcUser(emptyList(), idToken)
+    private fun mockUserJwt(user: User): Jwt {
+        return user.id!!.value.toJwt()
     }
 
     private fun joinRoomRequest(password: String? = null): TestJoinRoomRequest =
