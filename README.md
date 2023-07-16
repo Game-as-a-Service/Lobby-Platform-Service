@@ -2,8 +2,16 @@
 
 
 <p align="center">
+  <a href=""><img src="https://github.com/Game-as-a-Service/Lobby-Platform-Service/actions/workflows/build-and-deploy.yml/badge.svg" alt="badge"></a>
   <a href="https://maven-badges.herokuapp.com/maven-central/com.ejlchina/bean-searcher/"><img src="https://maven-badges.herokuapp.com/maven-central/com.ejlchina/bean-searcher/badge.svg" alt="Maven Central"></a>
-  <a href="https://gitee.com/troyzhxu/bean-searcher/blob/master/LICENSE"><img src="https://img.shields.io/hexpm/l/plug.svg" alt="License"></a>
+  <a href="https://lobby.gaas.waterballsa.tw"><img src="https://img.shields.io/website?url=https%3A%2F%2Fapi.gaas.waterballsa.tw%2Fhealth&label=service%20status" alt="Swagger Website"></a>
+  <a href="https://api.gaas.waterballsa.tw/swagger-ui/index.html"><img src="https://img.shields.io/badge/code%20of-conduct-ff69b4.svg?style=flat" alt="Code of Conduct"></a>
+  <a href="https://img.shields.io/github/release/Game-as-a-Service/Lobby-Platform-Service.svg"><img src="https://img.shields.io/github/release/Game-as-a-Service/Lobby-Platform-Service.svg " alt="GitHub Release"></a>
+  <a href="https://github.com/Game-as-a-Service/Lobby-Platform-Service/blob/main/LICENSE"><img src="https://img.shields.io/hexpm/l/plug.svg" alt="License"></a>
+
+
+  <a href=""><img src="https://img.shields.io/discord/937992003415838761?label=Discord" alt="Discord"></a>
+  <a href="https://api.gaas.waterballsa.tw/swagger-ui/index.html"><img src="https://img.shields.io/swagger/valid/3.0?specUrl=https%3A%2F%2Fapi.gaas.waterballsa.tw%2Fswagger-ui%2Fapi-docs" alt="Swagger Validator"></a>
 </p>
 
 
