@@ -26,8 +26,11 @@ class OAuth2Controller(
     }
 
     @PostMapping("/authenticate")
-    fun authenticate(request: NativeWebRequest, @RequestBody payload: AuthenticateToken): AuthenticateToken{
-        return refreshTokenHandler.refreshAccessToken(payload.token, request)
+    fun authenticate(
+        request: NativeWebRequest,
+        @RequestBody payload: AuthenticateToken
+    ): AuthenticateToken{
+        return refreshTokenHandler.refreshAccessToken(request, payload.token)
             ?.let { AuthenticateToken(it) }
             ?: throw notFound("AccessToken").message()
     }
