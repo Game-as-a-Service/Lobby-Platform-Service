@@ -66,7 +66,6 @@ class RefreshAccessTokenHandler(
             ?.first()
             ?.description?.startsWith("Jwt expired at") ?: false
 
-
     private fun NativeWebRequest.toOAuth2AuthorizeRequest(principalName: String): OAuth2AuthorizeRequest =
         OAuth2AuthorizeRequest
             .withClientRegistrationId(CLIENT_REGISTRATION_ID)
