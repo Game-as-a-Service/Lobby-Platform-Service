@@ -10,7 +10,6 @@ import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.events.CreatedRoomEvent
 import tw.waterballsa.gaas.events.DomainEvent
-import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.spring.controllers.RoomController.CreateRoomViewModel
 import tw.waterballsa.gaas.spring.controllers.presenter.GetRoomsPresenter
 import tw.waterballsa.gaas.spring.controllers.viewmodel.GetRoomsViewModel
@@ -33,8 +32,8 @@ class RoomController(
 ) {
     @PostMapping
     fun createRoom(
-            @AuthenticationPrincipal jwt: Jwt,
-            @RequestBody @Valid request: CreateRoomRequest
+        @AuthenticationPrincipal jwt: Jwt,
+        @RequestBody @Valid request: CreateRoomRequest
     ): ResponseEntity<Any> {
         val presenter = CreateRoomPresenter()
         createRoomUsecase.execute(request.toRequest(jwt.subject), presenter)
@@ -49,8 +48,7 @@ class RoomController(
         @PathVariable roomId: String,
         @RequestBody request: JoinRoomRequest
     ): PlatformViewModel {
-        val joinerId = jwt.subject ?: throw PlatformException("User id must exist.")
-        joinRoomUsecase.execute(request.toRequest(roomId, joinerId))
+        joinRoomUsecase.execute(request.toRequest(roomId, jwt.subject))
         return PlatformViewModel.success()
     }
 
@@ -92,10 +90,9 @@ class RoomController(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable roomId: String,
     ) {
-        val joinerId = jwt.subject ?: throw PlatformException("User id must exist.")
         val request = CloseRoomUsecase.Request(
             roomId = roomId,
-            userId = joinerId,
+            userIdentity = jwt.subject,
         )
         closeRoomsUseCase.execute(request)
     }
@@ -118,8 +115,7 @@ class RoomController(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable roomId: String
     ) {
-        val leaverId = jwt.subject ?: throw PlatformException("User id must exist.")
-        leaveRoomUsecase.execute(LeaveRoomUsecase.Request(roomId, leaverId))
+        leaveRoomUsecase.execute(LeaveRoomUsecase.Request(roomId, jwt.subject))
     }
 
     class CreateRoomRequest(
@@ -133,7 +129,7 @@ class RoomController(
         fun toRequest(hostId: String): CreateRoomUsecase.Request =
             CreateRoomUsecase.Request(
                 gameId = gameId,
-                hostId = hostId,
+                hostIdentity = hostId,
                 maxPlayers = maxPlayers,
                 minPlayers = minPlayers,
                 name = name,
@@ -182,7 +178,7 @@ class RoomController(
         fun toRequest(roomId: String, userId: String): JoinRoomUsecase.Request =
             JoinRoomUsecase.Request(
                 roomId = roomId,
-                userId = userId,
+                userIdentity = userId,
                 password = password
             )
     }

@@ -11,5 +11,6 @@ interface UserRepository {
     fun deleteAll()
     fun findAllById(ids: Collection<Id>): List<User>
     fun findByEmail(email: String): User?
+    fun findByIdentity(identity: String): User?
     fun update(user: User): User
 }

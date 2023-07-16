@@ -9,4 +9,5 @@ interface UserDAO : MongoRepository<UserData, String> {
     fun existsByEmail(email: String): Boolean
     fun existsByNickname(nickname: String): Boolean
     fun findByEmail(email: String): UserData?
+    fun findByIdentities(identityProviderId: String): UserData?
 }

@@ -18,26 +18,31 @@ class JoinRoomUsecase(
 ) {
 
     fun execute(request: Request) {
-        val (roomId, userId, password) = request
+        val (roomId, userIdentity, password) = request
         val room = findRoomById(Room.Id(roomId))
-        validateUserJoinedRoom(userId)
+        val user = findUserByIdentity(userIdentity)
+        validateUserJoinedRoom(user.id!!)
         room.run {
             validateRoomPassword(password)
             validateFullRoom()
-            joinPlayer(userId)
+            joinPlayer(user)
         }
     }
 
-    private fun validateUserJoinedRoom(userId: String) {
-        val hasJoined = roomRepository.hasPlayerJoinedRoom(User.Id(userId))
+    private fun validateUserJoinedRoom(userId: User.Id) {
+        val hasJoined = roomRepository.hasPlayerJoinedRoom(userId)
         if (hasJoined) {
-            throw PlatformException("Player($userId) has joined another room.")
+            throw PlatformException("Player(${userId.value}) has joined another room.")
         }
     }
 
     private fun findRoomById(roomId: Room.Id) =
         roomRepository.findById(roomId)
             ?: throw notFound(Room::class).id(roomId)
+
+    private fun findUserByIdentity(identityProviderId: String) =
+        userRepository.findByIdentity(identityProviderId)
+            ?: throw notFound(User::class).message()
 
     private fun Room.validateRoomPassword(password: String?) {
         if (isLocked && !isPasswordCorrect(password)) {
@@ -51,20 +56,14 @@ class JoinRoomUsecase(
         }
     }
 
-    private fun Room.joinPlayer(userId: String): Room {
-        val player = findPlayerByUserId(User.Id(userId))
-        addPlayer(player)
+    private fun Room.joinPlayer(user: User): Room {
+        addPlayer(user.toRoomPlayer())
         return roomRepository.update(this)
     }
 
-    private fun findPlayerByUserId(userId: User.Id) =
-        userRepository.findById(userId)
-            ?.toRoomPlayer()
-            ?: throw notFound(User::class).id(userId.value)
-
     data class Request(
         val roomId: String,
-        val userId: String,
+        val userIdentity: String,
         val password: String? = null,
     )
 }

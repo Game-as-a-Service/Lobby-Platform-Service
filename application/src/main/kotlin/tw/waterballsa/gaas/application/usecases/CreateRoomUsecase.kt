@@ -23,22 +23,23 @@ class CreateRoomUsecase(
 ) {
     fun execute(request: Request, presenter: Presenter) {
         with(request) {
-            ensureHostWouldNotCreatedRoomAgain()
-            createRoom()
+            val hostPlayer = findPlayerByIdentity(hostIdentity)
+            hostPlayer.ensureHostWouldNotCreatedRoomAgain()
+
+            createRoom(hostPlayer)
                 .toCreatedRoomEvent()
                 .also { presenter.present(it) }
         }
     }
 
-    private fun Request.ensureHostWouldNotCreatedRoomAgain() {
-        if (roomRepository.existsByHostId(hostPlayerId)) {
+    private fun Player.ensureHostWouldNotCreatedRoomAgain() {
+        if (roomRepository.existsByHostId(User.Id(id.value))) {
             throw PlatformException("A user can only create one room at a time.")
         }
     }
 
-    private fun Request.createRoom(): Room {
+    private fun Request.createRoom(hostPlayer: Player): Room {
         val gameRegistration = findGameRegistrationById(gameId)
-        val hostPlayer = findPlayerByUserId(hostPlayerId)
         return roomRepository.createRoom(toRoom(gameRegistration, hostPlayer))
     }
 
@@ -46,23 +47,20 @@ class CreateRoomUsecase(
         gameRegistrationRepository.findById(GameRegistration.Id(gameId))
             ?: throw notFound(GameRegistration::class).id(gameId)
 
-    private fun findPlayerByUserId(hostId: User.Id): Player =
-        userRepository.findById(hostId)
+    private fun findPlayerByIdentity(identityProviderId: String): Player =
+        userRepository.findByIdentity(identityProviderId)
             ?.toRoomPlayer()
-            ?: throw notFound(User::class).id(hostId.value)
+            ?: throw notFound(User::class).message()
 
     data class Request(
         val name: String,
         val gameId: String,
-        val hostId: String,
+        val hostIdentity: String,
         val password: String? = null,
         val minPlayers: Int,
         val maxPlayers: Int,
     )
 }
-
-private val CreateRoomUsecase.Request.hostPlayerId
-    get() = User.Id(hostId)
 
 private fun CreateRoomUsecase.Request.toRoom(gameRegistration: GameRegistration, host: Player): Room =
     Room(
