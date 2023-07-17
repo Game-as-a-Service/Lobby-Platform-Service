@@ -1,16 +1,30 @@
 # Lobby-Platform-Service
 
 <p style="text-align:center;">
-  <a href=""><img src="https://github.com/Game-as-a-Service/Lobby-Platform-Service/actions/workflows/build-and-deploy.yml/badge.svg" alt="badge"></a>
-  <a href="https://maven-badges.herokuapp.com/maven-central/com.ejlchina/bean-searcher/"><img src="https://maven-badges.herokuapp.com/maven-central/com.ejlchina/bean-searcher/badge.svg" alt="Maven Central"></a>
-  <a href="https://lobby.gaas.waterballsa.tw"><img src="https://img.shields.io/website?url=https%3A%2F%2Fapi.gaas.waterballsa.tw%2Fhealth&label=service%20status" alt="Swagger Website"></a>
-  <a href="https://api.gaas.waterballsa.tw/swagger-ui/index.html"><img src="https://img.shields.io/badge/code%20of-conduct-ff69b4.svg?style=flat" alt="Code of Conduct"></a>
-  <a href="https://img.shields.io/github/release/Game-as-a-Service/Lobby-Platform-Service.svg"><img src="https://img.shields.io/github/release/Game-as-a-Service/Lobby-Platform-Service.svg " alt="GitHub Release"></a>
-  <a href="https://github.com/Game-as-a-Service/Lobby-Platform-Service/blob/main/LICENSE"><img src="https://img.shields.io/hexpm/l/plug.svg" alt="License"></a>
-
-<!-- (目前有問題的) -->
-  <a href=""><img src="https://img.shields.io/discord/937992003415838761?label=Discord" alt="Discord"></a>
-  <a href="https://api.gaas.waterballsa.tw/swagger-ui/index.html"><img src="https://img.shields.io/swagger/valid/3.0?specUrl=https%3A%2F%2Fapi.gaas.waterballsa.tw%2Fswagger-ui%2Fapi-docs" alt="Swagger Validator"></a>
+    <a href="">
+        <img src="https://github.com/Game-as-a-Service/Lobby-Platform-Service/actions/workflows/build-and-deploy.yml/badge.svg" alt="badge">
+    </a>
+    <a href="https://maven-badges.herokuapp.com/maven-central/com.ejlchina/bean-searcher/">
+        <img src="https://maven-badges.herokuapp.com/maven-central/com.ejlchina/bean-searcher/badge.svg" alt="Maven Central">
+    </a>
+    <a href="https://lobby.gaas.waterballsa.tw">
+        <img src="https://img.shields.io/website?url=https%3A%2F%2Fapi.gaas.waterballsa.tw%2Fhealth&label=service%20status" alt="Website">
+    </a>
+    <a href="https://github.com/Game-as-a-Service/Lobby-Platform-Service/releases">
+        <img src="https://img.shields.io/github/release/Game-as-a-Service/Lobby-Platform-Service.svg" alt="GitHub Release">
+    </a>
+    <a href="https://github.com/Game-as-a-Service/Lobby-Platform-Service/blob/main/LICENSE">
+        <img src="https://img.shields.io/hexpm/l/plug.svg" alt="License">
+    </a>
+    <a href="https://github.com/Game-as-a-Service/Lobby-Platform-Service/blob/main/CODE_OF_CONDUCT.md">
+        <img src="https://img.shields.io/badge/code%20of-conduct-ff69b4.svg?style=flat" alt="Code of Conduct ">
+    </a>
+    <a href="https://api.gaas.waterballsa.tw/swagger-ui/index.html">
+        <img src="https://img.shields.io/swagger/valid/3.0?specUrl=https%3A%2F%2Fapi.gaas.waterballsa.tw%2Fswagger-ui%2Fapi-docs" alt="Swagger Validator">
+    </a>
+    <a href="">
+        <img src="https://img.shields.io/discord/937992003415838761?label=Discord" alt="Discord">
+    </a>
 </p>
 
 ## Description / Overview
@@ -43,12 +57,12 @@ Lobby-Platform-Service 是一個遊戲大廳平台的後端，提供API和服務
 
 ## Tech Stack
 
-| Tech Stack                       | Version | Description                                            |
-|----------------------------------|:-------:|--------------------------------------------------------|
+| Tech Stack                       | Version | Description                                                                       |
+|----------------------------------|:-------:|-----------------------------------------------------------------------------------|
 | Spring Boot                      | 2.7.10  | Spring Boot 是一個個基於Java 的開源框架。 主要是為了簡化Spring框架，並做到自動配置。 |
-| Spring-boot-starter-data-mongodb |    -    | Spring Boot連結Mongodb的服務的套件                             |
-| Springdoc-openapi                |    -    | Spring 整合 swagger的服務套件                                 |
-| Docker                           |    -    | 一種Container實現的技術                                       |
+| Spring-boot-starter-data-mongodb |    -    | Spring Boot連結Mongodb的服務的套件                                                |
+| Springdoc-openapi                |    -    | Spring 整合 swagger的服務套件                                                     |
+| Docker                           |    -    | 一種Container實現的技術                                                           |
 
 ## Installation
 
@@ -71,12 +85,6 @@ LobbyPlatformApplication.kt
 http://localhost:8087/swagger-ui/index.html 
 ```
 
-## Code of Conduct
-
-- 請在提交前確保代碼符合項目的編碼規範。
-- 請測試您的代碼，確保沒有錯誤和異常。
-- 請確保您的代碼沒有破壞項目的現有功能，也沒有引入新的問題。
-- 請提交有意義的提交消息，描述你的簡介。
 
 ## File Structure
 
