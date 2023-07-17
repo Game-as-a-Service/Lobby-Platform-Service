@@ -20,19 +20,19 @@ class JoinRoomUsecase(
     fun execute(request: Request) {
         val (roomId, userIdentity, password) = request
         val room = findRoomById(Room.Id(roomId))
-        val user = findUserByIdentity(userIdentity)
-        validateUserJoinedRoom(user.id!!)
+        val player = findPlayerByIdentity(userIdentity)
+        validatePlayerJoinedRoom(player)
         room.run {
             validateRoomPassword(password)
             validateFullRoom()
-            joinPlayer(user)
+            joinPlayer(player)
         }
     }
 
-    private fun validateUserJoinedRoom(userId: User.Id) {
-        val hasJoined = roomRepository.hasPlayerJoinedRoom(userId)
+    private fun validatePlayerJoinedRoom(player: Room.Player) {
+        val hasJoined = roomRepository.hasPlayerJoinedRoom(User.Id(player.id.value))
         if (hasJoined) {
-            throw PlatformException("Player(${userId.value}) has joined another room.")
+            throw PlatformException("Player(${player.id.value}) has joined another room.")
         }
     }
 
@@ -40,8 +40,9 @@ class JoinRoomUsecase(
         roomRepository.findById(roomId)
             ?: throw notFound(Room::class).id(roomId)
 
-    private fun findUserByIdentity(identityProviderId: String) =
+    private fun findPlayerByIdentity(identityProviderId: String) =
         userRepository.findByIdentity(identityProviderId)
+            ?.toRoomPlayer()
             ?: throw notFound(User::class).message()
 
     private fun Room.validateRoomPassword(password: String?) {
@@ -56,8 +57,8 @@ class JoinRoomUsecase(
         }
     }
 
-    private fun Room.joinPlayer(user: User): Room {
-        addPlayer(user.toRoomPlayer())
+    private fun Room.joinPlayer(player: Room.Player): Room {
+        addPlayer(player)
         return roomRepository.update(this)
     }
 

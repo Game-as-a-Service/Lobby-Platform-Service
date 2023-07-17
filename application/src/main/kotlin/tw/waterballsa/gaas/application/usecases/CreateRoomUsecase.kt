@@ -23,14 +23,19 @@ class CreateRoomUsecase(
 ) {
     fun execute(request: Request, presenter: Presenter) {
         with(request) {
-            val hostPlayer = findPlayerByIdentity(hostIdentity)
-            hostPlayer.ensureHostWouldNotCreatedRoomAgain()
+            val host = findPlayerByIdentity(userIdentity)
+            host.ensureHostWouldNotCreatedRoomAgain()
 
-            createRoom(hostPlayer)
+            createRoom(host)
                 .toCreatedRoomEvent()
                 .also { presenter.present(it) }
         }
     }
+
+    private fun findPlayerByIdentity(userIdentity: String): Player =
+        userRepository.findByIdentity(userIdentity)
+            ?.toRoomPlayer()
+            ?: throw notFound(User::class).message()
 
     private fun Player.ensureHostWouldNotCreatedRoomAgain() {
         if (roomRepository.existsByHostId(User.Id(id.value))) {
@@ -47,15 +52,10 @@ class CreateRoomUsecase(
         gameRegistrationRepository.findById(GameRegistration.Id(gameId))
             ?: throw notFound(GameRegistration::class).id(gameId)
 
-    private fun findPlayerByIdentity(identityProviderId: String): Player =
-        userRepository.findByIdentity(identityProviderId)
-            ?.toRoomPlayer()
-            ?: throw notFound(User::class).message()
-
     data class Request(
         val name: String,
         val gameId: String,
-        val hostIdentity: String,
+        val userIdentity: String,
         val password: String? = null,
         val minPlayers: Int,
         val maxPlayers: Int,

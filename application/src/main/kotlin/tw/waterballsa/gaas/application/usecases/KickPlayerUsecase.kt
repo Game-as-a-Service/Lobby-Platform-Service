@@ -16,16 +16,17 @@ class KickPlayerUsecase(
     fun execute(request: Request) {
         with(request) {
             val room = roomRepository.findById(Room.Id(roomId)) ?: throw notFound(Room::class).message()
-            val hostPlayer = userRepository.findByIdentity(hostIdentity)?.toRoomPlayer()
+            val host = userRepository.findByIdentity(userIdentity)
+                ?.toRoomPlayer()
                 ?: throw notFound(User::class).message()
-            room.kickPlayer(hostPlayer.id, Room.Player.Id(playerId))
+            room.kickPlayer(host.id, Room.Player.Id(playerId))
             roomRepository.update(room)
         }
     }
 
     data class Request(
         val roomId: String,
-        val hostIdentity: String,
+        val userIdentity: String,
         val playerId: String,
     )
 }

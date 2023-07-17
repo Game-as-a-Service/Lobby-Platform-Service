@@ -19,7 +19,7 @@ class LeaveRoomUsecase(
     fun execute(request: Request) {
         with(request) {
             val room = findRoomById(Room.Id(roomId))
-            val player = findPlayerByIdentity(playerId)
+            val player = findPlayerByIdentity(userIdentity)
             room.leaveRoom(player.id)
             roomRepository.leaveRoom(room)
         }
@@ -29,12 +29,13 @@ class LeaveRoomUsecase(
         roomRepository.findById(roomId)
             ?: throw notFound(Room::class).id(roomId)
 
-    private fun findPlayerByIdentity(identity: String) =
-        userRepository.findByIdentity(identity)?.toRoomPlayer()
+    private fun findPlayerByIdentity(userIdentity: String) =
+        userRepository.findByIdentity(userIdentity)
+            ?.toRoomPlayer()
             ?: throw notFound(User::class).message()
 
     data class Request(
         val roomId: String,
-        val playerId: String,
+        val userIdentity: String,
     )
 }

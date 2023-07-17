@@ -129,7 +129,7 @@ class RoomController(
         fun toRequest(hostId: String): CreateRoomUsecase.Request =
             CreateRoomUsecase.Request(
                 gameId = gameId,
-                hostIdentity = hostId,
+                userIdentity = hostId,
                 maxPlayers = maxPlayers,
                 minPlayers = minPlayers,
                 name = name,

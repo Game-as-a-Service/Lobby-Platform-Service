@@ -1,5 +1,6 @@
 package tw.waterballsa.gaas.application.usecases
 
+import tw.waterballsa.gaas.application.extension.toRoomPlayer
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
@@ -16,8 +17,8 @@ class CloseRoomUsecase(
     fun execute(request: Request) {
         with(request) {
             val room = findRoomById(Room.Id(roomId))
-            val user = findUserByIdentity(userIdentity)
-            room.validateRoomHost(Room.Player.Id(user.id!!.value))
+            val host = findPlayerByIdentity(userIdentity)
+            room.validateRoomHost(host.id)
             roomRepository.deleteById(Room.Id(roomId))
         }
     }
@@ -26,8 +27,9 @@ class CloseRoomUsecase(
         roomRepository.findById(roomId)
             ?: throw notFound(Room::class).id(roomId)
 
-    private fun findUserByIdentity(userIdentity: String) =
+    private fun findPlayerByIdentity(userIdentity: String) =
         userRepository.findByIdentity(userIdentity)
+            ?.toRoomPlayer()
             ?: throw notFound(User::class).message()
 
     private fun Room.validateRoomHost(userId: Room.Player.Id) {

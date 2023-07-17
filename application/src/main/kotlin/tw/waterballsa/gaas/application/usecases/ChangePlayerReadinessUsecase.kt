@@ -17,7 +17,8 @@ class ChangePlayerReadinessUsecase(
         with(request) {
             val room = roomRepository.findById(roomId.toRoomId())
                 ?: throw notFound(Room::class).message()
-            val player = userRepository.findByIdentity(playerIdentity)?.toRoomPlayer()
+            val player = userRepository.findByIdentity(userIdentity)
+                ?.toRoomPlayer()
                 ?: throw notFound(User::class).message()
             room.changePlayerReadiness(player.id, readiness)
             roomRepository.update(room)
@@ -28,7 +29,7 @@ class ChangePlayerReadinessUsecase(
 
     data class Request(
         val roomId: String,
-        val playerIdentity: String,
+        val userIdentity: String,
         val readiness: Boolean,
     ) {
         companion object {
