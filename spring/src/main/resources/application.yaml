@@ -15,6 +15,7 @@ spring:
               - openid
               - profile
               - email
+              - offline_access
         provider:
           auth0:
             # trailing slash is important!
@@ -22,6 +23,8 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: https://dev-1l0ixjw8yohsluoi.us.auth0.com/
+          audiences:
+            - https://api.gaas.waterballsa.tw
 
 frontend: https://lobby.gaas.waterballsa.tw
 
