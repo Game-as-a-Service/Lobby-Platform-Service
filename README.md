@@ -22,7 +22,7 @@
     <a href="https://api.gaas.waterballsa.tw/swagger-ui/index.html">
         <img src="https://img.shields.io/swagger/valid/3.0?specUrl=https%3A%2F%2Fapi.gaas.waterballsa.tw%2Fswagger-ui%2Fapi-docs" alt="Swagger Validator">
     </a>
-    <a href="">
+    <a href="https://discord.gg/waterballsa">
         <img src="https://img.shields.io/discord/937992003415838761?label=Discord" alt="Discord">
     </a>
 </p>
