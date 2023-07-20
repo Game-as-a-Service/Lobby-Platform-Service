@@ -3,17 +3,16 @@ package tw.waterballsa.gaas.application.usecases
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
-import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import javax.inject.Named
 
 @Named
 class KickPlayerUsecase(
-    private val roomRepository: RoomRepository,
+    roomRepository: RoomRepository,
     userRepository: UserRepository,
-) : AbstractRoomUseCase(userRepository) {
+) : AbstractRoomUseCase(roomRepository, userRepository) {
     fun execute(request: Request) {
         with(request) {
-            val room = roomRepository.findById(Room.Id(roomId)) ?: throw notFound(Room::class).message()
+            val room = findRoomById(roomId, false)
             val host = findPlayerByIdentity(userIdentity)
             room.kickPlayer(host.id, Room.Player.Id(playerId))
             roomRepository.update(room)

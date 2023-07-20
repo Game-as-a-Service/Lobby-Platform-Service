@@ -15,11 +15,11 @@ import javax.inject.Named
 
 @Named
 class CreateRoomUsecase(
-    private val roomRepository: RoomRepository,
+    roomRepository: RoomRepository,
     userRepository: UserRepository,
     private val gameRegistrationRepository: GameRegistrationRepository,
     private val eventBus: EventBus,
-) : AbstractRoomUseCase(userRepository) {
+) : AbstractRoomUseCase(roomRepository, userRepository) {
     fun execute(request: Request, presenter: Presenter) {
         with(request) {
             val host = findPlayerByIdentity(userIdentity)

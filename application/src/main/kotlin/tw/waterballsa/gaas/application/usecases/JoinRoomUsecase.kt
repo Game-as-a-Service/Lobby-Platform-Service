@@ -5,19 +5,18 @@ import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.User
-import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.exceptions.PlatformException
 import javax.inject.Named
 
 @Named
 class JoinRoomUsecase(
-    private val roomRepository: RoomRepository,
+    roomRepository: RoomRepository,
     userRepository: UserRepository,
     private val eventBus: EventBus,
-) : AbstractRoomUseCase(userRepository) {
+) : AbstractRoomUseCase(roomRepository, userRepository) {
     fun execute(request: Request) {
         val (roomId, userIdentity, password) = request
-        val room = findRoomById(Room.Id(roomId))
+        val room = findRoomById(roomId)
         val player = findPlayerByIdentity(userIdentity)
         validatePlayerJoinedRoom(player)
         room.run {
@@ -33,10 +32,6 @@ class JoinRoomUsecase(
             throw PlatformException("Player(${player.id.value}) has joined another room.")
         }
     }
-
-    private fun findRoomById(roomId: Room.Id) =
-        roomRepository.findById(roomId)
-            ?: throw notFound(Room::class).id(roomId)
 
     private fun Room.validateRoomPassword(password: String?) {
         if (isLocked && !isPasswordCorrect(password)) {
