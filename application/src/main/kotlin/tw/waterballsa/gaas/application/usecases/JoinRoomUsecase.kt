@@ -1,7 +1,6 @@
 package tw.waterballsa.gaas.application.usecases
 
 import tw.waterballsa.gaas.application.eventbus.EventBus
-import tw.waterballsa.gaas.application.extension.toRoomPlayer
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
@@ -13,10 +12,9 @@ import javax.inject.Named
 @Named
 class JoinRoomUsecase(
     private val roomRepository: RoomRepository,
-    private val userRepository: UserRepository,
+    userRepository: UserRepository,
     private val eventBus: EventBus,
-) {
-
+) : AbstractRoomUseCase(userRepository) {
     fun execute(request: Request) {
         val (roomId, userIdentity, password) = request
         val room = findRoomById(Room.Id(roomId))
@@ -39,11 +37,6 @@ class JoinRoomUsecase(
     private fun findRoomById(roomId: Room.Id) =
         roomRepository.findById(roomId)
             ?: throw notFound(Room::class).id(roomId)
-
-    private fun findPlayerByIdentity(identityProviderId: String) =
-        userRepository.findByIdentity(identityProviderId)
-            ?.toRoomPlayer()
-            ?: throw notFound(User::class).message()
 
     private fun Room.validateRoomPassword(password: String?) {
         if (isLocked && !isPasswordCorrect(password)) {

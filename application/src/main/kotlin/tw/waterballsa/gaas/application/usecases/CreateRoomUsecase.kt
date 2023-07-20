@@ -1,7 +1,6 @@
 package tw.waterballsa.gaas.application.usecases
 
 import tw.waterballsa.gaas.application.eventbus.EventBus
-import tw.waterballsa.gaas.application.extension.toRoomPlayer
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
@@ -17,10 +16,10 @@ import javax.inject.Named
 @Named
 class CreateRoomUsecase(
     private val roomRepository: RoomRepository,
-    private val userRepository: UserRepository,
+    userRepository: UserRepository,
     private val gameRegistrationRepository: GameRegistrationRepository,
     private val eventBus: EventBus,
-) {
+) : AbstractRoomUseCase(userRepository) {
     fun execute(request: Request, presenter: Presenter) {
         with(request) {
             val host = findPlayerByIdentity(userIdentity)
@@ -31,11 +30,6 @@ class CreateRoomUsecase(
                 .also { presenter.present(it) }
         }
     }
-
-    private fun findPlayerByIdentity(userIdentity: String): Player =
-        userRepository.findByIdentity(userIdentity)
-            ?.toRoomPlayer()
-            ?: throw notFound(User::class).message()
 
     private fun Player.ensureHostWouldNotCreatedRoomAgain() {
         if (roomRepository.existsByHostId(User.Id(id.value))) {
