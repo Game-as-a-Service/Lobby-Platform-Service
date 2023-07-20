@@ -5,6 +5,9 @@ import com.corundumstudio.socketio.SocketIOServer
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
+class UserMessage(user: UserVM)
+class UserVM(id: String, nickname: String)
+
 @Component
 class SocketIOEventHandler(
     private val socketIOServer: SocketIOServer) {
@@ -17,10 +20,25 @@ class SocketIOEventHandler(
     }
 
     private fun configureEventHandlers() {
-        socketIOServer.addEventListener("chatMessage", String::class.java) { client: SocketIOClient, data: String, _ ->
+        socketIOServer.addConnectListener {
+            it.sendEvent("CHAT_MESSAGE", "HELLO WORLD!")
+        }
+
+
+        socketIOServer.addEventListener("CHAT_MESSAGE", String::class.java) { client: SocketIOClient, data: String, _ ->
             // Handle the "chatMessage" event
             println("Received message: $data from client: ${client.sessionId}")
+
+            // ECHO
+            client.sendEvent("CHAT_MESSAGE", data)
         }
+
+        socketIOServer.addEventListener("CHATROOM_JOIN", UserMessage::class.java) {
+            client: SocketIOClient, data: UserMessage, _ ->
+            // ECHO
+            client.sendEvent("CHAT_MESSAGE", data)
+        }
+
 
         // Add other event handlers here
     }

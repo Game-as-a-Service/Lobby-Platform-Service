@@ -29,11 +29,12 @@ class SecurityConfig(
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
+            .cors().and()
             .csrf().disable()
             .authorizeHttpRequests()
             .antMatchers("/login", "/authenticate").permitAll()
             .antMatchers("/health", "/walking-skeleton").permitAll()
-            .antMatchers("/swagger-ui/**", "/favicon.ico").permitAll()
+            .antMatchers("/swagger-ui/**", "/favicon.ico", "/socket.io/**").permitAll()
             .anyRequest().authenticated()
             .and()
             .oauth2Login()
