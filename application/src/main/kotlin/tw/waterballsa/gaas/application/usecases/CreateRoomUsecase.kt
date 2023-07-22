@@ -1,7 +1,6 @@
 package tw.waterballsa.gaas.application.usecases
 
 import tw.waterballsa.gaas.application.eventbus.EventBus
-import tw.waterballsa.gaas.application.extension.toRoomPlayer
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
@@ -16,29 +15,30 @@ import javax.inject.Named
 
 @Named
 class CreateRoomUsecase(
-    private val roomRepository: RoomRepository,
-    private val userRepository: UserRepository,
+    roomRepository: RoomRepository,
+    userRepository: UserRepository,
     private val gameRegistrationRepository: GameRegistrationRepository,
     private val eventBus: EventBus,
-) {
+) : AbstractRoomUseCase(roomRepository, userRepository) {
     fun execute(request: Request, presenter: Presenter) {
         with(request) {
-            ensureHostWouldNotCreatedRoomAgain()
-            createRoom()
+            val host = findPlayerByIdentity(userIdentity)
+            host.ensureHostWouldNotCreatedRoomAgain()
+
+            createRoom(host)
                 .toCreatedRoomEvent()
                 .also { presenter.present(it) }
         }
     }
 
-    private fun Request.ensureHostWouldNotCreatedRoomAgain() {
-        if (roomRepository.existsByHostId(hostPlayerId)) {
+    private fun Player.ensureHostWouldNotCreatedRoomAgain() {
+        if (roomRepository.existsByHostId(User.Id(id.value))) {
             throw PlatformException("A user can only create one room at a time.")
         }
     }
 
-    private fun Request.createRoom(): Room {
+    private fun Request.createRoom(hostPlayer: Player): Room {
         val gameRegistration = findGameRegistrationById(gameId)
-        val hostPlayer = findPlayerByUserId(hostPlayerId)
         return roomRepository.createRoom(toRoom(gameRegistration, hostPlayer))
     }
 
@@ -46,23 +46,15 @@ class CreateRoomUsecase(
         gameRegistrationRepository.findById(GameRegistration.Id(gameId))
             ?: throw notFound(GameRegistration::class).id(gameId)
 
-    private fun findPlayerByUserId(hostId: User.Id): Player =
-        userRepository.findById(hostId)
-            ?.toRoomPlayer()
-            ?: throw notFound(User::class).id(hostId.value)
-
     data class Request(
         val name: String,
         val gameId: String,
-        val hostId: String,
+        val userIdentity: String,
         val password: String? = null,
         val minPlayers: Int,
         val maxPlayers: Int,
     )
 }
-
-private val CreateRoomUsecase.Request.hostPlayerId
-    get() = User.Id(hostId)
 
 private fun CreateRoomUsecase.Request.toRoom(gameRegistration: GameRegistration, host: Player): Room =
     Room(

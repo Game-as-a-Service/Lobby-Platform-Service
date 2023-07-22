@@ -1,43 +1,37 @@
 package tw.waterballsa.gaas.application.usecases
 
 import tw.waterballsa.gaas.application.eventbus.EventBus
-import tw.waterballsa.gaas.application.extension.toRoomPlayer
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.User
-import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.exceptions.PlatformException
 import javax.inject.Named
 
 @Named
 class JoinRoomUsecase(
-    private val roomRepository: RoomRepository,
-    private val userRepository: UserRepository,
+    roomRepository: RoomRepository,
+    userRepository: UserRepository,
     private val eventBus: EventBus,
-) {
-
+) : AbstractRoomUseCase(roomRepository, userRepository) {
     fun execute(request: Request) {
-        val (roomId, userId, password) = request
-        val room = findRoomById(Room.Id(roomId))
-        validateUserJoinedRoom(userId)
+        val (roomId, userIdentity, password) = request
+        val room = findRoomById(roomId)
+        val player = findPlayerByIdentity(userIdentity)
+        validatePlayerJoinedRoom(player)
         room.run {
             validateRoomPassword(password)
             validateFullRoom()
-            joinPlayer(userId)
+            joinPlayer(player)
         }
     }
 
-    private fun validateUserJoinedRoom(userId: String) {
-        val hasJoined = roomRepository.hasPlayerJoinedRoom(User.Id(userId))
+    private fun validatePlayerJoinedRoom(player: Room.Player) {
+        val hasJoined = roomRepository.hasPlayerJoinedRoom(User.Id(player.id.value))
         if (hasJoined) {
-            throw PlatformException("Player($userId) has joined another room.")
+            throw PlatformException("Player(${player.id.value}) has joined another room.")
         }
     }
-
-    private fun findRoomById(roomId: Room.Id) =
-        roomRepository.findById(roomId)
-            ?: throw notFound(Room::class).id(roomId)
 
     private fun Room.validateRoomPassword(password: String?) {
         if (isLocked && !isPasswordCorrect(password)) {
@@ -51,20 +45,14 @@ class JoinRoomUsecase(
         }
     }
 
-    private fun Room.joinPlayer(userId: String): Room {
-        val player = findPlayerByUserId(User.Id(userId))
+    private fun Room.joinPlayer(player: Room.Player): Room {
         addPlayer(player)
         return roomRepository.update(this)
     }
 
-    private fun findPlayerByUserId(userId: User.Id) =
-        userRepository.findById(userId)
-            ?.toRoomPlayer()
-            ?: throw notFound(User::class).id(userId.value)
-
     data class Request(
         val roomId: String,
-        val userId: String,
+        val userIdentity: String,
         val password: String? = null,
     )
 }

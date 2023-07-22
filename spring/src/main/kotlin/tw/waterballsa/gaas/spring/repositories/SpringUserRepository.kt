@@ -32,6 +32,9 @@ class SpringUserRepository(
     override fun findByEmail(email: String): User? =
         userDAO.findByEmail(email)?.toDomain()
 
+    override fun findByIdentity(identity: String): User? =
+        userDAO.findByIdentities(identity)?.toDomain()
+
     override fun update(user: User): User =
         userDAO.save(user.toData()).toDomain()
 }
