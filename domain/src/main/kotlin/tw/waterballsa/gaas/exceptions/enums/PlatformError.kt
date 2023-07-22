@@ -3,7 +3,6 @@ package tw.waterballsa.gaas.exceptions.enums
 enum class PlatformError(
     val code: String,
 ) {
-    DEFAULT_PLATFORM_ERROR("D000"),
 
     CLIENT_INVALID("C001"),
     CLIENT_AUTHORIZATION_INVALID("C002"),

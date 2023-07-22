@@ -14,5 +14,3 @@ data class PlatformViewModel(
         fun success(): PlatformViewModel = PlatformViewModel(message = "success")
     }
 }
-
-
