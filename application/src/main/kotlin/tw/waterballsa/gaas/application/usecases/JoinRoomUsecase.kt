@@ -6,6 +6,9 @@ import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.exceptions.PlatformException
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_JOIN_ROOM_ERROR
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.ROOM_FULL
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.ROOM_PASSWORD_INCORRECT
 import javax.inject.Named
 
 @Named
@@ -29,19 +32,22 @@ class JoinRoomUsecase(
     private fun validatePlayerJoinedRoom(player: Room.Player) {
         val hasJoined = roomRepository.hasPlayerJoinedRoom(User.Id(player.id.value))
         if (hasJoined) {
-            throw PlatformException("Player(${player.id.value}) has joined another room.")
+            throw PlatformException(PLAYER_JOIN_ROOM_ERROR, "Player(${player.id.value}) has joined another room.")
         }
     }
 
     private fun Room.validateRoomPassword(password: String?) {
         if (isLocked && !isPasswordCorrect(password)) {
-            throw PlatformException("wrong password")
+            throw PlatformException(ROOM_PASSWORD_INCORRECT, "wrong password")
         }
     }
 
     private fun Room.validateFullRoom() {
         if (isFull()) {
-            throw PlatformException("The room ($roomId) is full. Please select another room or try again later.")
+            throw PlatformException(
+                ROOM_FULL,
+                "The room ($roomId) is full. Please select another room or try again later.",
+            )
         }
     }
 

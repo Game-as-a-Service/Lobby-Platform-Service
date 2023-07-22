@@ -6,6 +6,7 @@ import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.ROOM_NOT_FOUND
 
 abstract class AbstractRoomUseCase(
     protected val roomRepository: RoomRepository,
@@ -14,14 +15,14 @@ abstract class AbstractRoomUseCase(
     protected fun findPlayerByIdentity(userIdentity: String): Room.Player =
         userRepository.findByIdentity(userIdentity)
             ?.toRoomPlayer()
-            ?: throw notFound(User::class).message()
+            ?: throw notFound(ROOM_NOT_FOUND, User::class).message()
 
     protected fun findRoomById(roomId: String, messageWithId: Boolean = true): Room {
         val id = Room.Id(roomId)
         val notFoundException = if (messageWithId) {
-            notFound(Room::class).id(id)
+            notFound(ROOM_NOT_FOUND, Room::class).id(id)
         } else {
-            notFound(Room::class).message()
+            notFound(ROOM_NOT_FOUND, Room::class).message()
         }
         return roomRepository.findById(id)
             ?: throw notFoundException
