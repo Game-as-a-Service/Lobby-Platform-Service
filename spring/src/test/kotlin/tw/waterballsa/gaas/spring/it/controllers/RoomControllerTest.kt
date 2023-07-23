@@ -3,6 +3,8 @@ package tw.waterballsa.gaas.spring.it.controllers
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -20,6 +22,7 @@ import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.Room.Player
 import tw.waterballsa.gaas.domain.User
+import tw.waterballsa.gaas.spring.controllers.RoomController.CreateRoomViewModel
 import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 import tw.waterballsa.gaas.spring.models.TestCreateRoomRequest
 import tw.waterballsa.gaas.spring.models.TestGetRoomsRequest
@@ -449,18 +452,20 @@ class RoomControllerTest @Autowired constructor(
     }
 
     private fun ResultActions.thenCreateRoomSuccessfully(request: TestCreateRoomRequest) {
-        request.let {
+        val view = getBody(CreateRoomViewModel::class.java)
+        val room = roomRepository.findById(view.id)!!
+        room.let {
             andExpect(status().isCreated)
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value(it.name))
-                .andExpect(jsonPath("$.game.id").value(testGame.id!!.value))
-                .andExpect(jsonPath("$.game.name").value(testGame.displayName))
-                .andExpect(jsonPath("$.host.id").value(testUser.id!!.value))
-                .andExpect(jsonPath("$.host.nickname").value(testUser.nickname))
-                .andExpect(jsonPath("$.isLocked").value(!it.password.isNullOrEmpty()))
-                .andExpect(jsonPath("$.currentPlayers").value(1))
-                .andExpect(jsonPath("$.minPlayers").value(it.minPlayers))
-                .andExpect(jsonPath("$.maxPlayers").value(it.maxPlayers))
+            assertEquals(view.name, it.name)
+            assertEquals(view.game.id, it.game.id!!.value)
+            assertEquals(view.game.name, it.game.displayName)
+            assertEquals(view.host.id, it.host.id!!.value)
+            assertEquals(view.host.nickname, it.host.nickname)
+            assertEquals(view.currentPlayers, it.players.size)
+            assertEquals(view.minPlayers, it.minPlayers)
+            assertEquals(view.maxPlayers, it.maxPlayers)
+            assertTrue(it.host.readiness)
+            assertTrue(it.players.first().readiness)
         }
     }
 
@@ -484,6 +489,8 @@ class RoomControllerTest @Autowired constructor(
         val room = roomRepository.findById(testRoom.roomId!!)!!
         assertFalse(room.hasPlayer(player.id))
         assertFalse(room.isHost(player.id))
+        assertTrue(room.host.readiness)
+        assertTrue(room.players.first().readiness)
     }
 
     private fun createUser(

@@ -53,7 +53,10 @@ class Room(
 
     private fun changeHost() {
         players.firstOrNull()
-            ?.let { host = it }
+            ?.let {
+                host = it
+                host.ready()
+            }
     }
 
     private fun findPlayer(playerId: Player.Id): Player? = players.find { it.id == playerId }
