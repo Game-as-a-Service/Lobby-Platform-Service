@@ -4,7 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.core.oidc.OidcIdToken
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
+import org.springframework.security.oauth2.core.oidc.user.OidcUser
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -19,15 +22,15 @@ class OAuth2ControllerTest @Autowired constructor(
     private final val googleIdentityProviderId = "google-oauth2|102527320242660434908"
     private final val discordIdentityProviderId = "discord|102527320242660434908"
 
-    private final val googleOAuth2Jwt = googleIdentityProviderId.toJwt()
-    private final val discordOAuth2Jwt = discordIdentityProviderId.toJwt()
+    private final val googleOAuth2OidcUser = googleIdentityProviderId.toOidcUser()
+    private final val discordOAuth2OidcUser = discordIdentityProviderId.toOidcUser()
 
-    private final val invalidJwt = Jwt(
-        "invalid_token",
-        null,
-        null,
-        mapOf("alg" to "none"),
-        mapOf("no_email" to "none")
+    private final val invalidOidcUser = DefaultOidcUser(
+        emptyList(),
+        OidcIdToken.withTokenValue("oidc-token-value")
+            .subject("invalid-user")
+            .claim("no_email", "none")
+            .build(),
     )
 
     @BeforeEach
@@ -37,35 +40,35 @@ class OAuth2ControllerTest @Autowired constructor(
 
     @Test
     fun whenUserLoginWithInvalidJwt_thenShouldLoginFailed() {
-        whenUserLogin(invalidJwt)
+        whenUserLogin(invalidOidcUser)
             .thenShouldLoginFailed()
     }
 
     @Test
     fun givenUserHasLoggedInViaGoogle_whenUserLoginWithGoogleOAuth2Jwt_thenLoginSuccessfully() {
         givenUserHasLoggedInViaGoogle()
-        whenUserLogin(googleOAuth2Jwt)
+        whenUserLogin(googleOAuth2OidcUser)
             .thenLoginSuccessfully()
     }
 
     @Test
     fun givenUserHasLoggedInViaGoogle_whenUserLoginWithDiscordOAuth2Jwt_thenUserHaveNewIdentity() {
         givenUserHasLoggedInViaGoogle()
-        whenUserLogin(discordOAuth2Jwt)
+        whenUserLogin(discordOAuth2OidcUser)
             .thenUserHaveNewIdentity(googleIdentityProviderId, discordIdentityProviderId)
     }
 
     @Test
     fun whenUserLoginAtTheFirstTime_thenCreateNewUser() {
-        whenUserLogin(googleOAuth2Jwt)
+        whenUserLogin(googleOAuth2OidcUser)
             .thenCreateNewUser()
     }
 
     private fun givenUserHasLoggedInViaGoogle(): User =
         userRepository.createUser(mockUser)
 
-    private fun whenUserLogin(jwt: Jwt): ResultActions =
-        mockMvc.perform(get("/").withJwt(jwt))
+    private fun whenUserLogin(oidcUser: OidcUser): ResultActions =
+        mockMvc.perform(get("/").with(oidcLogin().oidcUser(oidcUser)))
 
     private fun ResultActions.thenShouldLoginFailed() {
         andExpect(status().isBadRequest)
@@ -100,4 +103,12 @@ class OAuth2ControllerTest @Autowired constructor(
         return this
     }
 
+    private fun String.toOidcUser(): OidcUser =
+        DefaultOidcUser(
+            emptyList(),
+            OidcIdToken.withTokenValue("oidc-token-value")
+                .subject(this)
+                .claim("email", mockUser.email)
+                .build(),
+        )
 }

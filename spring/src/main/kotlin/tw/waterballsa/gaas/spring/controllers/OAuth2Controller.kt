@@ -5,7 +5,8 @@ import org.springframework.http.HttpStatus.*
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.client.*
-import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient
+import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.context.request.NativeWebRequest
 import tw.waterballsa.gaas.application.usecases.CreateUserUseCase
@@ -20,9 +21,12 @@ class OAuth2Controller(
 ) {
 
     @GetMapping
-    fun home(@AuthenticationPrincipal principal: Jwt): String {
+    fun home(
+        @AuthenticationPrincipal principal: OidcUser,
+        @RegisteredOAuth2AuthorizedClient client: OAuth2AuthorizedClient
+    ): String {
         createUserUseCase.execute(principal.toRequest())
-        return principal.tokenValue ?: "index"
+        return client.accessToken.tokenValue ?: "index"
     }
 
     @PostMapping("/authenticate")
@@ -47,13 +51,9 @@ data class AuthenticateToken(
     val token: String
 )
 
-val Jwt.email: String
-    get() = claims["email"]?.toString()
-        ?: throw PlatformException("JWT email should exist.")
-
-val Jwt.identityProviderId: String
+val OidcUser.identityProviderId: String
     get() = subject
-        ?: throw PlatformException("JWT subject should exist.")
+        ?: throw PlatformException("subject should exist.")
 
-private fun Jwt.toRequest(): CreateUserUseCase.Request =
-    CreateUserUseCase.Request(email, identityProviderId)
+private fun OidcUser.toRequest(): CreateUserUseCase.Request =
+    CreateUserUseCase.Request(email ?: throw PlatformException("email should exist."), identityProviderId)
