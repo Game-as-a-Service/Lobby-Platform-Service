@@ -8,6 +8,7 @@ enum class PlatformError(
     CLIENT_AUTHORIZATION_INVALID("C002"),
 
     JWT_ERROR("J001"),
+    JWT_NOT_FOUND("J002"),
 
     GAME_NOT_FOUND("G001"),
     GAME_EXISTS("G002"),
@@ -15,6 +16,7 @@ enum class PlatformError(
 
     USER_NOT_FOUND("U001"),
     USER_INPUT_INVALID("U002"),
+    USER_NAME_DUPLICATED("U003"),
 
     ROOM_NOT_FOUND("R001"),
     ROOM_PASSWORD_INCORRECT("R002"),
