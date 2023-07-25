@@ -16,7 +16,7 @@ class UpdateUserUseCase(
     fun execute(request: Request, presenter: Presenter) {
         with(request) {
             validateNicknameDuplicated(nickname)
-            val user = findUserByEmail(email)
+            val user = findUserByIdentity(userIdentity)
             user.changeNickname(nickname)
             val updatedUser = userRepository.update(user)
 
@@ -32,11 +32,11 @@ class UpdateUserUseCase(
         }
     }
 
-    private fun findUserByEmail(email: String) =
-        userRepository.findByEmail(email)
-            ?: throw notFound(User::class).identifyBy("email", email)
+    private fun findUserByIdentity(userIdentity: String) =
+        userRepository.findByIdentity(userIdentity)
+            ?: throw notFound(User::class).identifyBy("userIdentity", userIdentity)
 
-    data class Request(val email: String, val nickname: String)
+    data class Request(val userIdentity: String, val nickname: String)
 }
 
 private fun User.toUserUpdatedEvent(): UserUpdatedEvent =

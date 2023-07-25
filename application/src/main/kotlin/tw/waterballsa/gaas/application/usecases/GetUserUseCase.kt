@@ -11,13 +11,13 @@ class GetUserUseCase(
 ) {
     fun execute(request: Request, presenter: Presenter) {
         with(request) {
-            val user = userRepository.findByEmail(email)
-                ?: throw notFound(User::class).identifyBy("email", email)
+            val user = userRepository.findByIdentity(userIdentity)
+                ?: throw notFound(User::class).identifyBy("userIdentity", userIdentity)
             presenter.present(user)
         }
     }
 
-    class Request(val email: String)
+    class Request(val userIdentity: String)
 
     interface Presenter {
         fun present(user: User)

@@ -29,15 +29,14 @@ abstract class AbstractSpringBootTest {
         mutableListOf("google-oauth2|102527320242660434908")
     )
 
-    protected final fun String.toJwt(): Jwt = generateJwt(this, mockUser.email)
+    protected final fun String.toJwt(): Jwt = generateJwt(this)
 
-    protected final fun User.toJwt(): Jwt = generateJwt(identities.first(), email)
+    protected final fun User.toJwt(): Jwt = generateJwt(identities.first())
 
-    private fun generateJwt(id: String, email: String): Jwt =
+    private fun generateJwt(id: String): Jwt =
         Jwt.withTokenValue("mock-token")
             .header("alg", "none")
             .subject(id)
-            .claim("email", email)
             .build()
 
     protected fun <T> ResultActions.getBody(type: Class<T>): T =
