@@ -39,9 +39,10 @@ class CreateRoomUsecase(
         }
     }
 
-    private fun Request.createRoom(hostPlayer: Player): Room {
+    private fun Request.createRoom(host: Player): Room {
         val gameRegistration = findGameRegistrationById(gameId)
-        return roomRepository.createRoom(toRoom(gameRegistration, hostPlayer))
+        host.ready()
+        return roomRepository.createRoom(toRoom(gameRegistration, host))
     }
 
     private fun findGameRegistrationById(gameId: String) =

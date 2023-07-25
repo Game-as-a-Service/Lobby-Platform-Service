@@ -3,6 +3,8 @@ package tw.waterballsa.gaas.spring.it.controllers
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -20,6 +22,7 @@ import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.Room.Player
 import tw.waterballsa.gaas.domain.User
+import tw.waterballsa.gaas.spring.controllers.RoomController.CreateRoomViewModel
 import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 import tw.waterballsa.gaas.spring.models.TestCreateRoomRequest
 import tw.waterballsa.gaas.spring.models.TestGetRoomsRequest
@@ -54,14 +57,14 @@ class RoomControllerTest @Autowired constructor(
     fun givenUserIsInTheLobby_WhenUserCreateARoom_ThenShouldSucceed() {
         val request = createRoomRequest()
         createRoom(testUser, request)
-            .thenCreateRoomSuccessfully(request)
+            .thenCreateRoomSuccessfully()
     }
 
     @Test
     fun givenUserIsInTheLobby_WhenUserCreateARoomWithValidPassword_ThenShouldSucceed() {
         val request = createRoomRequest("1234")
         createRoom(testUser, request)
-            .thenCreateRoomSuccessfully(request)
+            .thenCreateRoomSuccessfully()
     }
 
     @Test
@@ -84,7 +87,7 @@ class RoomControllerTest @Autowired constructor(
     fun givenUserAlreadyCreatedARoom_WhenUserCreateAnotherRoom_ThenShouldFail() {
         val request = createRoomRequest("1234")
         createRoom(testUser, request)
-            .thenCreateRoomSuccessfully(request)
+            .thenCreateRoomSuccessfully()
         createRoom(testUser, request)
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value("A user can only create one room at a time."))
@@ -448,19 +451,21 @@ class RoomControllerTest @Autowired constructor(
         return leaveRoom(leaveUser)
     }
 
-    private fun ResultActions.thenCreateRoomSuccessfully(request: TestCreateRoomRequest) {
-        request.let {
+    private fun ResultActions.thenCreateRoomSuccessfully() {
+        val roomView = getBody(CreateRoomViewModel::class.java)
+        val room = roomRepository.findById(roomView.id)!!
+        room.let {
             andExpect(status().isCreated)
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value(it.name))
-                .andExpect(jsonPath("$.game.id").value(testGame.id!!.value))
-                .andExpect(jsonPath("$.game.name").value(testGame.displayName))
-                .andExpect(jsonPath("$.host.id").value(testUser.id!!.value))
-                .andExpect(jsonPath("$.host.nickname").value(testUser.nickname))
-                .andExpect(jsonPath("$.isLocked").value(!it.password.isNullOrEmpty()))
-                .andExpect(jsonPath("$.currentPlayers").value(1))
-                .andExpect(jsonPath("$.minPlayers").value(it.minPlayers))
-                .andExpect(jsonPath("$.maxPlayers").value(it.maxPlayers))
+            assertEquals(roomView.name, it.name)
+            assertEquals(roomView.game.id, it.game.id!!.value)
+            assertEquals(roomView.game.name, it.game.displayName)
+            assertEquals(roomView.host.id, it.host.id!!.value)
+            assertEquals(roomView.host.nickname, it.host.nickname)
+            assertEquals(roomView.currentPlayers, it.players.size)
+            assertEquals(roomView.minPlayers, it.minPlayers)
+            assertEquals(roomView.maxPlayers, it.maxPlayers)
+            assertTrue(it.host.readiness)
+            assertTrue(it.players.first().readiness)
         }
     }
 
@@ -484,6 +489,8 @@ class RoomControllerTest @Autowired constructor(
         val room = roomRepository.findById(testRoom.roomId!!)!!
         assertFalse(room.hasPlayer(player.id))
         assertFalse(room.isHost(player.id))
+        assertTrue(room.host.readiness)
+        assertTrue(room.players.first().readiness)
     }
 
     private fun createUser(
