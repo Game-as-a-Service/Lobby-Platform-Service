@@ -12,7 +12,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
 import tw.waterballsa.gaas.domain.User
-import java.nio.charset.Charset.forName
+import java.nio.charset.StandardCharsets.UTF_8
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -41,10 +41,10 @@ abstract class AbstractSpringBootTest {
             .build()
 
     protected fun <T> ResultActions.getBody(type: Class<T>): T =
-        String(andReturn().response.contentAsByteArray, forName("UTF-8")).let { objectMapper.readValue(it, type) }
+        String(andReturn().response.contentAsByteArray, UTF_8).let { objectMapper.readValue(it, type) }
 
     protected fun <T> ResultActions.getBody(type: TypeReference<T>): T =
-        String(andReturn().response.contentAsByteArray, forName("UTF-8")).let { objectMapper.readValue(it, type) }
+        String(andReturn().response.contentAsByteArray, UTF_8).let { objectMapper.readValue(it, type) }
 
     protected fun Any.toJson(): String = objectMapper.writeValueAsString(this)
 

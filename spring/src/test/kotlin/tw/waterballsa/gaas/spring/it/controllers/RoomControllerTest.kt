@@ -57,14 +57,14 @@ class RoomControllerTest @Autowired constructor(
     fun givenUserIsInTheLobby_WhenUserCreateARoom_ThenShouldSucceed() {
         val request = createRoomRequest()
         createRoom(testUser, request)
-            .thenCreateRoomSuccessfully(request)
+            .thenCreateRoomSuccessfully()
     }
 
     @Test
     fun givenUserIsInTheLobby_WhenUserCreateARoomWithValidPassword_ThenShouldSucceed() {
         val request = createRoomRequest("1234")
         createRoom(testUser, request)
-            .thenCreateRoomSuccessfully(request)
+            .thenCreateRoomSuccessfully()
     }
 
     @Test
@@ -87,7 +87,7 @@ class RoomControllerTest @Autowired constructor(
     fun givenUserAlreadyCreatedARoom_WhenUserCreateAnotherRoom_ThenShouldFail() {
         val request = createRoomRequest("1234")
         createRoom(testUser, request)
-            .thenCreateRoomSuccessfully(request)
+            .thenCreateRoomSuccessfully()
         createRoom(testUser, request)
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value("A user can only create one room at a time."))
@@ -451,19 +451,19 @@ class RoomControllerTest @Autowired constructor(
         return leaveRoom(leaveUser)
     }
 
-    private fun ResultActions.thenCreateRoomSuccessfully(request: TestCreateRoomRequest) {
-        val view = getBody(CreateRoomViewModel::class.java)
-        val room = roomRepository.findById(view.id)!!
+    private fun ResultActions.thenCreateRoomSuccessfully() {
+        val roomView = getBody(CreateRoomViewModel::class.java)
+        val room = roomRepository.findById(roomView.id)!!
         room.let {
             andExpect(status().isCreated)
-            assertEquals(view.name, it.name)
-            assertEquals(view.game.id, it.game.id!!.value)
-            assertEquals(view.game.name, it.game.displayName)
-            assertEquals(view.host.id, it.host.id!!.value)
-            assertEquals(view.host.nickname, it.host.nickname)
-            assertEquals(view.currentPlayers, it.players.size)
-            assertEquals(view.minPlayers, it.minPlayers)
-            assertEquals(view.maxPlayers, it.maxPlayers)
+            assertEquals(roomView.name, it.name)
+            assertEquals(roomView.game.id, it.game.id!!.value)
+            assertEquals(roomView.game.name, it.game.displayName)
+            assertEquals(roomView.host.id, it.host.id!!.value)
+            assertEquals(roomView.host.nickname, it.host.nickname)
+            assertEquals(roomView.currentPlayers, it.players.size)
+            assertEquals(roomView.minPlayers, it.minPlayers)
+            assertEquals(roomView.maxPlayers, it.maxPlayers)
             assertTrue(it.host.readiness)
             assertTrue(it.players.first().readiness)
         }
