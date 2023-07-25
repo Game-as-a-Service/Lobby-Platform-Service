@@ -10,12 +10,17 @@ import tw.waterballsa.gaas.spring.controllers.viewmodel.PlatformViewModel
 
 @RestControllerAdvice
 class PlatformExceptionHandler {
+
     @ResponseStatus(NOT_FOUND)
     @ExceptionHandler(NotFoundException::class)
-    fun notFound(exception: NotFoundException): PlatformViewModel = PlatformViewModel(exception.message!!)
+    fun notFound(exception: NotFoundException): PlatformViewModel =
+        exception.toPlatformViewModel()
 
     @ResponseStatus(BAD_REQUEST)
     @ExceptionHandler(PlatformException::class)
-    fun badRequest(exception: PlatformException): PlatformViewModel = PlatformViewModel(exception.message!!)
-
+    fun badRequest(exception: PlatformException): PlatformViewModel =
+        exception.toPlatformViewModel()
 }
+
+private fun <T : PlatformException> T.toPlatformViewModel(): PlatformViewModel =
+    PlatformViewModel(errorCode = platformError.code, message = message!!)

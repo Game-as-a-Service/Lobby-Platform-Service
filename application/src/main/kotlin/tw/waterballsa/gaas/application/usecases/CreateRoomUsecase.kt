@@ -11,6 +11,8 @@ import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.events.CreatedRoomEvent
 import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.exceptions.PlatformException
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_NOT_FOUND
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_JOIN_ROOM_ERROR
 import javax.inject.Named
 
 @Named
@@ -33,7 +35,7 @@ class CreateRoomUsecase(
 
     private fun Player.ensureHostWouldNotCreatedRoomAgain() {
         if (roomRepository.existsByHostId(User.Id(id.value))) {
-            throw PlatformException("A user can only create one room at a time.")
+            throw PlatformException(PLAYER_JOIN_ROOM_ERROR, "A user can only create one room at a time.")
         }
     }
 
@@ -44,7 +46,7 @@ class CreateRoomUsecase(
 
     private fun findGameRegistrationById(gameId: String) =
         gameRegistrationRepository.findById(GameRegistration.Id(gameId))
-            ?: throw notFound(GameRegistration::class).id(gameId)
+            ?: throw notFound(GAME_NOT_FOUND, GameRegistration::class).id(gameId)
 
     data class Request(
         val name: String,

@@ -1,6 +1,7 @@
 package tw.waterballsa.gaas.domain
 
 import tw.waterballsa.gaas.exceptions.PlatformException
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.USER_INPUT_INVALID
 
 class User(
     val id: Id? = null,
@@ -23,11 +24,11 @@ class User(
         val nicknameByteSize = nickname.toByteArray().size
 
         if (nicknameByteSize < NICKNAME_MINIMUM_BYTE_SIZE) {
-            throw PlatformException("invalid nickname: too short")
+            throw PlatformException(USER_INPUT_INVALID, "invalid nickname: too short")
         }
 
         if (nicknameByteSize > NICKNAME_MAXIMUM_BYTE_SIZE) {
-            throw PlatformException("invalid nickname: too long")
+            throw PlatformException(USER_INPUT_INVALID, "invalid nickname: too long")
         }
 
         this.nickname = nickname

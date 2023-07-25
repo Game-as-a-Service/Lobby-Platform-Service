@@ -2,8 +2,6 @@ package tw.waterballsa.gaas.application.usecases
 
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
-import tw.waterballsa.gaas.domain.Room
-import tw.waterballsa.gaas.exceptions.PlatformException
 import javax.inject.Named
 
 @Named
@@ -17,12 +15,6 @@ class CloseRoomUsecase(
             val host = findPlayerByIdentity(userIdentity)
             room.validateRoomHost(host.id)
             roomRepository.deleteById(room.roomId!!)
-        }
-    }
-
-    private fun Room.validateRoomHost(userId: Room.Player.Id) {
-        if (host.id != userId) {
-            throw PlatformException("Player($userId) is not the host")
         }
     }
 

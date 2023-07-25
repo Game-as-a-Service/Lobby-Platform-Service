@@ -1,10 +1,11 @@
 package tw.waterballsa.gaas.application.usecases
 
 import tw.waterballsa.gaas.application.eventbus.EventBus
-import tw.waterballsa.gaas.application.exceptions.GameAlreadyExistsException
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.events.RegisteredGameEvent
+import tw.waterballsa.gaas.exceptions.PlatformException
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_EXISTS
 import javax.inject.Named
 
 @Named
@@ -16,7 +17,11 @@ class RegisterGameUsecase(
         gameRegistrationRepository.run {
             val uniqueName = request.uniqueName
             val gameRegistration = when {
-                existsByUniqueName(uniqueName) -> throw GameAlreadyExistsException(uniqueName)
+                existsByUniqueName(uniqueName) -> throw PlatformException(
+                    GAME_EXISTS,
+                    "$uniqueName already exists",
+                )
+
                 else -> registerGame(request.toGameRegistration())
             }
             gameRegistration.toRegisteredGameEvent()

@@ -12,6 +12,8 @@ import org.springframework.web.context.request.NativeWebRequest
 import tw.waterballsa.gaas.application.usecases.CreateUserUseCase
 import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.exceptions.PlatformException
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.JWT_ERROR
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.JWT_NOT_FOUND
 import tw.waterballsa.gaas.spring.configs.securities.RefreshAccessTokenHandler
 
 @RestController
@@ -36,7 +38,7 @@ class OAuth2Controller(
     ): AuthenticateToken{
         return refreshTokenHandler.refreshAccessToken(request, payload.token)
             ?.let { AuthenticateToken(it) }
-            ?: throw notFound("AccessToken").message()
+            ?: throw notFound(JWT_NOT_FOUND,"AccessToken").message()
     }
 
     @GetMapping("/login")
@@ -53,7 +55,7 @@ data class AuthenticateToken(
 
 val OidcUser.identityProviderId: String
     get() = subject
-        ?: throw PlatformException("subject should exist.")
+        ?: throw PlatformException(JWT_ERROR,"subject should exist.")
 
 private fun OidcUser.toRequest(): CreateUserUseCase.Request =
-    CreateUserUseCase.Request(email ?: throw PlatformException("email should exist."), identityProviderId)
+    CreateUserUseCase.Request(email ?: throw PlatformException(JWT_ERROR,"email should exist."), identityProviderId)
