@@ -39,6 +39,9 @@ class Room(
         }
     }
 
+    fun hasPlayer(playerId: Player.Id): Boolean =
+        players.any { it.id == playerId }
+
     fun kickPlayer(hostId: Player.Id, playerId: Player.Id) {
         validateRoomHost(hostId)
         val player =
