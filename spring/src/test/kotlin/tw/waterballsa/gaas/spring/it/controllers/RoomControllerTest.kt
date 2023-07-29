@@ -327,7 +327,7 @@ class RoomControllerTest @Autowired constructor(
             "winner0033", "google-oauth2|200000000000000000000"
         ).toRoomPlayer()
 
-        givenHostAndPlayersAreInTheRoom(host, playerB, playerC)
+        givenHostAndPlayersJoinedTheRoom(host, playerB, playerC)
             .whenUserLeaveTheRoom(userA)
             .thenPlayerShouldBeNotInRoomAndHostIsChanged(host)
     }
@@ -358,6 +358,33 @@ class RoomControllerTest @Autowired constructor(
         givenTheHostCreatePublicRoom(userC)
             .whenUserJoinTheRoom(userB)
             .thenShouldFail("Player(${userB.id!!.value}) has joined another room.")
+    }
+
+    @Test
+    fun giveHostAndPlayerBJoinedRoomC_WhenHostGetRoomC_ThenShouldGetRoomCSuccessfully() {
+        val userA = testUser
+        val host = userA.toRoomPlayer()
+        val playerB = createUser(
+            "2", "test2@mail.com",
+            "winner1122", "google-oauth2|100000000000000000000"
+        ).toRoomPlayer()
+
+        givenHostAndPlayersJoinedTheRoom(host, playerB)
+            .whenUserGetTheRoom(userA)
+            .thenGetRoomSuccessfully()
+    }
+
+    @Test
+    fun giveUserANotJoinedRoomB_WhenUserAGetRoomB_ThenShouldFail() {
+        val userA = testUser
+        val host = createUser(
+            "2", "test2@mail.com",
+            "winner1122", "google-oauth2|100000000000000000000"
+        ).toRoomPlayer()
+
+        givenHostAndPlayersJoinedTheRoom(host)
+            .whenUserGetTheRoom(userA)
+            .thenShouldFail("Player(${userA.id!!.value}) is not in the room(${testRoom.roomId!!.value}).")
     }
 
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
@@ -429,7 +456,7 @@ class RoomControllerTest @Autowired constructor(
         return testRoom
     }
 
-    private fun givenHostAndPlayersAreInTheRoom(host: Player, vararg players: Player): Room {
+    private fun givenHostAndPlayersJoinedTheRoom(host: Player, vararg players: Player): Room {
         val combinedPlayers = (listOf(host) + players).toMutableList()
         testRoom = createRoom(host, combinedPlayers)
         return testRoom
@@ -450,6 +477,14 @@ class RoomControllerTest @Autowired constructor(
         val leaveUser = user.toJwt()
         return leaveRoom(leaveUser)
     }
+
+    private fun Room.whenUserGetTheRoom(user: User) = getRoom(user)
+
+    private fun getRoom(user: User): ResultActions =
+        mockMvc.perform(
+            get("/rooms/${testRoom.roomId!!.value}")
+                .withJwt(user.toJwt())
+        )
 
     private fun ResultActions.thenCreateRoomSuccessfully() {
         val roomView = getBody(CreateRoomViewModel::class.java)
@@ -499,6 +534,33 @@ class RoomControllerTest @Autowired constructor(
         userRepository.createUser(User(User.Id(id), email, nickname, mutableListOf(identity)))
 
     private fun createUser(user: User): User = userRepository.createUser(user)
+
+    private fun ResultActions.thenGetRoomSuccessfully() {
+        val room = roomRepository.findById(testRoom.roomId!!)!!
+        room.let {
+            andExpect(status().isOk)
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.id").value(it.roomId!!.value))
+                .andExpect(jsonPath("$.name").value(it.name))
+                .andExpect(jsonPath("$.game.id").value(it.game.id!!.value))
+                .andExpect(jsonPath("$.game.name").value(it.game.displayName))
+                .andExpect(jsonPath("$.host.id").value(it.host.id!!.value))
+                .andExpect(jsonPath("$.host.nickname").value(it.host.nickname))
+                .andExpect(jsonPath("$.host.isReady").value(it.host.readiness))
+                .andExpect(jsonPath("$.isLocked").value(!it.password.isNullOrEmpty()))
+                .andExpect(jsonPath("$.status").value(it.status.toString()))
+                .andExpect(jsonPath("$.currentPlayers").value(2))
+                .andExpect(jsonPath("$.minPlayers").value(it.minPlayers))
+                .andExpect(jsonPath("$.maxPlayers").value(it.maxPlayers))
+                .andExpect(jsonPath("$.players").isArray())
+
+            it.players.forEachIndexed { index, player ->
+                andExpect(jsonPath("$.players[$index].id").value(player.id!!.value))
+                    .andExpect(jsonPath("$.players[$index].nickname").value(player.nickname))
+                    .andExpect(jsonPath("$.players[$index].isReady").value(player.readiness))
+            }
+        }
+    }
 
     private fun registerGame(): GameRegistration = gameRegistrationRepository.registerGame(
         GameRegistration(
@@ -584,9 +646,6 @@ class RoomControllerTest @Autowired constructor(
 
     private fun User.toRoomPlayer(): Player =
         Player(Player.Id(id!!.value), nickname)
-
-    private fun Room.hasPlayer(playerId: Player.Id): Boolean =
-        players.any { it.id == playerId }
 
     private fun Room.isHost(playerId: Player.Id): Boolean =
         host.id == playerId
