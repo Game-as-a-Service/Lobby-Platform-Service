@@ -94,6 +94,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.corundumstudio.socketio</groupId>
+            <artifactId>netty-socketio</artifactId>
+            <version>2.0.3</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -166,4 +171,5 @@
             </properties>
         </profile>
     </profiles>
+
 </project>
