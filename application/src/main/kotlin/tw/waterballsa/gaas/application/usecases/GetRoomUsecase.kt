@@ -32,7 +32,7 @@ class GetRoomUsecase(
 
     data class Request(
         val roomId: String,
-        val userIdentity: String
+        val userIdentity: String,
     )
 
     interface Presenter {

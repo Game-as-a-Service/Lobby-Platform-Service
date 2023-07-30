@@ -41,3 +41,8 @@ logging:
   level:
     org.springframework.security: trace
 
+socketio:
+  host: 127.0.0.1
+  port: 9001
+  active: false
+

@@ -33,7 +33,7 @@ class SecurityConfig(
             .authorizeHttpRequests()
             .antMatchers("/login", "/authenticate").permitAll()
             .antMatchers("/health", "/walking-skeleton").permitAll()
-            .antMatchers("/swagger-ui/**", "/favicon.ico").permitAll()
+            .antMatchers("/swagger-ui/**", "/favicon.ico", "/start/**").permitAll()
             .anyRequest().authenticated()
             .and()
             .oauth2Login()
