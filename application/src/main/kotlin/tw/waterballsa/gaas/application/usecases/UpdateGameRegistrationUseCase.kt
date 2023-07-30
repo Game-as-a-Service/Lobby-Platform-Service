@@ -72,7 +72,6 @@ class UpdateGameRegistrationUseCase(
             backEndUrl,
         )
     }
-
 }
 
 private fun GameRegistration.toGameRegistrationUpdatedEvent(): GameRegistrationUpdatedEvent =

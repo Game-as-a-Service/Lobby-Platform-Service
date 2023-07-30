@@ -2,7 +2,7 @@ package tw.waterballsa.gaas.events
 
 import tw.waterballsa.gaas.domain.GameRegistration
 
-class GameRegistrationUpdatedEvent (
+class GameRegistrationUpdatedEvent(
     val id: GameRegistration.Id,
     val uniqueName: String,
     val displayName: String,
