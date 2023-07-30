@@ -11,4 +11,5 @@ interface GameRegistrationRepository {
     fun existsByUniqueName(uniqueName: String): Boolean
     fun findGameRegistrations(): List<GameRegistration>
     fun findById(id: Id): GameRegistration?
+    fun updateGame(gameRegistration: GameRegistration): GameRegistration
 }
