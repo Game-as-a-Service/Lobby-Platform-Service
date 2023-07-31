@@ -17,23 +17,24 @@ class SocketIOEventHandler(private val socketIOServer: SocketIOServer) {
     }
 
     private fun configureEventHandlers() {
-        socketIOServer.addConnectListener {
-            it.sendEvent(SocketIOEventMessage.CONNECT_EVENT.eventName, "HELLO WORLD!")
-        }
+//        socketIOServer.addConnectListener {
+//            it.sendEvent(SocketIOEvent.CONNECT_EVENT.eventName, "HELLO WORLD!")
+//        }
 
-        socketIOServer.addEventListener(SocketIOEventMessage.CHAT_MESSAGE.eventName, JSONObject::class.java) { client: SocketIOClient, data: JSONObject, _ ->
+        socketIOServer.addEventListener(SocketIOEvent.CHAT_MESSAGE.eventName, JSONObject::class.java) { client: SocketIOClient, data: JSONObject, _ ->
             // Handle the "chatMessage" event
             logger.info(" Received message: $data from client: ${client.sessionId}")
 
             // ECHO
-            client.sendEvent(SocketIOEventMessage.CHAT_MESSAGE.eventName, data)
+            client.sendEvent(SocketIOEvent.CHAT_MESSAGE.eventName, data)
         }
 
-        socketIOServer.addEventListener(SocketIOEventMessage.CHATROOM_JOIN.eventName, JSONObject::class.java) {
+        socketIOServer.addEventListener(SocketIOEvent.CHATROOM_JOIN.eventName, JSONObject::class.java) {
                 client: SocketIOClient, data: JSONObject, _ ->
             // ECHO
-            logger.info(" CHATROOM_JOIN message is  " + data)
-            client.sendEvent(SocketIOEventMessage.CHATROOM_JOIN.eventName, data)
+            logger.info(" Received message: $data from client: ${client.sessionId}")
+
+            client.sendEvent(SocketIOEvent.CHATROOM_JOIN.eventName, data)
         }
     }
 }
