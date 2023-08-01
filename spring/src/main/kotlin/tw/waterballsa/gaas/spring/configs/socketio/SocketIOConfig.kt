@@ -13,9 +13,10 @@ class SocketIOConfig (private val socketIOProperties: SocketIOProperties){
     @Bean
     fun SocketIOConfig(): SocketIOServer {
         val configuration = com.corundumstudio.socketio.Configuration()
-        configuration.hostname = socketIOProperties.host
-        configuration.port = socketIOProperties.port
-
+            .apply {
+        hostname = socketIOProperties.host
+        port = socketIOProperties.port
+    }
         return SocketIOServer(configuration)
     }
 }

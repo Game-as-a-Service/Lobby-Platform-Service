@@ -17,14 +17,9 @@ class SocketIOEventHandler(private val socketIOServer: SocketIOServer) {
     }
 
     private fun configureEventHandlers() {
-//        socketIOServer.addConnectListener {
-//            it.sendEvent(SocketIOEvent.CONNECT_EVENT.eventName, "HELLO WORLD!")
-//        }
-
         socketIOServer.addEventListener(SocketIOEvent.CHAT_MESSAGE.eventName, JSONObject::class.java) { client: SocketIOClient, data: JSONObject, _ ->
             // Handle the "chatMessage" event
             logger.info(" Received message: $data from client: ${client.sessionId}")
-
             // ECHO
             client.sendEvent(SocketIOEvent.CHAT_MESSAGE.eventName, data)
         }
