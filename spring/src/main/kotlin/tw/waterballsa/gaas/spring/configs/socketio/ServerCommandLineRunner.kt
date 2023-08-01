@@ -22,13 +22,10 @@ class ServerCommandLineRunner(private val server: SocketIOServer) : CommandLineR
 
     @PreDestroy
     fun stopServer() {
-        if (System.getProperty("skipServerCommandLineRunner") == null) {
-            println("Stopping the server...")
-            logger.info("Stopping the server...")
-            server.stop()
-            println("Server stopped.")
-            server.stop() // Call stop twice to ensure it stops properly.
-            logger.info("Server stopped.")
-        }
+        logger.info("Stopping the server...")
+        server.stop()
+        server.stop() // Call stop twice to ensure it stops properly.
+        logger.info("Server stopped.")
+
     }
 }
