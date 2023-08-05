@@ -18,7 +18,7 @@ class UpdateGameRegistrationUseCase(
 
     fun execute(request: Request, presenter: Presenter) {
         with(request) {
-            validateGameIdExist()
+            validateGameExist()
             validateUniqueNameDuplicated()
             val gameRegistration = updateGameRegistration()
 
@@ -28,7 +28,7 @@ class UpdateGameRegistrationUseCase(
         }
     }
 
-    private fun Request.validateGameIdExist() {
+    private fun Request.validateGameExist() {
         gameRegistrationRepository.findById(gameId)
             ?: throw notFound(GAME_NOT_FOUND, GameRegistration::class).id(gameId)
     }

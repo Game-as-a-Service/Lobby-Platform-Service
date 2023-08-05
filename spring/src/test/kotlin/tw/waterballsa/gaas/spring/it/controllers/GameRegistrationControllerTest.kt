@@ -269,25 +269,25 @@ class GameRegistrationControllerTest @Autowired constructor(
 
     private fun whenUpdateGameRegistration(gameId: String, updateGameRegistrationRequest: TestGameRegistrationRequest): ResultActions {
         return mockMvc.perform(put("/games/$gameId")
-            .contentType(APPLICATION_JSON)
-            .content(updateGameRegistrationRequest.toJson()))
+            .withJson(updateGameRegistrationRequest)
+        )
     }
 
     private fun ResultActions.thenShouldReturnGameRegistrationNotFound() {
-        this.andExpect(status().isNotFound)
+        andExpect(status().isNotFound)
             .andExpect(jsonPath("$.message").value("Resource (GameRegistration) not found (id = Id(value=not-exist-game-id))."))
     }
 
     private fun ResultActions.thenShouldReturnGameAlreadyExists() {
-        this.andExpect(status().isBadRequest)
+        andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value("uno already exists"))
     }
 
     private fun ResultActions.thenUpdateGameRegistrationSuccessfully(request: TestGameRegistrationRequest) {
-        val result = this.andExpect(status().isOk)
+        val view = andExpect(status().isOk)
             .getBody(UpdateGameRegistrationViewModel::class.java)
 
-        gameRegistrationRepository.findById(result.id)
+        gameRegistrationRepository.findById(view.id)
             .also {
                 assertThat(it).isNotNull
                 assertThat(it!!.uniqueName).isEqualTo(request.uniqueName)
