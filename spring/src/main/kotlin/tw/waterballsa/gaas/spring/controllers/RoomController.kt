@@ -59,9 +59,9 @@ class RoomController(
     fun getRooms(
         @RequestParam status: String,
         @RequestParam page: Int,
-        @RequestParam offset: Int
+        @RequestParam perPage: Int
     ): GetRoomsViewModel {
-        val request = GetRoomsRequest(status, page, offset)
+        val request = GetRoomsRequest(status, page, perPage)
         val presenter = GetRoomsPresenter()
         getRoomsUseCase.execute(request.toRequest(), presenter)
         return presenter.viewModel
@@ -205,14 +205,14 @@ class RoomController(
         val status: String,
         @field:Positive(message = "The page must be a positive number.")
         val page: Int,
-        @field:Positive(message = "The offset must be a positive number.")
-        val offset: Int
+        @field:Positive(message = "The perPage must be a positive number.")
+        val perPage: Int
     ) {
         fun toRequest(): GetRoomsUseCase.Request =
             GetRoomsUseCase.Request(
                 status = Room.Status.valueOf(status),
                 page = page,
-                offset = offset
+                offset = perPage
             )
     }
 

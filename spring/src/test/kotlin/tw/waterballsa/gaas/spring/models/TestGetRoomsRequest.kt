@@ -6,8 +6,8 @@ import tw.waterballsa.gaas.domain.Room
 class TestGetRoomsRequest(
     val status: String,
     val page: Int,
-    val offset: Int
+    val perPage: Int
 ) {
     fun toStatus() : Room.Status = Room.Status.valueOf(status)
-    fun toPagination(): Pagination<Any> = Pagination(page, offset)
+    fun toPagination(): Pagination<Any> = Pagination(page, perPage)
 }
