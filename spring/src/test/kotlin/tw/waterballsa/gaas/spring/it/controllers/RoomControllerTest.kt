@@ -43,14 +43,11 @@ class RoomControllerTest @Autowired constructor(
 
     @BeforeEach
     fun setUp() {
+        userRepository.deleteAll()
+        roomRepository.deleteAll()
+
         testUser = createUser(mockUser)
         testGame = registerGame()
-    }
-
-    @AfterEach
-    fun cleanUp() {
-        roomRepository.deleteAll()
-        userRepository.deleteAll()
     }
 
     @Test

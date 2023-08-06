@@ -32,4 +32,7 @@ class SpringGameRegistrationRepository(
 
     override fun findById(id: Id): GameRegistration? =
         gameRegistrationDAO.findById(id.value).mapOrNull(GameRegistrationData::toDomain)
+
+    override fun updateGame(gameRegistration: GameRegistration): GameRegistration =
+        gameRegistrationDAO.save(gameRegistration.toData()).toDomain()
 }

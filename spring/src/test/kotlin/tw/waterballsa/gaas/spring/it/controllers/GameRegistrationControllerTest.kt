@@ -9,13 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.web.servlet.ResultActions
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.spring.controllers.GetGameRegistrationPresenter.*
 import tw.waterballsa.gaas.spring.controllers.RegisterGamePresenter.RegisterGameViewModel
+import tw.waterballsa.gaas.spring.controllers.viewmodel.UpdateGameRegistrationViewModel
 import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 import tw.waterballsa.gaas.spring.models.TestGameRegistrationRequest
 import java.util.UUID.randomUUID
@@ -87,6 +87,65 @@ class GameRegistrationControllerTest @Autowired constructor(
 
         val gameRegistrations = gameRegistrationRepository.findGameRegistrations()
         getGamesViewModels.forEachIndexed { i, model -> model.validateWithGameRegistration(gameRegistrations[i]) }
+    }
+
+    @Test
+    fun givenBig2HasRegistered_whenUpdateGameRegistrationWithWrongId_thenShouldReturnGameRegistrationNotFound() {
+        givenGameHasRegistered("big2", "Big2")
+        whenUpdateGameRegistration(
+            "not-exist-game-id",
+            TestGameRegistrationRequest(
+            "big2",
+            "updated big2",
+            "updated big2 description",
+            "updated big2 rules",
+            "updated big2 image url",
+            3,
+            8,
+            "updated big2 frontend url",
+            "updated big2 backend url",
+            ))
+            .thenShouldReturnGameRegistrationNotFound()
+    }
+
+    @Test
+    fun givenBig2AndUnoHasRegistered_whenUpdateBig2UniqueNameAsUno_thenShouldReturnGameAlreadyExists() {
+        val big2GameId = givenGameHasRegistered("big2", "Big2")
+        val unoGameId = givenGameHasRegistered("uno", "UNO")
+
+        whenUpdateGameRegistration(
+            big2GameId.value,
+            TestGameRegistrationRequest(
+                "uno",
+                "updated big2",
+                "updated big2 description",
+                "updated big2 rules",
+                "updated big2 image url",
+                3,
+                8,
+                "updated big2 frontend url",
+                "updated big2 backend url",
+            ))
+            .thenShouldReturnGameAlreadyExists()
+    }
+
+    @Test
+    fun givenBig2HasRegistered_whenUpdateGameRegistrationWithRightIdAndUniqueName_thenUpdateGameRegistrationSuccessfully() {
+        val big2GameId = givenGameHasRegistered("big2", "Big2")
+        val updateGameRegistrationRequest = TestGameRegistrationRequest(
+            "big2",
+            "updated big2",
+            "updated big2 description",
+            "updated big2 rules",
+            "updated big2 image url",
+            3,
+            8,
+            "updated big2 frontend url",
+            "updated big2 backend url",
+        )
+
+        whenUpdateGameRegistration(big2GameId.value, updateGameRegistrationRequest)
+            .thenUpdateGameRegistrationSuccessfully(updateGameRegistrationRequest)
     }
 
     private fun createGameRegistrationRequest(
@@ -202,4 +261,45 @@ class GameRegistrationControllerTest @Autowired constructor(
             assertThat(it.maxPlayers).isEqualTo(maxPlayers)
         }
     }
+
+    private fun givenGameHasRegistered(uniqueName: String, displayName: String): GameRegistration.Id {
+        val createGameRegistrationRequest = createGameRegistrationRequest(uniqueName, displayName)
+        return registerGameSuccessfully(createGameRegistrationRequest).id
+    }
+
+    private fun whenUpdateGameRegistration(gameId: String, updateGameRegistrationRequest: TestGameRegistrationRequest): ResultActions {
+        return mockMvc.perform(put("/games/$gameId")
+            .withJson(updateGameRegistrationRequest)
+        )
+    }
+
+    private fun ResultActions.thenShouldReturnGameRegistrationNotFound() {
+        andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.message").value("Resource (GameRegistration) not found (id = Id(value=not-exist-game-id))."))
+    }
+
+    private fun ResultActions.thenShouldReturnGameAlreadyExists() {
+        andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("uno already exists"))
+    }
+
+    private fun ResultActions.thenUpdateGameRegistrationSuccessfully(request: TestGameRegistrationRequest) {
+        val view = andExpect(status().isOk)
+            .getBody(UpdateGameRegistrationViewModel::class.java)
+
+        gameRegistrationRepository.findById(view.id)
+            .also {
+                assertThat(it).isNotNull
+                assertThat(it!!.uniqueName).isEqualTo(request.uniqueName)
+                assertThat(it.displayName).isEqualTo(request.displayName)
+                assertThat(it.shortDescription).isEqualTo(request.shortDescription)
+                assertThat(it.rule).isEqualTo(request.rule)
+                assertThat(it.imageUrl).isEqualTo(request.imageUrl)
+                assertThat(it.minPlayers).isEqualTo(request.minPlayers)
+                assertThat(it.maxPlayers).isEqualTo(request.maxPlayers)
+                assertThat(it.frontEndUrl).isEqualTo(request.frontEndUrl)
+                assertThat(it.backEndUrl).isEqualTo(request.backEndUrl)
+            }
+    }
+
 }
