@@ -1,7 +1,6 @@
 package tw.waterballsa.gaas.spring.it.controllers
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -390,7 +389,7 @@ class RoomControllerTest @Autowired constructor(
                 .withJwt(joinUser.toJwt())
                 .param("status", status)
                 .param("page", page.toString())
-                .param("offset", offset.toString())
+                .param("perPage", perPage.toString())
         )
 
     private fun givenWaitingRooms(vararg users: User): Unit =
