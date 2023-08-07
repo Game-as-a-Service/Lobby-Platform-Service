@@ -17,7 +17,7 @@ class SocketIOConfig (){
                 with(socketIOProperties){
                     hostname = socketHost
                     port = socketPort
-                }
+                } 
         }
         return SocketIOServer(configuration)
     }
