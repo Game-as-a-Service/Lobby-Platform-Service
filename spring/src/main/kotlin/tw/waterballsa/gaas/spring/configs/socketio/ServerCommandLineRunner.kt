@@ -24,7 +24,6 @@ class ServerCommandLineRunner(private val server: SocketIOServer) : CommandLineR
     fun stopServer() {
         logger.info("Stopping the server...")
         server.stop()
-        server.stop() // Call stop twice to ensure it stops properly.
         logger.info("Server stopped.")
 
     }
