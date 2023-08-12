@@ -19,6 +19,7 @@
         <jackson-module-kotlin.version>2.14.2</jackson-module-kotlin.version>
         <spring-openapi.version>1.6.15</spring-openapi.version>
         <java.version>17</java.version>
+        <netty-socketio.version>2.0.3</netty-socketio.version>
     </properties>
 
     <dependencies>
@@ -94,6 +95,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.corundumstudio.socketio</groupId>
+            <artifactId>netty-socketio</artifactId>
+            <version>${netty-socketio.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -166,4 +172,5 @@
             </properties>
         </profile>
     </profiles>
+
 </project>
