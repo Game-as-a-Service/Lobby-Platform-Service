@@ -1,5 +1,7 @@
 package tw.waterballsa.gaas.spring.controllers.viewmodel
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class GetRoomsViewModel(
     val rooms: List<RoomViewModel>,
     val page: Page
@@ -21,6 +23,7 @@ data class GetRoomsViewModel(
     data class Page(
         val total: Int,
         val page: Int,
-        val perPage: Int
+        @JsonProperty("perPage")
+        val offset: Int
     )
 }

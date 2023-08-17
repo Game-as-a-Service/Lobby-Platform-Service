@@ -42,6 +42,6 @@ private fun Room.Player.toGetRoomsView(): GetRoomsViewModel.RoomViewModel.Player
 private fun Pagination<Room>.toPage(size: Int): GetRoomsViewModel.Page =
     GetRoomsViewModel.Page(
         page = page,
-        perPage = offset,
+        offset = offset,
         total = size
     )
