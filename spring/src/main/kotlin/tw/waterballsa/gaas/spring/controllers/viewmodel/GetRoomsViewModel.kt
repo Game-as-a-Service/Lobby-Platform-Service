@@ -21,6 +21,6 @@ data class GetRoomsViewModel(
     data class Page(
         val total: Int,
         val page: Int,
-        val offset: Int
+        val perPage: Int
     )
 }

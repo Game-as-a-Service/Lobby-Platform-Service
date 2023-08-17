@@ -21,7 +21,6 @@ class GetRoomsPresenter : GetRoomsUseCase.GetRoomsPresenter {
         )
 }
 
-
 private fun Room.toRoomsViewModel(): GetRoomsViewModel.RoomViewModel =
     GetRoomsViewModel.RoomViewModel(
         id = roomId!!.value,
@@ -43,6 +42,6 @@ private fun Room.Player.toGetRoomsView(): GetRoomsViewModel.RoomViewModel.Player
 private fun Pagination<Room>.toPage(size: Int): GetRoomsViewModel.Page =
     GetRoomsViewModel.Page(
         page = page,
-        offset = offset,
+        perPage = offset,
         total = size
     )
