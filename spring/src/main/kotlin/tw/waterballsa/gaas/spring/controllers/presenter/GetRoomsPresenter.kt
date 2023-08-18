@@ -21,7 +21,6 @@ class GetRoomsPresenter : GetRoomsUseCase.GetRoomsPresenter {
         )
 }
 
-
 private fun Room.toRoomsViewModel(): GetRoomsViewModel.RoomViewModel =
     GetRoomsViewModel.RoomViewModel(
         id = roomId!!.value,
