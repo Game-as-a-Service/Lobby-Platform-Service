@@ -39,8 +39,8 @@ class SpringRoomRepository(
             .map { it.toDomain() }
             .toPagination()
 
-    override fun deleteById(roomId: Id) {
-        roomDAO.deleteById(roomId.value)
+    override fun closeRoom(room: Room) {
+        roomDAO.deleteById(room.roomId!!.value)
     }
 
     override fun leaveRoom(room: Room) {

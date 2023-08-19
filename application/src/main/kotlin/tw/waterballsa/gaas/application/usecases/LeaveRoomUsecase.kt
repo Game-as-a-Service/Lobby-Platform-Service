@@ -17,10 +17,9 @@ class LeaveRoomUsecase(
             val player = findPlayerByIdentity(userIdentity)
             room.leaveRoom(player.id)
 
-            if (room.isEmpty()) {
-                roomRepository.deleteById(room.roomId!!)
-            } else {
-                roomRepository.leaveRoom(room)
+            when {
+                room.isEmpty() -> roomRepository.closeRoom(room)
+                else -> roomRepository.leaveRoom(room)
             }
         }
     }
