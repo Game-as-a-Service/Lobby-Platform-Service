@@ -14,7 +14,7 @@ class CloseRoomUsecase(
             val room = findRoomById(roomId)
             val host = findPlayerByIdentity(userIdentity)
             room.validateRoomHost(host.id)
-            roomRepository.deleteById(room.roomId!!)
+            roomRepository.closeRoom(room)
         }
     }
 

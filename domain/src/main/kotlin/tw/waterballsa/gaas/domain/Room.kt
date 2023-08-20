@@ -27,6 +27,8 @@ class Room(
         return this.password.equals(password)
     }
 
+    fun isEmpty(): Boolean = players.isEmpty()
+
     fun isFull(): Boolean = players.size >= maxPlayers
 
     fun changePlayerReadiness(playerId: Player.Id, readiness: Boolean) {

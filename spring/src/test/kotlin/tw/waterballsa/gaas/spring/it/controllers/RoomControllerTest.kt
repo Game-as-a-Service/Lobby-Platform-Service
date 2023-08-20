@@ -3,6 +3,7 @@ package tw.waterballsa.gaas.spring.it.controllers
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -383,6 +384,16 @@ class RoomControllerTest @Autowired constructor(
             .thenShouldFail("Player(${userA.id!!.value}) is not in the room(${testRoom.roomId!!.value}).")
     }
 
+    @Test
+    fun giveHostJoinedRoom_WhenHostLeaveRoom_ThenShouldCloseRoom() {
+        val userA = testUser
+        val host = userA.toRoomPlayer()
+
+        givenHostAndPlayersJoinedTheRoom(host)
+            .whenUserLeaveTheRoom(userA)
+            .thenShouldCloseRoom()
+    }
+
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
@@ -522,6 +533,12 @@ class RoomControllerTest @Autowired constructor(
         assertFalse(room.isHost(player.id))
         assertTrue(room.host.readiness)
         assertTrue(room.players.first().readiness)
+    }
+
+    private fun ResultActions.thenShouldCloseRoom() {
+        andExpect(status().isNoContent)
+        val room = roomRepository.findById(testRoom.roomId!!)
+        assertNull(room)
     }
 
     private fun createUser(
