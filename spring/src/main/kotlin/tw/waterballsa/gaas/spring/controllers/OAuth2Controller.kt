@@ -35,14 +35,14 @@ class OAuth2Controller(
     fun authenticate(
         request: NativeWebRequest,
         @RequestBody payload: AuthenticateToken
-    ): AuthenticateToken{
+    ): AuthenticateToken {
         return refreshTokenHandler.refreshAccessToken(request, payload.token)
             ?.let { AuthenticateToken(it) }
-            ?: throw notFound(JWT_NOT_FOUND,"AccessToken").message()
+            ?: throw notFound(JWT_NOT_FOUND, "AccessToken").message()
     }
 
     @GetMapping("/login")
-    fun login(@RequestParam type: String): ResponseEntity<Unit>{
+    fun login(@RequestParam type: String): ResponseEntity<Unit> {
         return ResponseEntity.status(FOUND)
             .header(LOCATION, "/oauth2/authorization/auth0?type=$type")
             .build()
@@ -55,7 +55,7 @@ data class AuthenticateToken(
 
 val OidcUser.identityProviderId: String
     get() = subject
-        ?: throw PlatformException(JWT_ERROR,"subject should exist.")
+        ?: throw PlatformException(JWT_ERROR, "subject should exist.")
 
 private fun OidcUser.toRequest(): CreateUserUseCase.Request =
-    CreateUserUseCase.Request(email ?: throw PlatformException(JWT_ERROR,"email should exist."), identityProviderId)
+    CreateUserUseCase.Request(email ?: throw PlatformException(JWT_ERROR, "email should exist."), identityProviderId)
