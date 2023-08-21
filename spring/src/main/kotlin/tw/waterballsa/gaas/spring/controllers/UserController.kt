@@ -7,8 +7,7 @@ import tw.waterballsa.gaas.application.usecases.CreateUserUseCase
 import tw.waterballsa.gaas.application.usecases.GetUserUseCase
 import tw.waterballsa.gaas.application.usecases.UpdateUserUseCase
 import tw.waterballsa.gaas.exceptions.PlatformException
-import tw.waterballsa.gaas.exceptions.enums.PlatformError
-import tw.waterballsa.gaas.exceptions.enums.PlatformError.JWT_NOT_FOUND
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.JWT_ERROR
 import tw.waterballsa.gaas.spring.controllers.presenter.GetUserPresenter
 import tw.waterballsa.gaas.spring.controllers.presenter.UpdateUserPresenter
 import tw.waterballsa.gaas.spring.controllers.viewmodel.GetUserViewModel
@@ -35,7 +34,7 @@ class UserController(
         @AuthenticationPrincipal principal: Jwt,
         @RequestBody updateUserRequest: UpdateUserRequest,
     ): UpdateUserViewModel {
-        val request = updateUserRequest.toRequest(principal.subject)
+        val request = updateUserRequest.toRequest(principal.identityProviderId)
         val presenter = UpdateUserPresenter()
         updateUserUseCase.execute(request, presenter)
         return presenter.viewModel
@@ -46,13 +45,16 @@ class UserController(
         @AuthenticationPrincipal principal: Jwt,
         @RequestBody createUserRequest: CreateUserRequest,
     ): PlatformViewModel {
-        createUserUseCase.execute(createUserRequest.toRequest(principal.subject))
-        return PlatformViewModel.success();
+        createUserUseCase.execute(createUserRequest.toRequest(principal.identityProviderId))
+        return PlatformViewModel.success()
     }
 }
 
+private val Jwt.identityProviderId: String
+    get() = subject ?: throw PlatformException(JWT_ERROR, "identityProviderId should exist.")
+
 private fun Jwt.toRequest(): GetUserUseCase.Request =
-    GetUserUseCase.Request(subject)
+    GetUserUseCase.Request(identityProviderId)
 
 data class UpdateUserRequest(val nickname: String) {
 

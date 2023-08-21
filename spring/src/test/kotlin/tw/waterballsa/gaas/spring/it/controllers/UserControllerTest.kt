@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
@@ -77,19 +76,18 @@ class UserControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenUserLoginAtProxyService_whenUserCreateAnUserWithJwt_thenUserShouldBeCreatedSuccessful() {
+    fun givenUserLoginAtProxyService_whenUserCreatePlatformUserWithJwt_thenUserShouldBeCreatedSuccessfully() {
         val email = "test@gmail.com"
         givenUserLoginAtProxyService()
-            .whenUserCreateAnUserWithJwt(email)
-            .thenUserShouldBeCreatedSuccessful(email)
+            .whenUserCreatePlatformUserWithJwt(email)
+            .thenUserShouldBeCreatedSuccessfully(email)
     }
 
     @Test
-    fun givenUserNotLoginAtProxyService_whenUserCreateAnUser_thenUserShouldBeCreatedFail() {
+    fun givenUserNotLoginAtProxyService_whenUserCreatePlatformUserWithoutJwt_thenShouldBeFailed() {
         val email = "test@gmail.com"
-        givenUserDoesNotLogIn()
-            .whenUserCreateAnUser(email)
-            .thenUserShouldBeCreatedFail(email)
+        whenUserCreatePlatformUserWithoutJwt(email)
+            .thenShouldBeFailed(email)
     }
 
     private fun givenUserDoesNotLogIn(): User = this.mockUser
@@ -115,20 +113,19 @@ class UserControllerTest @Autowired constructor(
     private fun User.whenChangeUserNickname(updateUserRequest: UpdateUserRequest): ResultActions =
         mockMvc.perform(
             put("/users/me")
-                .contentType(APPLICATION_JSON)
-                .content(updateUserRequest.toJson())
+                .withJson(updateUserRequest)
                 .withJwt(toJwt())
         )
 
     private fun ResultActions.thenGetUserSuccessfully() {
-        this.andExpect(status().isOk)
+        andExpect(status().isOk)
             .andExpect(jsonPath("$.id").value(mockUser.id!!.value))
             .andExpect(jsonPath("$.email").value(mockUser.email))
             .andExpect(jsonPath("$.nickname").value(mockUser.nickname))
     }
 
     private fun ResultActions.thenUserNotFound() {
-        this.andExpect(status().isNotFound)
+        andExpect(status().isNotFound)
             .andExpect(jsonPath("$.id").doesNotExist())
             .andExpect(jsonPath("$.email").doesNotExist())
             .andExpect(jsonPath("$.nickname").doesNotExist())
@@ -150,35 +147,29 @@ class UserControllerTest @Autowired constructor(
 
     private fun givenUserLoginAtProxyService(): Jwt = mockUser.toJwt()
 
-    private fun Jwt.whenUserCreateAnUserWithJwt(email: String) : ResultActions =
+    private fun Jwt.whenUserCreatePlatformUserWithJwt(email: String): ResultActions =
         mockMvc.perform(
             post("/users")
                 .withJwt(this)
-                .contentType(APPLICATION_JSON)
-                .content(CreateUserRequest(email).toJson())
+                .withJson(CreateUserRequest(email))
         )
 
-    private fun ResultActions.thenUserShouldBeCreatedSuccessful(email: String) {
+    private fun ResultActions.thenUserShouldBeCreatedSuccessfully(email: String) {
         andExpect(status().isOk)
 
-        userRepository.findByEmail(email)
-            .also { assertThat(it).isNotNull }
-            .also { assertThat(it!!.nickname).isNotNull() }
-            .also { assertThat(it!!.identities).isNotNull() }
-            .also { assertThat(it!!.email).isEqualTo(email) }
+        val user = userRepository.findByEmail(email)!!
+        assertThat(user).isNotNull
+        assertThat(user.nickname).isNotNull()
+        assertThat(user.identities).isNotNull()
+        assertThat(user.email).isEqualTo(email)
     }
 
-    private fun User.whenUserCreateAnUser(email: String) : ResultActions =
-        mockMvc.perform(
-            post("/users")
-                .contentType(APPLICATION_JSON)
-                .content(CreateUserRequest(email).toJson())
-        )
+    private fun whenUserCreatePlatformUserWithoutJwt(email: String): ResultActions =
+        mockMvc.perform(post("/users").withJson(CreateUserRequest(email)))
 
-    private fun ResultActions.thenUserShouldBeCreatedFail(email: String) {
+    private fun ResultActions.thenShouldBeFailed(email: String) {
         andExpect(status().isUnauthorized)
 
-        userRepository.findByEmail(email)
-            .also { assertThat(it).isNull() }
+        assertThat(userRepository.findByEmail(email)).isNull()
     }
 }
