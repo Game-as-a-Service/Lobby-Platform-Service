@@ -4,14 +4,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.MediaType
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.web.servlet.ResultActions
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.User
+import tw.waterballsa.gaas.spring.controllers.CreateUserRequest
 import tw.waterballsa.gaas.spring.controllers.UpdateUserRequest
 import tw.waterballsa.gaas.spring.controllers.viewmodel.UpdateUserViewModel
 import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
@@ -75,6 +75,21 @@ class UserControllerTest @Autowired constructor(
             .thenShouldChangeNicknameFailed("invalid nickname: duplicated")
     }
 
+    @Test
+    fun givenUserLoginAtProxyService_whenUserCreatePlatformUserWithJwt_thenUserShouldBeCreatedSuccessfully() {
+        val email = "test@gmail.com"
+        givenUserLoginAtProxyService()
+            .whenUserCreatePlatformUserWithJwt(email)
+            .thenUserShouldBeCreatedSuccessfully(email)
+    }
+
+    @Test
+    fun givenUserNotLoginAtProxyService_whenUserCreatePlatformUserWithoutJwt_thenShouldBeFailed() {
+        val email = "test@gmail.com"
+        whenUserCreatePlatformUserWithoutJwt(email)
+            .thenShouldBeFailed(email)
+    }
+
     private fun givenUserDoesNotLogIn(): User = this.mockUser
 
     private fun givenUserHasLoggedIn(): User {
@@ -98,20 +113,19 @@ class UserControllerTest @Autowired constructor(
     private fun User.whenChangeUserNickname(updateUserRequest: UpdateUserRequest): ResultActions =
         mockMvc.perform(
             put("/users/me")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(updateUserRequest.toJson())
+                .withJson(updateUserRequest)
                 .withJwt(toJwt())
         )
 
     private fun ResultActions.thenGetUserSuccessfully() {
-        this.andExpect(status().isOk)
+        andExpect(status().isOk)
             .andExpect(jsonPath("$.id").value(mockUser.id!!.value))
             .andExpect(jsonPath("$.email").value(mockUser.email))
             .andExpect(jsonPath("$.nickname").value(mockUser.nickname))
     }
 
     private fun ResultActions.thenUserNotFound() {
-        this.andExpect(status().isNotFound)
+        andExpect(status().isNotFound)
             .andExpect(jsonPath("$.id").doesNotExist())
             .andExpect(jsonPath("$.email").doesNotExist())
             .andExpect(jsonPath("$.nickname").doesNotExist())
@@ -131,4 +145,31 @@ class UserControllerTest @Autowired constructor(
             .andExpect(jsonPath("$.message").value(message))
     }
 
+    private fun givenUserLoginAtProxyService(): Jwt = mockUser.toJwt()
+
+    private fun Jwt.whenUserCreatePlatformUserWithJwt(email: String): ResultActions =
+        mockMvc.perform(
+            post("/users")
+                .withJwt(this)
+                .withJson(CreateUserRequest(email))
+        )
+
+    private fun ResultActions.thenUserShouldBeCreatedSuccessfully(email: String) {
+        andExpect(status().isOk)
+
+        val user = userRepository.findByEmail(email)!!
+        assertThat(user).isNotNull
+        assertThat(user.nickname).isNotNull()
+        assertThat(user.identities).isNotNull()
+        assertThat(user.email).isEqualTo(email)
+    }
+
+    private fun whenUserCreatePlatformUserWithoutJwt(email: String): ResultActions =
+        mockMvc.perform(post("/users").withJson(CreateUserRequest(email)))
+
+    private fun ResultActions.thenShouldBeFailed(email: String) {
+        andExpect(status().isUnauthorized)
+
+        assertThat(userRepository.findByEmail(email)).isNull()
+    }
 }
