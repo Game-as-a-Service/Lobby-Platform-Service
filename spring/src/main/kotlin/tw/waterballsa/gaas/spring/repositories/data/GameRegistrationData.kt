@@ -2,6 +2,7 @@ package tw.waterballsa.gaas.spring.repositories.data
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed
+import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
 import tw.waterballsa.gaas.domain.GameRegistration
 
@@ -18,8 +19,10 @@ class GameRegistrationData(
     var minPlayers: Int?,
     var maxPlayers: Int?,
     var frontEndUrl: String?,
-    var backEndUrl: String?
+    var backEndUrl: String?,
 ) {
+    @DBRef
+    var logs: MutableList<GameDevelopmentLog> = mutableListOf()
 
     fun toDomain(): GameRegistration =
         GameRegistration(
