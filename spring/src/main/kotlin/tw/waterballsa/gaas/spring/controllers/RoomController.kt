@@ -1,32 +1,22 @@
 package tw.waterballsa.gaas.spring.controllers
 
-import org.springframework.http.HttpStatus.*
+import org.springframework.http.HttpStatus.CREATED
+import org.springframework.http.HttpStatus.NO_CONTENT
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.*
 import tw.waterballsa.gaas.application.usecases.*
-import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
-import tw.waterballsa.gaas.events.CreatedRoomEvent
-import tw.waterballsa.gaas.events.DomainEvent
 import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.JWT_ERROR
-import tw.waterballsa.gaas.spring.controllers.RoomController.CreateRoomViewModel
-import tw.waterballsa.gaas.spring.controllers.presenter.GetRoomPresenter
-import tw.waterballsa.gaas.spring.controllers.presenter.GetRoomsPresenter
-import tw.waterballsa.gaas.spring.controllers.presenter.StartGamePresenter
-import tw.waterballsa.gaas.spring.controllers.viewmodel.GetRoomViewModel
-import tw.waterballsa.gaas.spring.controllers.viewmodel.GetRoomsViewModel
-import tw.waterballsa.gaas.spring.controllers.viewmodel.PlatformViewModel
-import tw.waterballsa.gaas.spring.controllers.viewmodel.StartGameViewModel
-import tw.waterballsa.gaas.spring.extensions.getEvent
+import tw.waterballsa.gaas.spring.controllers.presenter.*
+import tw.waterballsa.gaas.spring.controllers.viewmodel.*
 import javax.validation.Valid
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Positive
 
 @RestController
-@RequestMapping("/rooms")
 class RoomController(
     private val createRoomUsecase: CreateRoomUsecase,
     private val joinRoomUsecase: JoinRoomUsecase,
@@ -37,8 +27,9 @@ class RoomController(
     private val leaveRoomUsecase: LeaveRoomUsecase,
     private val getRoomUsecase: GetRoomUsecase,
     private val startGameUseCase: StartGameUseCase,
+    private val fastJoinRoomUseCase: FastJoinRoomUseCase,
 ) {
-    @PostMapping
+    @PostMapping("/rooms")
     fun createRoom(
         @AuthenticationPrincipal jwt: Jwt,
         @RequestBody @Valid request: CreateRoomRequest
@@ -50,7 +41,7 @@ class RoomController(
             ?: ResponseEntity.noContent().build()
     }
 
-    @PostMapping("/{roomId}/players")
+    @PostMapping("/rooms/{roomId}/players")
     fun joinRoom(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable roomId: String,
@@ -60,7 +51,7 @@ class RoomController(
         return PlatformViewModel.success()
     }
 
-    @GetMapping
+    @GetMapping("/rooms")
     fun getRooms(
         @RequestParam status: String,
         @RequestParam page: Int,
@@ -72,7 +63,7 @@ class RoomController(
         return presenter.viewModel
     }
 
-    @PostMapping("/{roomId}/players/me:ready")
+    @PostMapping("/rooms/{roomId}/players/me:ready")
     fun readyForRoom(
         @PathVariable roomId: String,
         @AuthenticationPrincipal jwt: Jwt
@@ -82,7 +73,7 @@ class RoomController(
         return PlatformViewModel.success()
     }
 
-    @PostMapping("/{roomId}/players/me:cancel")
+    @PostMapping("/rooms/{roomId}/players/me:cancel")
     fun cancelReadyForRoom(
         @PathVariable roomId: String,
         @AuthenticationPrincipal jwt: Jwt
@@ -92,7 +83,7 @@ class RoomController(
         return PlatformViewModel.success()
     }
 
-    @DeleteMapping("/{roomId}")
+    @DeleteMapping("/rooms/{roomId}")
     @ResponseStatus(NO_CONTENT)
     fun closeRoom(
         @AuthenticationPrincipal jwt: Jwt,
@@ -105,7 +96,7 @@ class RoomController(
         closeRoomsUseCase.execute(request)
     }
 
-    @DeleteMapping("/{roomId}/players/{playerId}")
+    @DeleteMapping("/rooms/{roomId}/players/{playerId}")
     fun kickPlayer(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable roomId: String,
@@ -117,7 +108,7 @@ class RoomController(
         return PlatformViewModel.success()
     }
 
-    @DeleteMapping("/{roomId}/players/me")
+    @DeleteMapping("/rooms/{roomId}/players/me")
     @ResponseStatus(NO_CONTENT)
     fun leaveRoom(
         @AuthenticationPrincipal jwt: Jwt,
@@ -126,7 +117,7 @@ class RoomController(
         leaveRoomUsecase.execute(LeaveRoomUsecase.Request(roomId, jwt.identityProviderId))
     }
 
-    @GetMapping("/{roomId}")
+    @GetMapping("/rooms/{roomId}")
     fun getRoom(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable roomId: String,
@@ -137,7 +128,7 @@ class RoomController(
         return presenter.viewModel
     }
 
-    @PostMapping("/{roomId}:startGame")
+    @PostMapping("/rooms/{roomId}:start")
     fun startGame(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable roomId: String,
@@ -145,6 +136,17 @@ class RoomController(
         val request = StartGameUseCase.Request(roomId, jwt.tokenValue, jwt.identityProviderId)
         val presenter = StartGamePresenter()
         startGameUseCase.execute(request, presenter)
+        return presenter.viewModel
+    }
+
+    @PostMapping("/rooms:fastJoin")
+    fun fastJoinRoom(
+        @AuthenticationPrincipal jwt: Jwt,
+        @RequestBody request: FastJoinRoomRequest,
+    ): FastJoinRoomViewModel {
+        val fastJoinRequest = FastJoinRoomUseCase.Request(request.gameId, jwt.identityProviderId)
+        val presenter = FastJoinRoomPresenter()
+        fastJoinRoomUseCase.execute(fastJoinRequest, presenter)
         return presenter.viewModel
     }
 
@@ -167,41 +169,6 @@ class RoomController(
             )
     }
 
-    class CreateRoomPresenter : Presenter {
-        var viewModel: CreateRoomViewModel? = null
-            private set
-
-        override fun present(vararg events: DomainEvent) {
-            viewModel = events.getEvent(CreatedRoomEvent::class)?.toViewModel()
-        }
-
-        private fun CreatedRoomEvent.toViewModel(): CreateRoomViewModel =
-            CreateRoomViewModel(
-                id = roomId,
-                game = game.toView(),
-                host = host.toView(),
-                currentPlayers = currentPlayers,
-                maxPlayers = maxPlayers,
-                minPlayers = minPlayers,
-                name = name,
-                isLocked = isLocked
-            )
-    }
-
-    data class CreateRoomViewModel(
-        val id: Room.Id,
-        val name: String,
-        val game: Game,
-        val host: Player,
-        val isLocked: Boolean,
-        val currentPlayers: Int,
-        val maxPlayers: Int,
-        val minPlayers: Int,
-    ) {
-        data class Game(val id: String, val name: String)
-        data class Player(val id: String, val nickname: String)
-    }
-
     class JoinRoomRequest(
         val password: String? = null
     ) {
@@ -212,6 +179,10 @@ class RoomController(
                 password = password
             )
     }
+
+    class FastJoinRoomRequest(
+        val gameId: String
+    )
 
     class GetRoomsRequest(
         @field:Pattern(
@@ -236,8 +207,4 @@ class RoomController(
 private val Jwt.identityProviderId: String
     get() = subject ?: throw PlatformException(JWT_ERROR, "identityProviderId should exist.")
 
-private fun GameRegistration.toView(): CreateRoomViewModel.Game =
-    CreateRoomViewModel.Game(id!!.value, displayName)
 
-private fun Room.Player.toView(): CreateRoomViewModel.Player =
-    CreateRoomViewModel.Player(id.value, nickname)

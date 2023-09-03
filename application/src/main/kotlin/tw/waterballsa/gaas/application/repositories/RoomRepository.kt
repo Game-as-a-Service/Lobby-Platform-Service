@@ -1,6 +1,7 @@
 package tw.waterballsa.gaas.application.repositories
 
 import tw.waterballsa.gaas.application.model.Pagination
+import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.User
 
@@ -14,4 +15,5 @@ interface RoomRepository {
     fun closeRoom(room: Room)
     fun leaveRoom(room: Room)
     fun hasPlayerJoinedRoom(playerId: User.Id): Boolean
+    fun findWaitingPublicRoomsByGame(game: GameRegistration): List<Room>
 }

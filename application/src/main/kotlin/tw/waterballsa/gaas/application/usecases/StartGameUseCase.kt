@@ -15,7 +15,7 @@ class StartGameUseCase(
     roomRepository: RoomRepository,
     userRepository: UserRepository,
     private val gameService: GameService,
-    private val eventBus: EventBus
+    private val eventBus: EventBus,
 ) : AbstractRoomUseCase(roomRepository, userRepository) {
 
     fun execute(request: Request, presenter: Presenter) {
@@ -40,7 +40,7 @@ class StartGameUseCase(
     data class Request(
         val roomId: String,
         val jwtToken: String,
-        val identityProviderId: String
+        val identityProviderId: String,
     )
 
     interface Presenter {

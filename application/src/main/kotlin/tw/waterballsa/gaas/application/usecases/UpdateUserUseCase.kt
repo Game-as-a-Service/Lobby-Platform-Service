@@ -1,6 +1,7 @@
 package tw.waterballsa.gaas.application.usecases
 
 import tw.waterballsa.gaas.application.eventbus.EventBus
+import tw.waterballsa.gaas.application.presenters.Presenter
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.events.UserUpdatedEvent

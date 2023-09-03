@@ -12,7 +12,9 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
 import tw.waterballsa.gaas.domain.User
+import tw.waterballsa.gaas.spring.utils.Users.Companion.defaultUserBuilder
 import java.nio.charset.StandardCharsets.UTF_8
+import java.util.UUID.randomUUID
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -23,12 +25,10 @@ abstract class AbstractSpringBootTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
 
-    protected final val mockUser: User = User(
-        User.Id("1"),
-        "user@example.com",
-        "user-437b200d-da9c-449e-b147-114b4822b5aa",
-        mutableListOf("google-oauth2|102527320242660434908")
-    )
+    protected final val mockUser: User = defaultUserBuilder("1")
+        .nickname("user-${randomUUID()}")
+        .identities("google-oauth2|102527320242660434908")
+        .build()
 
     protected final fun String.toJwt(): Jwt = generateJwt(this)
 

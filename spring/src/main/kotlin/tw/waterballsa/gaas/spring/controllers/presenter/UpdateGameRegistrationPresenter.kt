@@ -1,6 +1,6 @@
 package tw.waterballsa.gaas.spring.controllers.presenter
 
-import tw.waterballsa.gaas.application.usecases.Presenter
+import tw.waterballsa.gaas.application.presenters.Presenter
 import tw.waterballsa.gaas.events.DomainEvent
 import tw.waterballsa.gaas.events.GameRegistrationUpdatedEvent
 import tw.waterballsa.gaas.spring.controllers.viewmodel.UpdateGameRegistrationViewModel
