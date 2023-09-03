@@ -2,8 +2,6 @@ package tw.waterballsa.gaas.spring.client
 
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod.POST
-import org.springframework.http.HttpStatus.OK
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 import tw.waterballsa.gaas.application.client.GameService
@@ -17,16 +15,11 @@ class RestGameService(
     private val restTemplate: RestTemplate
 ) : GameService {
 
-    override fun startGame(host: String, jwtToken: String, request: StartGameRequest): StartGameResponse {
-        val response = restTemplate.exchange(
-            "$host/games",
-            POST,
-            HttpEntity(request, HttpHeaders().apply { setBearerAuth(jwtToken) }),
-            StartGameResponse::class.java
-        )
-        if (response.statusCode != OK) {
-            throw PlatformException(GAME_START_FAILED, "Failed to start game")
-        }
-        return response.body!!
+    override fun startGame(host: String, jwtToken: String, body: StartGameRequest): StartGameResponse {
+        val header = HttpHeaders().apply { setBearerAuth(jwtToken) }
+        val request = HttpEntity(body, header)
+        val response = restTemplate.postForObject("$host/games", request, StartGameResponse::class.java)
+
+        return response ?: throw PlatformException(GAME_START_FAILED, "Failed to start game")
     }
 }

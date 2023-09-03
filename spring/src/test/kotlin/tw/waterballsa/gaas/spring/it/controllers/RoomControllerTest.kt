@@ -13,7 +13,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tw.waterballsa.gaas.application.client.GameService
-import tw.waterballsa.gaas.application.client.StartGamePlayer
 import tw.waterballsa.gaas.application.client.StartGameRequest
 import tw.waterballsa.gaas.application.client.StartGameResponse
 import tw.waterballsa.gaas.application.model.Pagination
@@ -694,7 +693,7 @@ class RoomControllerTest @Autowired constructor(
     private fun Room.isHost(playerId: Player.Id): Boolean =
         host.id == playerId
 
-    private fun  mockGameService(): OngoingStubbing<StartGameResponse> =
+    private fun mockGameService(): OngoingStubbing<StartGameResponse> =
         `when`(gameService.startGame(anyString(), anyString(), anyObject()))
 
     private fun User.givenRoomHaveFourReadyPlayers(): Room {
@@ -729,7 +728,8 @@ class RoomControllerTest @Autowired constructor(
                 .withJson(StartGameRequest(room.players.map { it.toStartGamePlayer() }))
         )
 
-    private fun Player.toStartGamePlayer(): StartGamePlayer = StartGamePlayer(id.value, nickname)
+    private fun Player.toStartGamePlayer(): StartGameRequest.GamePlayer =
+        StartGameRequest.GamePlayer(id.value, nickname)
 
     private fun ResultActions.thenGameShouldBeStarted(room: Room) {
         andExpect(status().isOk)

@@ -68,7 +68,7 @@ class Room(
 
     fun startGame() {
         if (status != WAITING) {
-            throw PlatformException(GAME_ALREADY_STARTED, "Game is already started")
+            throw PlatformException(GAME_ALREADY_STARTED, "Game has already started")
         }
         status = PLAYING
     }

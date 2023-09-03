@@ -5,14 +5,14 @@ interface GameService {
 }
 
 data class StartGameRequest(
-    val players: List<StartGamePlayer>
-)
+    val players: List<GamePlayer>
+){
+    data class GamePlayer(
+        val id: String,
+        val nickName: String
+    )
+}
 
-data class StartGamePlayer(
-    val id: String,
-    val nickName: String
-)
-
-class StartGameResponse(
+data class StartGameResponse(
     val url: String
 )
