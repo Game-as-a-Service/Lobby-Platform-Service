@@ -3,7 +3,9 @@ package tw.waterballsa.gaas.domain
 import tw.waterballsa.gaas.domain.Room.Status.PLAYING
 import tw.waterballsa.gaas.domain.Room.Status.WAITING
 import tw.waterballsa.gaas.exceptions.PlatformException
-import tw.waterballsa.gaas.exceptions.enums.PlatformError.*
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_ALREADY_STARTED
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_NOT_FOUND
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_NOT_HOST
 
 class Room(
     var roomId: Id? = null,
