@@ -1,19 +1,21 @@
 package tw.waterballsa.gaas.spring.it.controllers
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.*
+import org.mockito.Mockito.*
+import org.mockito.stubbing.OngoingStubbing
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import tw.waterballsa.gaas.application.client.GameService
+import tw.waterballsa.gaas.application.client.StartGamePlayer
+import tw.waterballsa.gaas.application.client.StartGameRequest
+import tw.waterballsa.gaas.application.client.StartGameResponse
 import tw.waterballsa.gaas.application.model.Pagination
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.application.repositories.RoomRepository
@@ -22,11 +24,14 @@ import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.Room.Player
 import tw.waterballsa.gaas.domain.User
+import tw.waterballsa.gaas.exceptions.PlatformException
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_START_FAILED
 import tw.waterballsa.gaas.spring.controllers.RoomController.CreateRoomViewModel
 import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 import tw.waterballsa.gaas.spring.models.TestCreateRoomRequest
 import tw.waterballsa.gaas.spring.models.TestGetRoomsRequest
 import tw.waterballsa.gaas.spring.models.TestJoinRoomRequest
+import tw.waterballsa.gaas.spring.utils.MockitoUtils.Companion.anyObject
 import java.util.UUID.*
 import kotlin.reflect.KClass
 
@@ -40,6 +45,9 @@ class RoomControllerTest @Autowired constructor(
     lateinit var testUser: User
     lateinit var testGame: GameRegistration
     lateinit var testRoom: Room
+
+    @MockBean
+    lateinit var gameService: GameService
 
     @BeforeEach
     fun setUp() {
@@ -394,6 +402,29 @@ class RoomControllerTest @Autowired constructor(
             .thenShouldCloseRoom()
     }
 
+    @Test
+    fun givenRoomHaveFourReadyPlayers_whenHostStartGame_thenGameShouldBeStarted() {
+        val host = testUser
+        val room = host.givenRoomHaveFourReadyPlayers()
+
+        mockGameService().thenReturn(StartGameResponse("${room.game.frontEndUrl}/games/${room.game.id!!.value}"))
+
+        host.whenHostStartGame(room)
+            .thenGameShouldBeStarted(room)
+    }
+
+    @Test
+    fun givenRoomHaveFourReadyPlayers_whenHostStartGame_thenConnectGameServerFailAndStartGameShouldBeFailed() {
+        val failedMessage = "Failed to start game"
+        val host = testUser
+        val room = host.givenRoomHaveFourReadyPlayers()
+
+        mockGameService().thenThrow(PlatformException(GAME_START_FAILED, failedMessage))
+
+        host.whenHostStartGame(room)
+            .thenConnectGameServerFailAndStartGameShouldBeFailed(failedMessage)
+    }
+
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
@@ -501,7 +532,7 @@ class RoomControllerTest @Autowired constructor(
             assertEquals(roomView.name, it.name)
             assertEquals(roomView.game.id, it.game.id!!.value)
             assertEquals(roomView.game.name, it.game.displayName)
-            assertEquals(roomView.host.id, it.host.id!!.value)
+            assertEquals(roomView.host.id, it.host.id.value)
             assertEquals(roomView.host.nickname, it.host.nickname)
             assertEquals(roomView.currentPlayers, it.players.size)
             assertEquals(roomView.minPlayers, it.minPlayers)
@@ -557,7 +588,7 @@ class RoomControllerTest @Autowired constructor(
                 .andExpect(jsonPath("$.name").value(it.name))
                 .andExpect(jsonPath("$.game.id").value(it.game.id!!.value))
                 .andExpect(jsonPath("$.game.name").value(it.game.displayName))
-                .andExpect(jsonPath("$.host.id").value(it.host.id!!.value))
+                .andExpect(jsonPath("$.host.id").value(it.host.id.value))
                 .andExpect(jsonPath("$.host.nickname").value(it.host.nickname))
                 .andExpect(jsonPath("$.host.isReady").value(it.host.readiness))
                 .andExpect(jsonPath("$.isLocked").value(!it.password.isNullOrEmpty()))
@@ -568,7 +599,7 @@ class RoomControllerTest @Autowired constructor(
                 .andExpect(jsonPath("$.players").isArray())
 
             it.players.forEachIndexed { index, player ->
-                andExpect(jsonPath("$.players[$index].id").value(player.id!!.value))
+                andExpect(jsonPath("$.players[$index].id").value(player.id.value))
                     .andExpect(jsonPath("$.players[$index].nickname").value(player.nickname))
                     .andExpect(jsonPath("$.players[$index].isReady").value(player.readiness))
             }
@@ -589,7 +620,7 @@ class RoomControllerTest @Autowired constructor(
         )
     )
 
-    private fun createRoom(host: User, password: String? = null, hostReady: Boolean = false): Room =
+    private fun createRoom(host: User, password: String? = null, hostReady: Boolean = true): Room =
         roomRepository.createRoom(
             Room(
                 game = testGame,
@@ -662,4 +693,51 @@ class RoomControllerTest @Autowired constructor(
 
     private fun Room.isHost(playerId: Player.Id): Boolean =
         host.id == playerId
+
+    private fun  mockGameService(): OngoingStubbing<StartGameResponse> =
+        `when`(gameService.startGame(anyString(), anyString(), anyObject()))
+
+    private fun User.givenRoomHaveFourReadyPlayers(): Room {
+        val userB = createUser(
+            "2", "test2@mail.com",
+            "1st_join_user", "google-oauth2|100000000000000000000"
+        )
+        val userC = createUser(
+            "3", "test3@mail.com",
+            "2nd_join_user", "google-oauth2|200000000000000000000"
+        )
+        val userD = createUser(
+            "4", "test4@mail.com",
+            "3rd_join_user", "google-oauth2|300000000000000000000"
+        )
+        val room = givenTheHostCreatePublicRoom(this)
+        userB.joinRoomAndReady(room)
+        userC.joinRoomAndReady(room)
+        userD.joinRoomAndReady(room)
+        return roomRepository.findById(room.roomId!!)!!
+    }
+
+    private fun User.joinRoomAndReady(room: Room) {
+        room.whenUserJoinTheRoom(this)
+        whenUserGetReadyFor(room.roomId!!, this)
+    }
+
+    private fun User.whenHostStartGame(room: Room): ResultActions =
+        mockMvc.perform(
+            post("/rooms/${room.roomId!!.value}:start")
+                .withJwt(toJwt())
+                .withJson(StartGameRequest(room.players.map { it.toStartGamePlayer() }))
+        )
+
+    private fun Player.toStartGamePlayer(): StartGamePlayer = StartGamePlayer(id.value, nickname)
+
+    private fun ResultActions.thenGameShouldBeStarted(room: Room) {
+        andExpect(status().isOk)
+            .andExpect(jsonPath("$.url").value("${room.game.frontEndUrl}/games/${room.game.id!!.value}"))
+    }
+
+    private fun ResultActions.thenConnectGameServerFailAndStartGameShouldBeFailed(message: String) {
+        andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value(message))
+    }
 }

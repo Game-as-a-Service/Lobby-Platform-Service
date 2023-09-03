@@ -1,9 +1,9 @@
 package tw.waterballsa.gaas.domain
 
+import tw.waterballsa.gaas.domain.Room.Status.PLAYING
 import tw.waterballsa.gaas.domain.Room.Status.WAITING
 import tw.waterballsa.gaas.exceptions.PlatformException
-import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_NOT_FOUND
-import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_NOT_HOST
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.*
 
 class Room(
     var roomId: Id? = null,
@@ -14,7 +14,7 @@ class Room(
     val minPlayers: Int,
     val name: String,
     val password: String? = null,
-    val status: Status = WAITING,
+    var status: Status = WAITING,
 ) {
     val isLocked: Boolean
         get() = !password.isNullOrEmpty()
@@ -62,6 +62,13 @@ class Room(
         if (playerId == host.id) {
             changeHost()
         }
+    }
+
+    fun startGame() {
+        if (status != WAITING) {
+            throw PlatformException(GAME_ALREADY_STARTED, "Game is already started")
+        }
+        status = PLAYING
     }
 
     private fun changeHost() {
