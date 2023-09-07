@@ -1,6 +1,6 @@
 # Lobby-Platform-Service
 
-Game as a Service is an open source, community-based project aimed at demonstrating the best software engineering methodologies, such as Domain-Driven Design (DDD), Behavior-Driven Development (BDD), Test-Driven Development (TDD) and DevOps. You can explore the most advance software technology and how we leveraging it. Feel free to check around the code.
+Game as a Service is an open source, community-based project aimed at demonstrating the best software engineering methodologies, such as Domain-Driven Design (DDD), Behavior-Driven Development (BDD), Test-Driven Development (TDD), and DevOps. You can explore the most advance software technology and how we leveraging it. Feel free to check around the code.
 
 Lobby-Platform-Service supports the backend service of GaaS, providing a gaming portal and a social community platform.
 
