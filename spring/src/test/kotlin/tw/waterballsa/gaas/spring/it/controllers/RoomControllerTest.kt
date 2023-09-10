@@ -723,7 +723,7 @@ class RoomControllerTest @Autowired constructor(
 
     private fun User.whenHostStartGame(room: Room): ResultActions =
         mockMvc.perform(
-            post("/rooms/${room.roomId!!.value}:start")
+            post("/rooms/${room.roomId!!.value}:startGame")
                 .withJwt(toJwt())
                 .withJson(StartGameRequest(room.players.map { it.toGamePlayer() }))
         )
