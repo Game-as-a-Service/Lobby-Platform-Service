@@ -137,7 +137,7 @@ class RoomController(
         return presenter.viewModel
     }
 
-    @PostMapping("/{roomId}:start")
+    @PostMapping("/{roomId}:startGame")
     fun startGame(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable roomId: String,
