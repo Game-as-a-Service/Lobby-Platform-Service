@@ -60,7 +60,7 @@ class StartGameUseCase(
     }
 
     private fun Room.startGameByHost(jwtToken: String): String {
-        val gameServerHost = game.frontEndUrl
+        val gameServerHost = game.backEndUrl
         val startGameRequest = StartGameRequest(players.map { it.toGamePlayer() })
 
         return gameService.startGame(gameServerHost, jwtToken, startGameRequest).url
