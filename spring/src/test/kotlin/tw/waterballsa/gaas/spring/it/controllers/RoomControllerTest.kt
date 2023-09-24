@@ -1,9 +1,12 @@
 package tw.waterballsa.gaas.spring.it.controllers
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
-import org.mockito.Mockito.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
+import org.mockito.Mockito.anyString
+import org.mockito.Mockito.`when`
 import org.mockito.stubbing.OngoingStubbing
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -25,20 +28,23 @@ import tw.waterballsa.gaas.domain.Room.Player
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_START_FAILED
-import tw.waterballsa.gaas.spring.controllers.RoomController.CreateRoomViewModel
+import tw.waterballsa.gaas.spring.controllers.RoomController.FastJoinRoomRequest
+import tw.waterballsa.gaas.spring.controllers.presenter.CreateRoomViewModel
+import tw.waterballsa.gaas.spring.controllers.viewmodel.FastJoinRoomViewModel
 import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 import tw.waterballsa.gaas.spring.models.TestCreateRoomRequest
 import tw.waterballsa.gaas.spring.models.TestGetRoomsRequest
 import tw.waterballsa.gaas.spring.models.TestJoinRoomRequest
 import tw.waterballsa.gaas.spring.utils.MockitoUtils.Companion.anyObject
-import java.util.UUID.*
+import tw.waterballsa.gaas.spring.utils.Users.Companion.defaultUser
+import java.util.UUID.randomUUID
 import kotlin.reflect.KClass
 
 
 class RoomControllerTest @Autowired constructor(
     val userRepository: UserRepository,
     val roomRepository: RoomRepository,
-    val gameRegistrationRepository: GameRegistrationRepository
+    val gameRegistrationRepository: GameRegistrationRepository,
 ) : AbstractSpringBootTest() {
 
     lateinit var testUser: User
@@ -53,7 +59,7 @@ class RoomControllerTest @Autowired constructor(
         userRepository.deleteAll()
         roomRepository.deleteAll()
 
-        testUser = createUser(mockUser)
+        testUser = mockUser.createUser()
         testGame = registerGame()
     }
 
@@ -98,39 +104,33 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun giveUserACreatedRoomC_WhenUserBJoinRoomC_ThenShouldSucceed() {
+    fun givenUserACreatedRoomC_WhenUserBJoinRoomC_ThenShouldSucceed() {
         val userA = testUser
-        val userB = createUser(
-            "2", "test2@mail.com",
-            "winner1122", "google-oauth2|100000000000000000000",
-        )
+        val userB = defaultUser("2").createUser()
+
         givenTheHostCreatePublicRoom(userA)
             .whenUserJoinTheRoom(userB)
             .thenActionSuccessfully()
     }
 
     @Test
-    fun giveUserACreatedRoomCWithPassword_WhenUserBJoinRoomCWithIncorrectPassword_ThenShouldFail() {
+    fun givenUserACreatedRoomCWithPassword_WhenUserBJoinRoomCWithIncorrectPassword_ThenShouldFail() {
         val password = "P@ssw0rd"
         val errorPassword = "password"
         val userA = testUser
-        val userB = createUser(
-            "2", "test2@mail.com",
-            "winner1122", "google-oauth2|100000000000000000000"
-        )
+        val userB = defaultUser("2").createUser()
+
         givenTheHostCreateRoomWithPassword(userA, password)
             .whenUserJoinTheRoom(userB, errorPassword)
             .thenShouldFail("wrong password")
     }
 
     @Test
-    fun giveUserACreatedRoomCWithPassword_WhenUserBJoinRoomCWithCorrectPassword_ThenShouldSucceed() {
+    fun givenUserACreatedRoomCWithPassword_WhenUserBJoinRoomCWithCorrectPassword_ThenShouldSucceed() {
         val password = "P@ssw0rd"
         val userA = testUser
-        val userB = createUser(
-            "2", "test2@mail.com",
-            "winner1122", "google-oauth2|100000000000000000000"
-        )
+        val userB = defaultUser("2").createUser()
+
         givenTheHostCreateRoomWithPassword(userA, password)
             .whenUserJoinTheRoom(userB, password)
             .thenActionSuccessfully()
@@ -139,14 +139,8 @@ class RoomControllerTest @Autowired constructor(
     @Test
     fun givenWaitingRoomBAndWaitingRoomC_WhenUserAVisitLobby_ThenShouldHaveRoomBAndRoomC() {
         val userA = testUser
-        val userB = createUser(
-            "2", "test2@mail.com",
-            "winner1122", "google-oauth2|100000000000000000000"
-        )
-        val userC = createUser(
-            "3", "test3@mail.com",
-            "winner1234", "google-oauth2|200000000000000000000"
-        )
+        val userB = defaultUser("2").createUser()
+        val userC = defaultUser("3").createUser()
         val request = TestGetRoomsRequest("WAITING", 0, 10)
 
         givenWaitingRooms(userB, userC)
@@ -157,10 +151,7 @@ class RoomControllerTest @Autowired constructor(
     @Test
     fun givenRoomIsNotFull_whenUserJoinRoom_ThenShouldSucceed() {
         val userA = testUser
-        val userB = createUser(
-            "2", "test2@mail.com",
-            "1st_join_user", "google-oauth2|100000000000000000000"
-        )
+        val userB = defaultUser("2").createUser()
         givenTheHostCreatePublicRoom(userA)
             .whenUserJoinTheRoom(userB)
             .thenActionSuccessfully()
@@ -169,28 +160,10 @@ class RoomControllerTest @Autowired constructor(
     @Test
     fun givenRoomIsFull_whenUserJoinRoom_ThenShouldFail() {
         val host = testUser
-        val userB = createUser(
-            "2", "test2@mail.com",
-            "1st_join_user", "google-oauth2|100000000000000000000"
-        )
-        val userC = createUser(
-            "3", "test3@mail.com",
-            "2nd_join_user", "google-oauth2|200000000000000000000"
-        )
-        val userD = createUser(
-            "4", "test4@mail.com",
-            "3rd_join_user", "google-oauth2|300000000000000000000"
-        )
-        val room = givenTheHostCreatePublicRoom(host)
-        room.whenUserJoinTheRoom(userB)
-        room.whenUserJoinTheRoom(userC)
-        room.whenUserJoinTheRoom(userD)
+        val userE = defaultUser("5").createUser()
 
-        val userE = createUser(
-            "5", "test5@mail.com",
-            "4th_join_user", "google-oauth2|400000000000000000000"
-        )
-        room.whenUserJoinTheRoom(userE)
+        givenTheHostCreatePublicRoomWithUsers(host, "2", "3", "4")
+            .whenUserJoinTheRoom(userE)
             .andExpect(status().isBadRequest)
     }
 
@@ -208,10 +181,7 @@ class RoomControllerTest @Autowired constructor(
     @Test
     fun givenPlayerAIsNotInRoom_WhenPlayerAGetReady_ThenShouldFail() {
         val userA = testUser
-        val userB = createUser(
-            "2", "test2@mail.com",
-            "winner1122", "google-oauth2|100000000000000000000"
-        )
+        val userB = defaultUser("2").createUser()
         val roomB = createRoom(userB)
 
         whenUserGetReadyFor(roomB.roomId!!, userA)
@@ -228,7 +198,7 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givePlayerAIsReadyInRoomA_WhenPlayerACancelReady_ThenShouldPlayerABeUnready() {
+    fun givenPlayerAIsReadyInRoomA_WhenPlayerACancelReady_ThenShouldPlayerABeUnready() {
         val userA = testUser
         val roomA = createRoom(host = userA, hostReady = true)
 
@@ -241,10 +211,7 @@ class RoomControllerTest @Autowired constructor(
     @Test
     fun givenPlayerAIsNotInRoom_WhenPlayerACancelReady_ThenShouldFail() {
         val userA = testUser
-        val userB = createUser(
-            "2", "test2@mail.com",
-            "winner1122", "google-oauth2|100000000000000000000"
-        )
+        val userB = defaultUser("2").createUser()
         val roomB = createRoom(userB)
 
         whenUserCancelReadyFor(roomB.roomId!!, userA)
@@ -273,10 +240,7 @@ class RoomControllerTest @Autowired constructor(
     fun givenHostCreatedRoom_whenNonHostPlayerCloseRoom_ShouldFail() {
         val host = testUser
         val room = givenTheHostCreatePublicRoom(host)
-        val userA = createUser(
-            "2", "test2@mail.com",
-            "not_a_room_host", "google-oauth2|100000000000000000000"
-        )
+        val userA = defaultUser("2").createUser()
 
         deleteRoom(userA, room.roomId!!.value)
             .andExpect(status().isBadRequest)
@@ -285,10 +249,7 @@ class RoomControllerTest @Autowired constructor(
     @Test
     fun givenHostACreatedRoomCAndPlayerBJoined_whenHostAKickPlayerB_thenHostAShouldInTheRoomC() {
         val hostA = testUser
-        val playerB = createUser(
-            "2", "test2@mail.com",
-            "winner1122", "google-oauth2|100000000000000000000"
-        )
+        val playerB = defaultUser("2").createUser()
         val roomC = givenHostCreatedRoomAndPlayerJoined(hostA, playerB)
 
         thenPlayersShouldBeInTheRoom(roomC.roomId!!, hostA)
@@ -297,10 +258,7 @@ class RoomControllerTest @Autowired constructor(
     @Test
     fun givenHostACreatedRoomC_whenHostAKickPlayerB_thenHostAShouldInTheRoomC() {
         val hostA = testUser
-        val playerB = createUser(
-            "2", "test2@mail.com",
-            "winner1122", "google-oauth2|100000000000000000000"
-        )
+        val playerB = defaultUser("2").createUser()
         val roomC = givenTheHostCreatePublicRoom(hostA)
 
         thenPlayersShouldBeInTheRoom(roomC.roomId!!, hostA)
@@ -309,10 +267,7 @@ class RoomControllerTest @Autowired constructor(
     @Test
     fun givenHostACreatedRoomCAndPlayerBJoined_whenHostBKickPlayerA_thenHostAAndPlayerBShouldInTheRoomC() {
         val hostA = testUser
-        val playerB = createUser(
-            "2", "test2@mail.com",
-            "winner1122", "google-oauth2|100000000000000000000"
-        )
+        val playerB = defaultUser("2").createUser()
         val roomC = givenHostCreatedRoomAndPlayerJoined(hostA, playerB)
 
         thenPlayersShouldBeInTheRoom(roomC.roomId!!, hostA, playerB)
@@ -322,14 +277,8 @@ class RoomControllerTest @Autowired constructor(
     fun givenHostAndPlayerBAndPlayerCAreInRoomD_WhenHostLeaveRoomD_ThenPreviousHostShouldBeNotInRoomDAndChangedNewHost() {
         val userA = testUser
         val host = userA.toRoomPlayer()
-        val playerB = createUser(
-            "2", "test2@mail.com",
-            "winner1122", "google-oauth2|100000000000000000000"
-        ).toRoomPlayer()
-        val playerC = createUser(
-            "3", "test3@mail.com",
-            "winner0033", "google-oauth2|200000000000000000000"
-        ).toRoomPlayer()
+        val playerB = defaultUser("2").createUser().toRoomPlayer()
+        val playerC = defaultUser("3").createUser().toRoomPlayer()
 
         givenHostAndPlayersJoinedTheRoom(host, playerB, playerC)
             .whenUserLeaveTheRoom(userA)
@@ -346,14 +295,8 @@ class RoomControllerTest @Autowired constructor(
     )
     fun testUserJoinedAnotherRoom() {
         val userA = testUser
-        val userB = createUser(
-            "2", "test2@mail.com",
-            "winner1122", "google-oauth2|100000000000000000000"
-        )
-        val userC = createUser(
-            "3", "test3@mail.com",
-            "winner1123", "google-oauth2|200000000000000000000"
-        )
+        val userB = defaultUser("2").createUser()
+        val userC = defaultUser("3").createUser()
 
         givenTheHostCreatePublicRoom(userA)
             .whenUserJoinTheRoom(userB)
@@ -365,13 +308,10 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun giveHostAndPlayerBJoinedRoomC_WhenHostGetRoomC_ThenShouldGetRoomCSuccessfully() {
+    fun givenHostAndPlayerBJoinedRoomC_WhenHostGetRoomC_ThenShouldGetRoomCSuccessfully() {
         val userA = testUser
         val host = userA.toRoomPlayer()
-        val playerB = createUser(
-            "2", "test2@mail.com",
-            "winner1122", "google-oauth2|100000000000000000000"
-        ).toRoomPlayer()
+        val playerB = defaultUser("2").createUser().toRoomPlayer()
 
         givenHostAndPlayersJoinedTheRoom(host, playerB)
             .whenUserGetTheRoom(userA)
@@ -379,12 +319,9 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun giveUserANotJoinedRoomB_WhenUserAGetRoomB_ThenShouldFail() {
+    fun givenUserANotJoinedRoomB_WhenUserAGetRoomB_ThenShouldFail() {
         val userA = testUser
-        val host = createUser(
-            "2", "test2@mail.com",
-            "winner1122", "google-oauth2|100000000000000000000"
-        ).toRoomPlayer()
+        val host = defaultUser("2").createUser().toRoomPlayer()
 
         givenHostAndPlayersJoinedTheRoom(host)
             .whenUserGetTheRoom(userA)
@@ -392,7 +329,7 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun giveHostJoinedRoom_WhenHostLeaveRoom_ThenShouldCloseRoom() {
+    fun givenHostJoinedRoom_WhenHostLeaveRoom_ThenShouldCloseRoom() {
         val userA = testUser
         val host = userA.toRoomPlayer()
 
@@ -422,6 +359,56 @@ class RoomControllerTest @Autowired constructor(
 
         host.whenHostStartGame(room)
             .thenConnectGameServerFailAndStartGameShouldBeFailed(failedMessage)
+    }
+
+    @Test
+    fun givenMahjongGameRoom_WhenUserBFastJoinMahjongGameRoom_ThenUserBShouldJoinedRoom() {
+        val room = createRoom(testUser)
+        val userB = defaultUser("2").createUser()
+        FastJoinRoomRequest(testGame.id!!.value)
+            .whenFastJoin(userB)
+            .thenShouldFastJoinRoom(room.roomId!!, testGame.id!!, Player.Id(userB.id!!.value))
+    }
+
+    @Test
+    fun givenFullMahjongGameRoom_WhenUserEFastJoinMahjongGameRoom_ThenUserEShouldCreateRoom() {
+        val host = testUser
+
+        givenTheHostCreatePublicRoomWithUsers(host, "2", "3", "4")
+
+        val userE = defaultUser("5").createUser()
+
+        FastJoinRoomRequest(testGame.id!!.value)
+            .whenFastJoin(userE)
+            .thenShouldCreateRoom(gameId = testGame.id!!, playerId = Player.Id(userE.id!!.value))
+    }
+
+    @DisplayName(
+        """
+        Given: Both mahjong game room A and mahjong game room B are created, room A was created earlier than room B
+        When: User C faster join Mahjong game room
+        Then: User C should join room A
+    """
+    )
+    @Test
+    fun testFastJoinEarlyCreatedRoom() {
+        val roomA = givenTheHostCreatePublicRoom(testUser)
+        givenTheHostCreatePublicRoom(defaultUser("2").createUser())
+
+        val userC = defaultUser("3").createUser()
+        FastJoinRoomRequest(testGame.id!!.value)
+            .whenFastJoin(userC)
+            .thenShouldFastJoinRoom(roomA.roomId!!, testGame.id!!, Player.Id(userC.id!!.value))
+    }
+
+    @Test
+    fun givenUserBHasJoinedRoom_WhenUserBFastJoin_ThenShouldFailed() {
+        givenTheHostCreatePublicRoomWithUsers(testUser, "2")
+        val userB = defaultUser("2")
+
+        FastJoinRoomRequest(testGame.id!!.value)
+            .whenFastJoin(userB)
+            .thenShouldFail("Player(${userB.id!!.value}) has joined another room.")
     }
 
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
@@ -481,6 +468,13 @@ class RoomControllerTest @Autowired constructor(
         mockMvc.perform(
             delete("/rooms/${testRoom.roomId!!.value}/players/me")
                 .withJwt(leaveUser)
+        )
+
+    private fun FastJoinRoomRequest.whenFastJoin(fastJoinUser: User): ResultActions =
+        mockMvc.perform(
+            post("/rooms:fastJoin")
+                .withJwt(fastJoinUser.toJwt())
+                .withJson(this)
         )
 
     private fun givenTheHostCreatePublicRoom(host: User): Room {
@@ -571,12 +565,40 @@ class RoomControllerTest @Autowired constructor(
         assertNull(room)
     }
 
-    private fun createUser(
-        id: String, email: String, nickname: String, identity: String
-    ): User =
-        userRepository.createUser(User(User.Id(id), email, nickname, mutableListOf(identity)))
+    private fun ResultActions.thenShouldFastJoinRoom(
+        roomId: Room.Id,
+        gameId: GameRegistration.Id,
+        playerId: Player.Id
+    ) {
+        andExpect(status().isOk)
+        val fastJoinRoomViewModel = getBody(FastJoinRoomViewModel::class.java)
+        val actualRoomId = Room.Id(fastJoinRoomViewModel.roomId)
+        assertEquals(roomId, actualRoomId)
+        val actualJoinedRoom = roomRepository.findById(actualRoomId)
+        assertNotNull(actualJoinedRoom)
+        assertEquals(gameId, actualJoinedRoom!!.game.id)
+        assertTrue(actualJoinedRoom.hasPlayer(playerId))
+    }
 
-    private fun createUser(user: User): User = userRepository.createUser(user)
+    private fun ResultActions.thenShouldCreateRoom(gameId: GameRegistration.Id, playerId: Player.Id) {
+        andExpect(status().isOk)
+        val fastJoinRoomViewModel = getBody(FastJoinRoomViewModel::class.java)
+        val actualRoomId = Room.Id(fastJoinRoomViewModel.roomId)
+        val actualJoinedRoom = roomRepository.findById(actualRoomId)
+        assertNotNull(actualJoinedRoom)
+        assertEquals(gameId, actualJoinedRoom!!.game.id)
+        assertEquals(actualJoinedRoom.host.id, playerId)
+    }
+
+    private fun givenTheHostCreatePublicRoomWithUsers(host: User, vararg users: String): Room{
+        val room = givenTheHostCreatePublicRoom(host)
+        users.map { defaultUser(it).createUser() }
+            .forEach { room.whenUserJoinTheRoom(it) }
+        return room
+    }
+
+
+    private fun User.createUser(): User = userRepository.createUser(this)
 
     private fun ResultActions.thenGetRoomSuccessfully() {
         val room = roomRepository.findById(testRoom.roomId!!)!!
@@ -697,18 +719,10 @@ class RoomControllerTest @Autowired constructor(
         `when`(gameService.startGame(anyString(), anyString(), anyObject()))
 
     private fun User.givenRoomHaveFourReadyPlayers(): Room {
-        val userB = createUser(
-            "2", "test2@mail.com",
-            "1st_join_user", "google-oauth2|100000000000000000000"
-        )
-        val userC = createUser(
-            "3", "test3@mail.com",
-            "2nd_join_user", "google-oauth2|200000000000000000000"
-        )
-        val userD = createUser(
-            "4", "test4@mail.com",
-            "3rd_join_user", "google-oauth2|300000000000000000000"
-        )
+        val userB = defaultUser("2").createUser()
+        val userC = defaultUser("3").createUser()
+        val userD = defaultUser("4").createUser()
+
         val room = givenTheHostCreatePublicRoom(this)
         userB.joinRoomAndReady(room)
         userC.joinRoomAndReady(room)

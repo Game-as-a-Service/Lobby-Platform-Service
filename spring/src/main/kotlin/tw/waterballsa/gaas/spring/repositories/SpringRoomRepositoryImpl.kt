@@ -6,8 +6,10 @@ import org.springframework.stereotype.Component
 import tw.waterballsa.gaas.application.model.Pagination
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
+import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.Room.*
+import tw.waterballsa.gaas.domain.Room.Status.WAITING
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.USER_NOT_FOUND
@@ -49,6 +51,11 @@ class SpringRoomRepository(
 
     override fun hasPlayerJoinedRoom(playerId: User.Id): Boolean =
         roomDAO.existsByPlayersContaining(listOf(playerId.toPlayerData()))
+
+    override fun findWaitingPublicRoomsByGame(game: GameRegistration): List<Room> {
+        return roomDAO.findAllByStatusAndGameAndPasswordNull(WAITING, game.toData())
+            .map { it.toDomain() }
+    }
 
     private fun RoomData.toDomain(): Room =
         Room(

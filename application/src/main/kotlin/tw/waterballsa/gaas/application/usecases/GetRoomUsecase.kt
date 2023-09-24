@@ -1,6 +1,7 @@
 package tw.waterballsa.gaas.application.usecases
 
 import tw.waterballsa.gaas.application.eventbus.EventBus
+import tw.waterballsa.gaas.application.presenters.RoomPresenter
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
@@ -15,7 +16,7 @@ class GetRoomUsecase(
     userRepository: UserRepository,
     private val eventBus: EventBus,
 ) : AbstractRoomUseCase(roomRepository, userRepository) {
-    fun execute(request: Request, presenter: Presenter) {
+    fun execute(request: Request, presenter: RoomPresenter) {
         with(request) {
             val room = findRoomById(roomId)
             val player = findPlayerByIdentity(userIdentity)
@@ -34,8 +35,4 @@ class GetRoomUsecase(
         val roomId: String,
         val userIdentity: String,
     )
-
-    interface Presenter {
-        fun present(room: Room)
-    }
 }

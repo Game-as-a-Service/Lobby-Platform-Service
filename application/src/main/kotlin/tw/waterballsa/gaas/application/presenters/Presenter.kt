@@ -1,4 +1,4 @@
-package tw.waterballsa.gaas.application.usecases
+package tw.waterballsa.gaas.application.presenters
 
 import tw.waterballsa.gaas.events.DomainEvent
 

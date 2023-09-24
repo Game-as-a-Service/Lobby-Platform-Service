@@ -2,15 +2,15 @@ package tw.waterballsa.gaas.spring.controllers
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import tw.waterballsa.gaas.application.presenters.Presenter
 import tw.waterballsa.gaas.application.usecases.GetGameRegistrationsUsecase
-import tw.waterballsa.gaas.application.usecases.Presenter
 import tw.waterballsa.gaas.application.usecases.RegisterGameUsecase
 import tw.waterballsa.gaas.application.usecases.UpdateGameRegistrationUseCase
 import tw.waterballsa.gaas.domain.GameRegistration
-import tw.waterballsa.gaas.domain.GameRegistration.*
+import tw.waterballsa.gaas.domain.GameRegistration.Id
 import tw.waterballsa.gaas.events.DomainEvent
 import tw.waterballsa.gaas.events.RegisteredGameEvent
-import tw.waterballsa.gaas.spring.controllers.GetGameRegistrationPresenter.*
+import tw.waterballsa.gaas.spring.controllers.GetGameRegistrationPresenter.GetGamesViewModel
 import tw.waterballsa.gaas.spring.controllers.presenter.UpdateGameRegistrationPresenter
 import tw.waterballsa.gaas.spring.controllers.viewmodel.UpdateGameRegistrationViewModel
 import tw.waterballsa.gaas.spring.extensions.getEvent

@@ -1,6 +1,7 @@
 package tw.waterballsa.gaas.application.usecases
 
 import tw.waterballsa.gaas.application.eventbus.EventBus
+import tw.waterballsa.gaas.application.presenters.RoomPresenter
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
@@ -8,7 +9,6 @@ import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.Room.Player
 import tw.waterballsa.gaas.domain.User
-import tw.waterballsa.gaas.events.CreatedRoomEvent
 import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_NOT_FOUND
@@ -22,13 +22,12 @@ class CreateRoomUsecase(
     private val gameRegistrationRepository: GameRegistrationRepository,
     private val eventBus: EventBus,
 ) : AbstractRoomUseCase(roomRepository, userRepository) {
-    fun execute(request: Request, presenter: Presenter) {
+    fun execute(request: Request, presenter: RoomPresenter) {
         with(request) {
             val host = findPlayerByIdentity(userIdentity)
             host.ensureHostWouldNotCreatedRoomAgain()
 
             createRoom(host)
-                .toCreatedRoomEvent()
                 .also { presenter.present(it) }
         }
     }
@@ -68,16 +67,4 @@ private fun CreateRoomUsecase.Request.toRoom(gameRegistration: GameRegistration,
         password = password,
         minPlayers = minPlayers,
         maxPlayers = maxPlayers,
-    )
-
-private fun Room.toCreatedRoomEvent(): CreatedRoomEvent =
-    CreatedRoomEvent(
-        roomId = roomId!!,
-        game = game,
-        host = host,
-        currentPlayers = players.size,
-        maxPlayers = maxPlayers,
-        minPlayers = minPlayers,
-        name = name,
-        isLocked = isLocked,
     )
