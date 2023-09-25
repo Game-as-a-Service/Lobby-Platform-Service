@@ -50,7 +50,7 @@ class SpringRoomRepository(
     }
 
     override fun hasPlayerJoinedRoom(playerId: User.Id): Boolean =
-        roomDAO.existsByPlayersContaining(listOf(playerId.toPlayerData()))
+        roomDAO.existsByPlayersIdIn(listOf(playerId.value))
 
     override fun findWaitingPublicRoomsByGame(game: GameRegistration): List<Room> {
         return roomDAO.findAllByStatusAndGameAndPasswordNull(WAITING, game.toData())

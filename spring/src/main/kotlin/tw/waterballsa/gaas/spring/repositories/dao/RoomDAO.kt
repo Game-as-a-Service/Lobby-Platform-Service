@@ -7,13 +7,12 @@ import org.springframework.stereotype.Repository
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.spring.repositories.data.GameRegistrationData
 import tw.waterballsa.gaas.spring.repositories.data.RoomData
-import tw.waterballsa.gaas.spring.repositories.data.RoomData.PlayerData
 
 @Repository
 interface RoomDAO : MongoRepository<RoomData, String> {
     fun existsByHostId(hostId: String): Boolean
     fun findByStatus(status: Room.Status, pageable: Pageable): Page<RoomData>
-    fun existsByPlayersContaining(players: Collection<PlayerData>): Boolean
+    fun existsByPlayersIdIn(playerIds: Collection<String>): Boolean
     fun findAllByStatusAndGameAndPasswordNull(status: Room.Status, game: GameRegistrationData): List<RoomData>
 }
 
