@@ -21,17 +21,18 @@ class JoinRoomUsecase(
         val (roomId, userIdentity, password) = request
         val room = findRoomById(roomId)
         val player = findPlayerByIdentity(userIdentity)
-        validatePlayerJoinedRoom(player)
-        room.run {
+        ensureThatPlayerNotJoinedAnyRoom(player)
+
+        with(room) {
             validateRoomPassword(password)
-            validateFullRoom()
+            ensureThatPlayerNotJoinFullRoom()
             joinPlayer(player)
         }
     }
 
-    private fun validatePlayerJoinedRoom(player: Room.Player) {
-        val hasJoined = roomRepository.hasPlayerJoinedRoom(User.Id(player.id.value))
-        if (hasJoined) {
+    private fun ensureThatPlayerNotJoinedAnyRoom(player: Room.Player) {
+        val hasPlayerJoined = roomRepository.hasPlayerJoinedRoom(User.Id(player.id.value))
+        if (hasPlayerJoined) {
             throw PlatformException(PLAYER_JOIN_ROOM_ERROR, "Player(${player.id.value}) has joined another room.")
         }
     }
@@ -42,7 +43,7 @@ class JoinRoomUsecase(
         }
     }
 
-    private fun Room.validateFullRoom() {
+    private fun Room.ensureThatPlayerNotJoinFullRoom() {
         if (isFull()) {
             throw PlatformException(
                 ROOM_FULL,

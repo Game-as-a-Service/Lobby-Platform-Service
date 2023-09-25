@@ -590,7 +590,7 @@ class RoomControllerTest @Autowired constructor(
         assertEquals(actualJoinedRoom.host.id, playerId)
     }
 
-    private fun givenTheHostCreatePublicRoomWithUsers(host: User, vararg users: String): Room{
+    private fun givenTheHostCreatePublicRoomWithUsers(host: User, vararg users: String): Room {
         val room = givenTheHostCreatePublicRoom(host)
         users.map { defaultUser(it).createUser() }
             .forEach { room.whenUserJoinTheRoom(it) }
