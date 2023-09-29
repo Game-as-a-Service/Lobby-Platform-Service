@@ -6,5 +6,8 @@ enum class SocketIOEventName (val eventName: String){
     JOIN_ROOM("JOIN_ROOM"),
     LEAVE_ROOM("LEAVE_ROOM"),
 
-    CONNECT_EVENT("CONNECT_EVENT");
+    CONNECT_EVENT("CONNECT_EVENT"),
+    DISCONNECT("DISCONNECT");
+
+
 }
