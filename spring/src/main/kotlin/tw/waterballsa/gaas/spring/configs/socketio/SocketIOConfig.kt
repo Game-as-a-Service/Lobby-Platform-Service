@@ -4,6 +4,9 @@ import com.corundumstudio.socketio.SocketIOServer
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.reactive.CorsWebFilter
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
 
 
 @Configuration
@@ -19,6 +22,8 @@ class SocketIOConfig (){
                     port = socketPort
                 }
         }
+
         return SocketIOServer(configuration)
     }
+
 }

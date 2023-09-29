@@ -22,7 +22,7 @@ class ServerCommandLineRunner(private val server: SocketIOServer) : CommandLineR
 
     @PreDestroy
     fun stopServer() {
-        logger.info("Stopping the server...")
+        server.stop()
         server.stop()
         logger.info("Server stopped.")
 
