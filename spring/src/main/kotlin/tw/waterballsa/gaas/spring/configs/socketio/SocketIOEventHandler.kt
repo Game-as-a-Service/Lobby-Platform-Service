@@ -14,6 +14,7 @@ import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.events.SocketioEvent
 import tw.waterballsa.gaas.spring.controllers.identityProviderId
 import tw.waterballsa.gaas.spring.controllers.presenter.GetRoomPresenter
+import kotlin.math.log
 
 
 @Component
@@ -32,25 +33,20 @@ class SocketIOEventHandler(private val socketIOServer: SocketIOServer,
 
     fun configureEventHandlers() {
 
-        socketIOServer.addConnectListener { client -> // 判断是否有客户端连接
+        socketIOServer.addConnectListener { client ->
             if (client != null) {
                 logger.info("有新用戶連結  , SessionId: {}", client.getSessionId())
                 val board = socketIOServer.broadcastOperations
                 logger.info("board clientId {}", board.clients)
 
             }
-
         }
 
         socketIOServer.addEventListener(SocketIOEventName.CHAT_MESSAGE.eventName, SocketioEvent::class.java)
             { client: SocketIOClient, socketioEvent: SocketioEvent, _ ->
             // Handle the "chatMessage" event
             logger.info(" CHAT_MESSAGE Received message: $socketioEvent from client: ${client.sessionId}")
-
             client.handshakeData.getSingleUrlParam("")
-                
-
-
             // ECHO
             client.sendEvent(SocketIOEventName.CHAT_MESSAGE.eventName, socketioEvent.data)
         }
@@ -60,12 +56,11 @@ class SocketIOEventHandler(private val socketIOServer: SocketIOServer,
 
             // ECHO
             logger.info(" JOIN_ROOM Received message: $socketioEvent from client: ${client.sessionId}")
-//
             val roomSize = client.getCurrentRoomSize(socketioEvent.data.target)
 
             // roomSize == 0, create room  else join room
             if(roomSize == 0){
-                logger.info("用户：{}", client.sessionId, "you are the host ")
+                logger.info("user： " +  client.sessionId + "you are the host ")
                 //client.send()
             } else{
                 client.joinRoom(socketioEvent.data.target)
@@ -74,7 +69,6 @@ class SocketIOEventHandler(private val socketIOServer: SocketIOServer,
                 logger.info(" room size is : ${client.getCurrentRoomSize(socketioEvent.data.target)}")
                 socketIOServer.getRoomOperations(socketioEvent.data.target).sendEvent(SocketIOEventName.JOIN_ROOM.eventName, socketioEvent.data.user.id)
             }
-
         }
 
 
@@ -84,7 +78,6 @@ class SocketIOEventHandler(private val socketIOServer: SocketIOServer,
             logger.info(" LEAVE_ROOM Received message: ${socketioEvent.data.target} from client: ${client.sessionId}")
 
             client.leaveRoom(socketioEvent.data.target)
-
             socketIOServer.removeNamespace(socketioEvent.data.target)
         }
 
@@ -102,7 +95,7 @@ class SocketIOEventHandler(private val socketIOServer: SocketIOServer,
 
         socketIOServer.addDisconnectListener {
                 client: SocketIOClient ->
-            println("Server disconnected on the server side")
+            logger.info("Server disconnected on the server side")
         }
 
 
