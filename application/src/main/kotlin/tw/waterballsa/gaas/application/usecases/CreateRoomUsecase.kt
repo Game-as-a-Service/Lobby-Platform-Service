@@ -11,7 +11,8 @@ import tw.waterballsa.gaas.domain.Room.Player
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.exceptions.PlatformException
-import tw.waterballsa.gaas.exceptions.enums.PlatformError.*
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_CREATE_ROOM_ERROR
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_NOT_FOUND
 import javax.inject.Named
 
 @Named
