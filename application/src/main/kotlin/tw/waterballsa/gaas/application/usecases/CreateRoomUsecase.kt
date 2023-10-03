@@ -11,8 +11,7 @@ import tw.waterballsa.gaas.domain.Room.Player
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.exceptions.NotFoundException.Companion.notFound
 import tw.waterballsa.gaas.exceptions.PlatformException
-import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_NOT_FOUND
-import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_JOIN_ROOM_ERROR
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.*
 import javax.inject.Named
 
 @Named
@@ -24,17 +23,17 @@ class CreateRoomUsecase(
 ) : AbstractRoomUseCase(roomRepository, userRepository) {
     fun execute(request: Request, presenter: RoomPresenter) {
         with(request) {
-            val host = findPlayerByIdentity(userIdentity)
-            host.ensureJoinedRoomPlayerWouldNotCreatedRoom()
+            val player = findPlayerByIdentity(userIdentity)
+            player.ensureJoinedRoomPlayerWouldNotCreatedRoom()
 
-            createRoom(host)
+            createRoom(player)
                 .also { presenter.present(it) }
         }
     }
 
     private fun Player.ensureJoinedRoomPlayerWouldNotCreatedRoom() {
         if (roomRepository.hasPlayerJoinedRoom(User.Id(id.value))) {
-            throw PlatformException(PLAYER_JOIN_ROOM_ERROR, "A user can only create one room at a time.")
+            throw PlatformException(PLAYER_CREATE_ROOM_ERROR, "A user can only create one room or join one room at a time.")
         }
     }
 
