@@ -6,6 +6,9 @@ import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
+import tw.waterballsa.gaas.events.StartedGameEvent
+import tw.waterballsa.gaas.events.StartedGameEvent.Data
+import tw.waterballsa.gaas.events.enums.EventMessageType.GAME_STARTED
 import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_START_FAILED
 import javax.inject.Named
@@ -34,6 +37,7 @@ class StartGameUseCase(
             room.startGame()
             roomRepository.update(room)
             presenter.present(gameServerUrl)
+            eventBus.broadcast(room.toStartGameEvent(gameServerUrl))
         }
     }
 
@@ -68,4 +72,7 @@ class StartGameUseCase(
 
     private fun Room.Player.toGamePlayer(): StartGameRequest.GamePlayer =
         StartGameRequest.GamePlayer(id.value, nickname)
+
+    private fun Room.toStartGameEvent(url: String): StartedGameEvent =
+        StartedGameEvent(GAME_STARTED, Data(url, roomId!!))
 }
