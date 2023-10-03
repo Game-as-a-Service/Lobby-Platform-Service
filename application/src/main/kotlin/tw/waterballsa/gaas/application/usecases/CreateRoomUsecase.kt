@@ -24,16 +24,19 @@ class CreateRoomUsecase(
     fun execute(request: Request, presenter: RoomPresenter) {
         with(request) {
             val player = findPlayerByIdentity(userIdentity)
-            player.ensureJoinedRoomPlayerWouldNotCreatedRoom()
+            ensurePlayerJoinsRoomFirstTime(player)
 
             createRoom(player)
                 .also { presenter.present(it) }
         }
     }
 
-    private fun Player.ensureJoinedRoomPlayerWouldNotCreatedRoom() {
-        if (roomRepository.hasPlayerJoinedRoom(User.Id(id.value))) {
-            throw PlatformException(PLAYER_CREATE_ROOM_ERROR, "A user can only create one room or join one room at a time.")
+    private fun ensurePlayerJoinsRoomFirstTime(player: Player) {
+        if (roomRepository.hasPlayerJoinedRoom(User.Id(player.id.value))) {
+            throw PlatformException(
+                PLAYER_CREATE_ROOM_ERROR,
+                "A user can only create one room or join one room at a time."
+            )
         }
     }
 
