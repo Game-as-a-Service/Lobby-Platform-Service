@@ -100,7 +100,7 @@ class RoomControllerTest @Autowired constructor(
             .thenCreateRoomSuccessfully()
         createRoom(testUser, request)
             .andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.message").value("A user can only create one room at a time."))
+            .andExpect(jsonPath("$.message").value("A user can only create one room or join one room at a time."))
     }
 
     @Test
