@@ -32,12 +32,12 @@ class StartGameUseCase(
                 validateAllPlayersReady()
             }
 
-            val gameServerUrl = room.startGameByHost(jwtToken)
+            val startedGameEvent = room.startGameByHost(jwtToken)
 
             room.startGame()
             roomRepository.update(room)
-            presenter.present(gameServerUrl)
-            eventBus.broadcast(room.toStartGameEvent(gameServerUrl))
+            presenter.present(startedGameEvent.data.gameUrl)
+            eventBus.broadcast(startedGameEvent)
         }
     }
 
@@ -63,16 +63,14 @@ class StartGameUseCase(
         }
     }
 
-    private fun Room.startGameByHost(jwtToken: String): String {
+    private fun Room.startGameByHost(jwtToken: String): StartedGameEvent {
         val gameServerHost = game.backEndUrl
         val startGameRequest = StartGameRequest(players.map { it.toGamePlayer() })
+        val startGameResponse = gameService.startGame(gameServerHost, jwtToken, startGameRequest)
 
-        return gameService.startGame(gameServerHost, jwtToken, startGameRequest).url
+        return StartedGameEvent(GAME_STARTED, Data(startGameResponse.url, roomId!!))
     }
 
     private fun Room.Player.toGamePlayer(): StartGameRequest.GamePlayer =
         StartGameRequest.GamePlayer(id.value, nickname)
-
-    private fun Room.toStartGameEvent(url: String): StartedGameEvent =
-        StartedGameEvent(GAME_STARTED, Data(url, roomId!!))
 }
