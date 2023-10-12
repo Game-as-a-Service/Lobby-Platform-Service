@@ -6,6 +6,9 @@ import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
+import tw.waterballsa.gaas.events.StartedGameEvent
+import tw.waterballsa.gaas.events.StartedGameEvent.Data
+import tw.waterballsa.gaas.events.enums.EventMessageType.GAME_STARTED
 import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_START_FAILED
 import javax.inject.Named
@@ -29,11 +32,12 @@ class StartGameUseCase(
                 validateAllPlayersReady()
             }
 
-            val gameServerUrl = room.startGameByHost(jwtToken)
+            val startedGameEvent = room.startGameByHost(jwtToken)
 
             room.startGame()
             roomRepository.update(room)
-            presenter.present(gameServerUrl)
+            presenter.present(startedGameEvent.data.gameUrl)
+            eventBus.broadcast(startedGameEvent)
         }
     }
 
@@ -59,11 +63,12 @@ class StartGameUseCase(
         }
     }
 
-    private fun Room.startGameByHost(jwtToken: String): String {
+    private fun Room.startGameByHost(jwtToken: String): StartedGameEvent {
         val gameServerHost = game.backEndUrl
         val startGameRequest = StartGameRequest(players.map { it.toGamePlayer() })
+        val startGameResponse = gameService.startGame(gameServerHost, jwtToken, startGameRequest)
 
-        return gameService.startGame(gameServerHost, jwtToken, startGameRequest).url
+        return StartedGameEvent(GAME_STARTED, Data(startGameResponse.url, roomId!!))
     }
 
     private fun Room.Player.toGamePlayer(): StartGameRequest.GamePlayer =
