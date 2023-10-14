@@ -2,7 +2,7 @@ package tw.waterballsa.gaas.events
 
 import tw.waterballsa.gaas.events.enums.EventMessageType
 
-data class ChangePlayerReadinessEvent(
+data class PlayerReadinessChangedEvent(
     val type: EventMessageType,
     val data: Data
 ) : DomainEvent() {

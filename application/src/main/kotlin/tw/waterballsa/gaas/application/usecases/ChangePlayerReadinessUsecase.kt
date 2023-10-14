@@ -4,11 +4,11 @@ import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
-import tw.waterballsa.gaas.events.ChangePlayerReadinessEvent
-import tw.waterballsa.gaas.events.ChangePlayerReadinessEvent.Data
-import tw.waterballsa.gaas.events.ChangePlayerReadinessEvent.Data.User
-import tw.waterballsa.gaas.events.enums.EventMessageType.USER_READY
+import tw.waterballsa.gaas.events.PlayerReadinessChangedEvent
+import tw.waterballsa.gaas.events.PlayerReadinessChangedEvent.Data
+import tw.waterballsa.gaas.events.PlayerReadinessChangedEvent.Data.User
 import tw.waterballsa.gaas.events.enums.EventMessageType.USER_NOT_READY
+import tw.waterballsa.gaas.events.enums.EventMessageType.USER_READY
 import javax.inject.Named
 
 @Named
@@ -24,8 +24,8 @@ class ChangePlayerReadinessUsecase(
             room.changePlayerReadiness(player.id, readiness)
             roomRepository.update(room)
 
-            val changePlayerReadinessEvent = room.toChangePlayerReadinessEvent(readiness, player.id!!.value, player.nickname)
-            eventBus.broadcast(changePlayerReadinessEvent)
+            val playerReadinessChangedEvent = room.changePlayerReadiness(readiness, player.id!!.value, player.nickname)
+            eventBus.broadcast(playerReadinessChangedEvent)
         }
     }
 
@@ -42,18 +42,22 @@ class ChangePlayerReadinessUsecase(
     }
 }
 
-fun Room.toChangePlayerReadinessEvent(
+fun Room.changePlayerReadiness(
     readiness: Boolean,
     playerId: String,
     nickname: String
-): ChangePlayerReadinessEvent {
+): PlayerReadinessChangedEvent {
     val type = if (readiness) USER_READY else USER_NOT_READY
-    return ChangePlayerReadinessEvent(
-        type, Data(
-            User(
-                playerId,
-                nickname
-            ), roomId!!.value
-        )
+    val user = User(
+        playerId,
+        nickname
+    )
+    val data = Data(
+        user,
+        roomId!!.value
+    )
+    return PlayerReadinessChangedEvent(
+        type,
+        data
     )
 }
