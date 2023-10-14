@@ -48,16 +48,7 @@ fun Room.changePlayerReadiness(
     nickname: String
 ): PlayerReadinessChangedEvent {
     val type = if (readiness) USER_READY else USER_NOT_READY
-    val user = User(
-        playerId,
-        nickname
-    )
-    val data = Data(
-        user,
-        roomId!!.value
-    )
-    return PlayerReadinessChangedEvent(
-        type,
-        data
-    )
+    val user = User(playerId, nickname)
+    val data = Data(user, roomId!!.value)
+    return PlayerReadinessChangedEvent(type, data)
 }
