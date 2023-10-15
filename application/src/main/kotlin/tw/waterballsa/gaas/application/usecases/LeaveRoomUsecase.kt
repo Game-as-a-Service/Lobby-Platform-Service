@@ -4,9 +4,9 @@ import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
-import tw.waterballsa.gaas.events.UserLeavedRoomEvent
-import tw.waterballsa.gaas.events.UserLeavedRoomEvent.Data
-import tw.waterballsa.gaas.events.UserLeavedRoomEvent.Data.UserInfo
+import tw.waterballsa.gaas.events.PlayerLeavedRoomEvent
+import tw.waterballsa.gaas.events.PlayerLeavedRoomEvent.Data
+import tw.waterballsa.gaas.events.PlayerLeavedRoomEvent.Data.Player
 import tw.waterballsa.gaas.events.enums.EventMessageType.USER_LEFT
 import javax.inject.Named
 
@@ -27,18 +27,18 @@ class LeaveRoomUsecase(
                 else -> roomRepository.leaveRoom(room)
             }
 
-            val leaveRoomEvent = room.leaveRoomEvent(player.id.value, player.nickname)
-            eventBus.broadcast(leaveRoomEvent)
+            val playerLeavedRoomEvent = room.leaveRoomEvent(player.id.value, player.nickname)
+            eventBus.broadcast(playerLeavedRoomEvent)
         }
     }
 
     private fun Room.leaveRoomEvent(
         playerId: String,
         nickname: String
-    ) : UserLeavedRoomEvent {
-        val user = UserInfo(playerId, nickname)
+    ) : PlayerLeavedRoomEvent {
+        val user = Player(playerId, nickname)
         val data = Data(user, roomId!!.value)
-        return UserLeavedRoomEvent(USER_LEFT, data)
+        return PlayerLeavedRoomEvent(USER_LEFT, data)
     }
 
     data class Request(
