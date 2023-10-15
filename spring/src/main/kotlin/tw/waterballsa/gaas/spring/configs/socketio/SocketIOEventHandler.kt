@@ -10,14 +10,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Component
+import org.springframework.web.context.request.RequestContextHolder
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.application.usecases.GetRoomUsecase
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.events.SocketioEvent
-import tw.waterballsa.gaas.spring.controllers.identityProviderId
-import tw.waterballsa.gaas.spring.controllers.presenter.GetRoomPresenter
-import kotlin.math.log
+import javax.servlet.http.HttpServletRequest
 
 
 @Component
@@ -37,12 +36,15 @@ class SocketIOEventHandler(private val socketIOServer: SocketIOServer,
     fun configureEventHandlers() {
 
         socketIOServer.addConnectListener { client ->
-            if (client != null) {
+            val token =  client.handshakeData.httpHeaders.get(HttpHeaderNames.COOKIE)
+            val customHeader = client.handshakeData.getSingleUrlParam("Authorization")
+
+            if (client != null ) {
                 logger.info("有新用戶連結  , SessionId: {}", client.getSessionId())
                 val board = socketIOServer.broadcastOperations
                 logger.info("board clientId {}", board.clients)
-
             }
+
         }
 
         socketIOServer.addEventListener(SocketIOEventName.CHAT_MESSAGE.eventName, SocketioEvent::class.java)
@@ -61,10 +63,8 @@ class SocketIOEventHandler(private val socketIOServer: SocketIOServer,
             logger.info(" JOIN_ROOM Received message: $socketioEvent from client: ${client.sessionId}")
             val roomSize = client.getCurrentRoomSize(socketioEvent.data.target)
 
-            // roomSize == 0, create room  else join room
             if(roomSize == 0){
                 logger.info("user： " +  client.sessionId + "you are the host ")
-                //client.send()
             } else{
                 client.joinRoom(socketioEvent.data.target)
                 logger.info("Client joined room: ${socketioEvent.data.target}")
