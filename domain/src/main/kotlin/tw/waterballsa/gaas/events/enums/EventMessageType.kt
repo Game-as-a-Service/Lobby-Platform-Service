@@ -9,4 +9,6 @@ enum class EventMessageType(
     GAME_STARTED("GAME_STARTED"),
     USER_READY("USER_READY"),
     USER_NOT_READY("USER_NOT_READY"),
+    USER_JOINED("USER_JOINED"),
+    USER_LEFT("USER_LEFT"),
 }

@@ -9,6 +9,10 @@ import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_JOIN_ROOM_ERROR
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.ROOM_FULL
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.ROOM_PASSWORD_INCORRECT
+import tw.waterballsa.gaas.events.PlayerJoinedRoomEvent
+import tw.waterballsa.gaas.events.PlayerJoinedRoomEvent.Data
+import tw.waterballsa.gaas.events.PlayerJoinedRoomEvent.Data.Player
+import tw.waterballsa.gaas.events.enums.EventMessageType.USER_JOINED
 import javax.inject.Named
 
 @Named
@@ -27,6 +31,9 @@ class JoinRoomUsecase(
             validateRoomPassword(password)
             ensureThatPlayerNotJoinFullRoom()
             joinPlayer(player)
+
+            val playerJoinedRoomEvent = room.joinRoomEvent(player.id.value, player.nickname)
+            eventBus.broadcast(playerJoinedRoomEvent)
         }
     }
 
@@ -55,6 +62,15 @@ class JoinRoomUsecase(
     private fun Room.joinPlayer(player: Room.Player): Room {
         addPlayer(player)
         return roomRepository.update(this)
+    }
+
+    private fun Room.joinRoomEvent(
+        playerId: String,
+        nickname: String
+    ) : PlayerJoinedRoomEvent{
+        val user = Player(playerId, nickname)
+        val data = Data(user, roomId!!.value)
+        return PlayerJoinedRoomEvent(USER_JOINED, data)
     }
 
     data class Request(
