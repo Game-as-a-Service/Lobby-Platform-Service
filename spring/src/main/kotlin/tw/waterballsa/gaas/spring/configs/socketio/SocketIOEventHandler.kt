@@ -20,9 +20,10 @@ import javax.servlet.http.HttpServletRequest
 
 
 @Component
-class SocketIOEventHandler(private val socketIOServer: SocketIOServer,
-                           protected val roomRepository: RoomRepository,
-                           protected val userRepository: UserRepository,
+class SocketIOEventHandler(
+    private val socketIOServer: SocketIOServer,
+    protected val roomRepository: RoomRepository,
+    protected val userRepository: UserRepository,
 ) {
 
     private val logger: Logger = LoggerFactory.getLogger(SocketIOEventHandler::class.java)
@@ -92,18 +93,9 @@ class SocketIOEventHandler(private val socketIOServer: SocketIOServer,
             logger.info(" client is leaven room with key disconnect")
         }
 
-
-
-
-
         socketIOServer.addDisconnectListener {
                 client: SocketIOClient ->
             logger.info("Server disconnected on the server side")
         }
-
-
-
-
-
     }
 }
