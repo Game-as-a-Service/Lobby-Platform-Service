@@ -11,4 +11,5 @@ enum class EventMessageType(
     USER_NOT_READY("USER_NOT_READY"),
     USER_JOINED("USER_JOINED"),
     USER_LEFT("USER_LEFT"),
+    GAME_ENDED("GAME_ENDED"),
 }

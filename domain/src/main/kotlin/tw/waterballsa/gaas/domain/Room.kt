@@ -6,6 +6,7 @@ import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_ALREADY_STARTED
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_NOT_FOUND
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_NOT_HOST
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_NOT_STARTED
 
 class Room(
     var roomId: Id? = null,
@@ -33,6 +34,8 @@ class Room(
 
     fun isFull(): Boolean = players.size >= maxPlayers
 
+    fun isHost(playerId: Player.Id): Boolean = playerId == host.id
+
     fun changePlayerReadiness(playerId: Player.Id, readiness: Boolean) {
         val player =
             findPlayer(playerId) ?: throw PlatformException(PLAYER_NOT_FOUND, "Player not joined")
@@ -41,6 +44,14 @@ class Room(
         } else {
             player.cancelReady()
         }
+    }
+
+    fun endGame() {
+        if (status != PLAYING) {
+            throw PlatformException(GAME_NOT_STARTED, "Game has not started yet")
+        }
+        status = WAITING
+        playersCancelReady()
     }
 
     fun hasPlayer(playerId: Player.Id): Boolean =
@@ -82,6 +93,14 @@ class Room(
     }
 
     private fun findPlayer(playerId: Player.Id): Player? = players.find { it.id == playerId }
+
+    private fun playersCancelReady() {
+        players.forEach { player ->
+            if (!isHost(player.id)) {
+                player.cancelReady()
+            }
+        }
+    }
 
     @JvmInline
     value class Id(val value: String)

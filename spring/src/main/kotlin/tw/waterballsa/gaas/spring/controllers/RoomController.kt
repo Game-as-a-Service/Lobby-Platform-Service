@@ -28,6 +28,7 @@ class RoomController(
     private val getRoomUsecase: GetRoomUsecase,
     private val startGameUseCase: StartGameUseCase,
     private val fastJoinRoomUseCase: FastJoinRoomUseCase,
+    private val endGameUseCase: EndGameUseCase,
 ) {
     @PostMapping("/rooms")
     fun createRoom(
@@ -148,6 +149,14 @@ class RoomController(
         val presenter = FastJoinRoomPresenter()
         fastJoinRoomUseCase.execute(fastJoinRequest, presenter)
         return presenter.viewModel
+    }
+
+    @PostMapping("/rooms/{roomId}:endGame")
+    @ResponseStatus(NO_CONTENT)
+    fun endGame(
+        @PathVariable roomId: String,
+    ) {
+        endGameUseCase.execute(EndGameUseCase.Request(roomId))
     }
 
     class CreateRoomRequest(

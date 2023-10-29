@@ -67,6 +67,7 @@ class SpringRoomRepository(
             minPlayers = minPlayers,
             name = name,
             password = password,
+            status = status
         )
 
     private fun User.Id.toRoomPlayer(): Player =

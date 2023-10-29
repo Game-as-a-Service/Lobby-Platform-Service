@@ -25,6 +25,9 @@ import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.Room.Player
+import tw.waterballsa.gaas.domain.Room.Status
+import tw.waterballsa.gaas.domain.Room.Status.PLAYING
+import tw.waterballsa.gaas.domain.Room.Status.WAITING
 import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_START_FAILED
@@ -39,7 +42,6 @@ import tw.waterballsa.gaas.spring.utils.MockitoUtils.Companion.anyObject
 import tw.waterballsa.gaas.spring.utils.Users.Companion.defaultUser
 import java.util.UUID.randomUUID
 import kotlin.reflect.KClass
-
 
 class RoomControllerTest @Autowired constructor(
     val userRepository: UserRepository,
@@ -411,6 +413,28 @@ class RoomControllerTest @Autowired constructor(
             .thenShouldFail("Player(${userB.id!!.value}) has joined another room.")
     }
 
+    @Test
+    fun givenHostAndPlayerBArePlayingInRoomC_WhenEndGame_ThenRoomCAndPlayersStatusAreChanged() {
+        val userA = testUser
+        val host = userA.toRoomPlayer()
+        val playerB = defaultUser("2").createUser().toRoomPlayer()
+
+        givenPlayersArePlayingInRoom(host, playerB)
+            .wheEndGame()
+            .thenRoomAndPlayersStatusAreChanged()
+    }
+
+    @Test
+    fun givenHostAndPlayerBAreWaitingInRoomC_WhenEndGame_ThenShouldFailed() {
+        val userA = testUser
+        val host = userA.toRoomPlayer()
+        val playerB = defaultUser("2").createUser().toRoomPlayer()
+
+        givenHostAndPlayersJoinedTheRoom(host, playerB)
+            .wheEndGame()
+            .thenShouldFail("Game has not started yet")
+    }
+
     private fun TestGetRoomsRequest.whenUserAVisitLobby(joinUser: User): ResultActions =
         mockMvc.perform(
             get("/rooms")
@@ -493,6 +517,15 @@ class RoomControllerTest @Autowired constructor(
         return testRoom
     }
 
+    private fun givenPlayersArePlayingInRoom(host: Player, vararg players: Player): Room {
+        val combinedPlayers = (listOf(host) + players).toMutableList()
+        players.forEach { player ->
+            player.ready()
+        }
+        testRoom = createRoom(host = host, players = combinedPlayers, status = PLAYING)
+        return testRoom
+    }
+
     private fun Room.whenUserJoinTheRoom(user: User, password: String? = null): ResultActions =
         user.joinRoom(roomId!!.value, joinRoomRequest(password))
 
@@ -515,6 +548,11 @@ class RoomControllerTest @Autowired constructor(
         mockMvc.perform(
             get("/rooms/${testRoom.roomId!!.value}")
                 .withJwt(user.toJwt())
+        )
+
+    private fun Room.wheEndGame(): ResultActions =
+        mockMvc.perform(
+            post("/rooms/${testRoom.roomId!!.value}:endGame")
         )
 
     private fun ResultActions.thenCreateRoomSuccessfully() {
@@ -655,19 +693,25 @@ class RoomControllerTest @Autowired constructor(
             )
         )
 
-    private fun createRoom(host: Player, players: MutableList<Player>, password: String? = null): Room =
-        roomRepository.createRoom(
+    private fun createRoom(
+        host: Player,
+        players: MutableList<Player>,
+        password: String? = null,
+        status: Status? = WAITING,
+    ): Room {
+        return roomRepository.createRoom(
             Room(
                 game = testGame,
-                host = host,
+                host = Player(Player.Id(host.id!!.value), host.nickname, true),
                 players = players,
                 maxPlayers = testGame.maxPlayers,
                 minPlayers = testGame.minPlayers,
                 name = "My Room",
-                status = Room.Status.WAITING,
+                status = status!!,
                 password = password
             )
         )
+    }
 
     private fun createRoomRequest(password: String? = null): TestCreateRoomRequest =
         TestCreateRoomRequest(
@@ -753,5 +797,20 @@ class RoomControllerTest @Autowired constructor(
     private fun ResultActions.thenConnectGameServerFailAndStartGameShouldBeFailed(message: String) {
         andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value(message))
+    }
+
+    private fun ResultActions.thenRoomAndPlayersStatusAreChanged() {
+        andExpect(status().isNoContent)
+        val room = roomRepository.findById(testRoom.roomId!!)!!
+        room.let {
+            assertEquals(WAITING, it.status)
+            assertFalse(it.isEmpty())
+            assertTrue(it.host.readiness)
+            it.players.forEach { player ->
+                if (!it.isHost(player.id)) {
+                    assertFalse(player.readiness)
+                }
+            }
+        }
     }
 }
