@@ -34,6 +34,7 @@ class SecurityConfig(
             .antMatchers("/login", "/authenticate").permitAll()
             .antMatchers("/health", "/walking-skeleton").permitAll()
             .antMatchers("/swagger-ui/**", "/favicon.ico").permitAll()
+            .regexMatchers("/rooms/.*:endGame").permitAll()
             .anyRequest().authenticated()
             .and()
             .oauth2Login()
