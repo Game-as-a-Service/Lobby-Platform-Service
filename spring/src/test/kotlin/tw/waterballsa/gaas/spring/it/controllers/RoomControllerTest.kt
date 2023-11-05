@@ -518,11 +518,9 @@ class RoomControllerTest @Autowired constructor(
     }
 
     private fun givenPlayersArePlayingInRoom(host: Player, vararg players: Player): Room {
-        val combinedPlayers = (listOf(host) + players).toMutableList()
-        players.forEach { player ->
-            player.ready()
-        }
-        testRoom = createRoom(host = host, players = combinedPlayers, status = PLAYING)
+        players.forEach { it.ready() }
+        val allPlayers = mutableListOf(host, *players)
+        testRoom = createRoom(host = host, players = allPlayers, status = PLAYING)
         return testRoom
     }
 
