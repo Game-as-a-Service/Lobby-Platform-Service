@@ -34,8 +34,8 @@ class LeaveRoomUsecase(
 
     private fun Room.leaveRoomEvent(
         playerId: String,
-        nickname: String
-    ) : PlayerLeavedRoomEvent {
+        nickname: String,
+    ): PlayerLeavedRoomEvent {
         val user = Player(playerId, nickname)
         val data = Data(user, roomId!!.value)
         return PlayerLeavedRoomEvent(USER_LEFT, data)

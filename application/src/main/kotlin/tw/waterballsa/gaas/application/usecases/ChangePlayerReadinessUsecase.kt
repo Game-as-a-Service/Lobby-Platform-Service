@@ -45,7 +45,7 @@ class ChangePlayerReadinessUsecase(
 fun Room.changePlayerReadiness(
     readiness: Boolean,
     playerId: String,
-    nickname: String
+    nickname: String,
 ): PlayerReadinessChangedEvent {
     val type = if (readiness) USER_READY else USER_NOT_READY
     val user = User(playerId, nickname)

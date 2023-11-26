@@ -41,13 +41,10 @@ class WebSocketEventBus(
                 val type = event.type
                 socketIOServer.broadcastOperations.sendEvent(type.toString(), data)
             } else if(event is UserUpdatedEvent){
-                val data = event.data
-                val type = event.type
-                socketIOServer.broadcastOperations.sendEvent(type.toString(), data)
+//                val data = event.data
+//                val type = event.type
+//                socketIOServer.broadcastOperations.sendEvent(type.toString(), data)
             }
-
-
-
 
         }
 
