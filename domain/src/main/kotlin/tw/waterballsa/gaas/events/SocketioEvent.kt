@@ -3,7 +3,7 @@ package tw.waterballsa.gaas.events
 data class SocketioEvent(
     var type: String = "",
     var data: ChatData = ChatData(),
-) {
+) : DomainEvent() {
     constructor(type: String, userId: String, nickname: String, target: String) : this(
         type,
         ChatData(ChatUser(userId, nickname), target),

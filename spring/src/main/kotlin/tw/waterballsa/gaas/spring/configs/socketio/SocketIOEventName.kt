@@ -8,3 +8,4 @@ enum class SocketIOEventName (val eventName: String){
     CONNECT_EVENT("CONNECT_EVENT"),
     DISCONNECT("DISCONNECT");
 }
+

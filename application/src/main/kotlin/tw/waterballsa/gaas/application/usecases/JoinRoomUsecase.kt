@@ -5,14 +5,14 @@ import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.domain.User
-import tw.waterballsa.gaas.exceptions.PlatformException
-import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_JOIN_ROOM_ERROR
-import tw.waterballsa.gaas.exceptions.enums.PlatformError.ROOM_FULL
-import tw.waterballsa.gaas.exceptions.enums.PlatformError.ROOM_PASSWORD_INCORRECT
 import tw.waterballsa.gaas.events.PlayerJoinedRoomEvent
 import tw.waterballsa.gaas.events.PlayerJoinedRoomEvent.Data
 import tw.waterballsa.gaas.events.PlayerJoinedRoomEvent.Data.Player
 import tw.waterballsa.gaas.events.enums.EventMessageType.USER_JOINED
+import tw.waterballsa.gaas.exceptions.PlatformException
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_JOIN_ROOM_ERROR
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.ROOM_FULL
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.ROOM_PASSWORD_INCORRECT
 import javax.inject.Named
 
 @Named
@@ -66,8 +66,8 @@ class JoinRoomUsecase(
 
     private fun Room.joinRoomEvent(
         playerId: String,
-        nickname: String
-    ) : PlayerJoinedRoomEvent{
+        nickname: String,
+    ): PlayerJoinedRoomEvent {
         val user = Player(playerId, nickname)
         val data = Data(user, roomId!!.value)
         return PlayerJoinedRoomEvent(USER_JOINED, data)

@@ -11,17 +11,20 @@ import org.slf4j.LoggerFactory
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
+import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.application.usecases.GetRoomUsecase
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.events.SocketioEvent
+import tw.waterballsa.gaas.events.enums.EventMessageType
 import javax.servlet.http.HttpServletRequest
 
 
 @Component
 class SocketIOEventHandler(
     private val socketIOServer: SocketIOServer,
+    private val eventBus: EventBus,
     protected val roomRepository: RoomRepository,
     protected val userRepository: UserRepository,
 ) {
@@ -45,8 +48,19 @@ class SocketIOEventHandler(
                 val board = socketIOServer.broadcastOperations
                 logger.info("board clientId {}", board.clients)
             }
+        }
+
+        socketIOServer.addEventListener(EventMessageType.GAME_STARTED.eventName, SocketioEvent::class.java)
+        {  client: SocketIOClient, socketioEvent: SocketioEvent, _ ->
+
+            logger.info(" ... " )
+            client.sendEvent(EventMessageType.GAME_STARTED.eventName, socketioEvent.data)
 
         }
+
+
+
+
 
         socketIOServer.addEventListener(SocketIOEventName.CHAT_MESSAGE.eventName, SocketioEvent::class.java)
             { client: SocketIOClient, socketioEvent: SocketioEvent, _ ->
@@ -55,6 +69,9 @@ class SocketIOEventHandler(
             client.handshakeData.getSingleUrlParam("")
             // ECHO
             client.sendEvent(SocketIOEventName.CHAT_MESSAGE.eventName, socketioEvent.data)
+
+            socketIOServer.broadcastOperations.sendEvent("test", socketioEvent.data)
+
         }
 
         socketIOServer.addEventListener(SocketIOEventName.JOIN_ROOM.eventName, SocketioEvent::class.java) {
