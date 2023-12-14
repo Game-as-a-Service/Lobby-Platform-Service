@@ -22,12 +22,14 @@ class WebSocketEventBus(
 
     // TODO broadcast the events!
     override fun broadcast(events: Collection<DomainEvent>) {
-
         for (event in events) {
             if (event is PlayerJoinedRoomEvent) {
                 val data = event.data
                 val type = event.type
-                socketIOServer.broadcastOperations.sendEvent(type.toString(), data)
+
+                val roomId = "ROOM_${data.roomId}"
+                val room = socketIOServer.getRoomOperations(roomId)
+                room.sendEvent(type.eventName, data)
             } else if(event is PlayerLeavedRoomEvent){
                 val data = event.data
                 val type = event.type
