@@ -46,5 +46,5 @@ logging:
 socketio:
   host: 127.0.0.1
   port: 9001
-  active: true
+  active: ${SOCKET_IO_SERVER_START:false}
 
