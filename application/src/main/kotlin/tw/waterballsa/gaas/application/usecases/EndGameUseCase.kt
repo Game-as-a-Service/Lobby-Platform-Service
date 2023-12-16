@@ -5,7 +5,6 @@ import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.events.EndedGameEvent
-import tw.waterballsa.gaas.events.EndedGameEvent.Data
 import tw.waterballsa.gaas.events.enums.EventMessageType.GAME_ENDED
 import javax.inject.Named
 
@@ -31,6 +30,6 @@ class EndGameUseCase(
 
 fun Room.endGameByGameService(): EndedGameEvent {
     val type = GAME_ENDED
-    val data = Data(roomId!!.value)
+    val data = EndedGameEvent.Data(roomId!!.value)
     return EndedGameEvent(type, data)
 }

@@ -2,10 +2,10 @@ package tw.waterballsa.gaas.events
 
 import tw.waterballsa.gaas.events.enums.EventMessageType
 
-data class PlayerJoinedRoomEvent(
-    val type: EventMessageType,
-    val data: Data,
-) : DomainEvent() {
+class PlayerJoinedRoomEvent(
+    type: EventMessageType,
+    val data: Data
+) : SocketIoResponseEvent(type) {
     data class Data(
         val user: Player,
         val roomId: String,
@@ -15,4 +15,8 @@ data class PlayerJoinedRoomEvent(
             val nickname: String,
         )
     }
+
+
+    override fun getEventData(): Any = data
+
 }
