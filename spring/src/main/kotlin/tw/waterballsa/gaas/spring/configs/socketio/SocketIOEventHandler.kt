@@ -16,6 +16,7 @@ import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.application.usecases.GetRoomUsecase
 import tw.waterballsa.gaas.domain.Room
+import tw.waterballsa.gaas.events.ChatData
 import tw.waterballsa.gaas.events.SocketioEvent
 import tw.waterballsa.gaas.events.enums.EventMessageType
 import javax.servlet.http.HttpServletRequest
@@ -74,22 +75,13 @@ class SocketIOEventHandler(
 
         }
 
-        socketIOServer.addEventListener(SocketIOEventName.JOIN_ROOM.eventName, SocketioEvent::class.java) {
-                client: SocketIOClient, socketioEvent: SocketioEvent, _ ->
+        socketIOServer.addEventListener(SocketIOEventName.JOIN_ROOM.eventName, ChatData::class.java) {
+                client: SocketIOClient, socketioEvent: ChatData, _ ->
 
-            // ECHO
-            logger.info(" JOIN_ROOM Received message: $socketioEvent from client: ${client.sessionId}")
-            val roomSize = client.getCurrentRoomSize(socketioEvent.data.target)
-
-            if(roomSize == 0){
-                logger.info("user： " +  client.sessionId + "you are the host ")
-            } else{
-                client.joinRoom(socketioEvent.data.target)
-                logger.info("Client joined room: ${socketioEvent.data.target}")
-                logger.info("id = " + socketioEvent.data.user.id + " nickname " + socketioEvent.data.user.nickname +  " targetRoom  " + socketioEvent.data.target)
-                logger.info(" room size is : ${client.getCurrentRoomSize(socketioEvent.data.target)}")
-                socketIOServer.getRoomOperations(socketioEvent.data.target).sendEvent(SocketIOEventName.JOIN_ROOM.eventName, socketioEvent.data.user.id)
-            }
+            client.joinRoom(socketioEvent.target)
+            logger.info("Client joined room: ${socketioEvent.target}")
+            logger.info("id = " + socketioEvent.user.id + " nickname " + socketioEvent.user.nickname +  " targetRoom  " + socketioEvent.target)
+            logger.info(" room size is : ${client.getCurrentRoomSize(socketioEvent.target)}")
         }
 
 

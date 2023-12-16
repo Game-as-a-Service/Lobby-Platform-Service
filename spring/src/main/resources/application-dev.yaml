@@ -34,6 +34,8 @@ spring:
           audiences:
             - https://api.gaas.waterballsa.tw
 
+frontend: http://localhost:3030
+
 server:
   port: 8087
 
@@ -44,5 +46,5 @@ logging:
 socketio:
   host: 127.0.0.1
   port: 9001
-  active: false
+  active: ${SOCKET_IO_SERVER_START:false}
 
