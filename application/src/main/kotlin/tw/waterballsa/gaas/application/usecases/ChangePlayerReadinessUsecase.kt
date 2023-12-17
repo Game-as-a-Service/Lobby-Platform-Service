@@ -24,8 +24,8 @@ class ChangePlayerReadinessUsecase(
             room.changePlayerReadiness(player.id, readiness)
             roomRepository.update(room)
 
-            val playerReadinessChangedEvent = room.changePlayerReadiness(readiness, player.id!!.value, player.nickname)
-            eventBus.broadcast(playerReadinessChangedEvent)
+            room.changePlayerReadiness(readiness, player.id.value, player.nickname)
+                .also { eventBus.broadcast(it) }
         }
     }
 
@@ -49,6 +49,6 @@ fun Room.changePlayerReadiness(
 ): PlayerReadinessChangedEvent {
     val type = if (readiness) USER_READY else USER_NOT_READY
     val user = User(playerId, nickname)
-    val data = Data(user, roomId!!.value)
+    val data = Data(user, roomId!!)
     return PlayerReadinessChangedEvent(type, data)
 }

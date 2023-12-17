@@ -32,8 +32,8 @@ class JoinRoomUsecase(
             ensureThatPlayerNotJoinFullRoom()
             joinPlayer(player)
 
-            val playerJoinedRoomEvent = room.joinRoomEvent(player.id.value, player.nickname)
-            eventBus.broadcast(playerJoinedRoomEvent)
+            joinRoomEvent(player.id.value, player.nickname)
+                .also { eventBus.broadcast(it) }
         }
     }
 
@@ -69,7 +69,7 @@ class JoinRoomUsecase(
         nickname: String,
     ): PlayerJoinedRoomEvent {
         val user = Player(playerId, nickname)
-        val data = Data(user, roomId!!.value)
+        val data = Data(user, roomId!!)
         return PlayerJoinedRoomEvent(USER_JOINED, data)
     }
 

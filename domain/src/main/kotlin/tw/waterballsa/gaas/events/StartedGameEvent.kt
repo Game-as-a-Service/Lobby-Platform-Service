@@ -6,12 +6,13 @@ import tw.waterballsa.gaas.events.enums.EventMessageType
 class StartedGameEvent(
     type: EventMessageType,
     val data: Data
-) : SocketIoResponseEvent(type) {
+) : RoomEvent(type) {
     data class Data(
         val gameUrl: String,
         val roomId: Room.Id,
     )
 
-
     override fun getEventData(): Any = data
+
+    override fun getRoomId(): Room.Id = data.roomId
 }

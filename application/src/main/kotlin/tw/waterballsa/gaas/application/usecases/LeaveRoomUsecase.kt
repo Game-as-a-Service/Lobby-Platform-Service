@@ -27,8 +27,8 @@ class LeaveRoomUsecase(
                 else -> roomRepository.leaveRoom(room)
             }
 
-            val playerLeavedRoomEvent = room.leaveRoomEvent(player.id.value, player.nickname)
-            eventBus.broadcast(playerLeavedRoomEvent)
+           room.leaveRoomEvent(player.id.value, player.nickname)
+               .also { eventBus.broadcast(it) }
         }
     }
 
@@ -37,7 +37,7 @@ class LeaveRoomUsecase(
         nickname: String,
     ): PlayerLeavedRoomEvent {
         val user = Player(playerId, nickname)
-        val data = Data(user, roomId!!.value)
+        val data = Data(user, roomId!!)
         return PlayerLeavedRoomEvent(USER_LEFT, data)
     }
 

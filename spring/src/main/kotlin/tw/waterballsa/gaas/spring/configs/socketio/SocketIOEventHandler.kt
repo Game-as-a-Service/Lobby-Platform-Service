@@ -2,24 +2,16 @@ package tw.waterballsa.gaas.spring.configs.socketio
 
 import com.corundumstudio.socketio.SocketIOClient
 import com.corundumstudio.socketio.SocketIOServer
-import com.corundumstudio.socketio.listener.DisconnectListener
-import com.nimbusds.jose.shaded.json.JSONObject
 import io.netty.handler.codec.http.HttpHeaderNames
-import org.apache.catalina.manager.util.SessionUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Component
-import org.springframework.web.context.request.RequestContextHolder
 import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
-import tw.waterballsa.gaas.application.usecases.GetRoomUsecase
-import tw.waterballsa.gaas.domain.Room
 import tw.waterballsa.gaas.events.ChatData
 import tw.waterballsa.gaas.events.SocketioEvent
 import tw.waterballsa.gaas.events.enums.EventMessageType
-import javax.servlet.http.HttpServletRequest
 
 
 @Component
@@ -38,14 +30,14 @@ class SocketIOEventHandler(
     }
 
 
-    fun configureEventHandlers() {
+    private final fun configureEventHandlers() {
 
         socketIOServer.addConnectListener { client ->
             val token =  client.handshakeData.httpHeaders.get(HttpHeaderNames.COOKIE)
             val customHeader = client.handshakeData.getSingleUrlParam("Authorization")
 
             if (client != null ) {
-                logger.info("有新用戶連結  , SessionId: {}", client.getSessionId())
+                logger.info("有新用戶連結  , SessionId: {}", client.sessionId)
                 val board = socketIOServer.broadcastOperations
                 logger.info("board clientId {}", board.clients)
             }
@@ -96,15 +88,15 @@ class SocketIOEventHandler(
 
 
         socketIOServer.addEventListener(SocketIOEventName.DISCONNECT.eventName, SocketioEvent::class.java) {
-                client: SocketIOClient, socketioEvent: SocketioEvent, _ ->
+                client: SocketIOClient, _: SocketioEvent, _ ->
 
             client.disconnect()
             logger.info(" client is leaven room with key disconnect")
         }
 
         socketIOServer.addDisconnectListener {
-                client: SocketIOClient ->
-            logger.info("Server disconnected on the server side")
+
+        logger.info("Server disconnected on the server side")
         }
     }
 }

@@ -16,11 +16,12 @@ class EndGameUseCase(
 ) : AbstractRoomUseCase(roomRepository, userRepository) {
     fun execute(request: Request) {
         val room = findRoomById(request.roomId)
-        room.endGame()
-        roomRepository.update(room)
-
-        val endedGameEvent = room.endGameByGameService()
-        eventBus.broadcast(endedGameEvent)
+        with(room) {
+            endGame()
+            roomRepository.update(this)
+            endGameByGameService()
+                .also { eventBus.broadcast(it) }
+        }
     }
 
     data class Request(
@@ -29,7 +30,6 @@ class EndGameUseCase(
 }
 
 fun Room.endGameByGameService(): EndedGameEvent {
-    val type = GAME_ENDED
-    val data = EndedGameEvent.Data(roomId!!.value)
-    return EndedGameEvent(type, data)
+    val data = EndedGameEvent.Data(roomId!!)
+    return EndedGameEvent(GAME_ENDED, data)
 }
