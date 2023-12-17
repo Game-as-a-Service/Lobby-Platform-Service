@@ -22,7 +22,7 @@ class WebSocketEventBus(
         events.asSequence()
             .mapNotNull { RoomEvent::class.safeCast(it) }
             .forEach {
-                socketIOServer.getRoomOperations(it.getRoomId().value)
+                socketIOServer.getRoomOperations("ROOM_${it.getRoomId().value}")
                     .sendEvent(it.type.eventName, it.getEventData())
             }
     }

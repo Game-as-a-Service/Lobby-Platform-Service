@@ -77,13 +77,11 @@ class SocketIOEventHandler(
         }
 
 
-        socketIOServer.addEventListener(SocketIOEventName.LEAVE_ROOM.eventName, SocketioEvent::class.java) {
-                client: SocketIOClient, socketioEvent: SocketioEvent, _ ->
+        socketIOServer.addEventListener(SocketIOEventName.LEAVE_ROOM.eventName, ChatData::class.java) {
+                client: SocketIOClient, socketioEvent: ChatData, _ ->
             // ECHO
-            logger.info(" LEAVE_ROOM Received message: ${socketioEvent.data.target} from client: ${client.sessionId}")
-
-            client.leaveRoom(socketioEvent.data.target)
-            socketIOServer.removeNamespace(socketioEvent.data.target)
+            logger.info(" LEAVE_ROOM Received message: ${socketioEvent.target} from client: ${client.sessionId}")
+            client.leaveRoom(socketioEvent.target)
         }
 
 
