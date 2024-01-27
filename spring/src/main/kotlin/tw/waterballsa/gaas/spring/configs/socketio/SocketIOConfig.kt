@@ -1,14 +1,10 @@
 package tw.waterballsa.gaas.spring.configs.socketio
 
-import com.corundumstudio.socketio.AuthorizationListener
 import com.corundumstudio.socketio.SocketIOServer
-import com.corundumstudio.socketio.listener.DefaultExceptionListener
+import com.corundumstudio.socketio.annotation.SpringAnnotationScanner
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.web.cors.CorsConfiguration
-import org.springframework.web.cors.reactive.CorsWebFilter
-import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
 
 
 @Configuration
@@ -25,9 +21,11 @@ class SocketIOConfig{
                     allowHeaders = "Authorization, CustomHeaderName"
                 }
         }
-
-
         return SocketIOServer(configuration)
     }
 
+    @Bean
+    fun springAnnotationScanner(socketIOServer: SocketIOServer): SpringAnnotationScanner {
+        return SpringAnnotationScanner(socketIOServer)
+    }
 }

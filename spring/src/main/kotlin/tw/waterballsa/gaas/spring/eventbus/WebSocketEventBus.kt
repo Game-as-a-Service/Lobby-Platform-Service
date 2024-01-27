@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component
 import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.events.DomainEvent
 import tw.waterballsa.gaas.events.RoomEvent
-import tw.waterballsa.gaas.spring.controllers.viewmodel.SocketioViewModel
 import kotlin.reflect.safeCast
 
 @Component
@@ -17,7 +16,6 @@ class WebSocketEventBus(
 
     private val logger: Logger = LoggerFactory.getLogger(WebSocketEventBus::class.java)
 
-    lateinit var viewModel: SocketioViewModel
     override fun broadcast(events: Collection<DomainEvent>) {
         events.asSequence()
             .mapNotNull { RoomEvent::class.safeCast(it) }
