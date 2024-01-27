@@ -8,9 +8,9 @@ import com.corundumstudio.socketio.annotation.OnDisconnect
 import com.corundumstudio.socketio.annotation.OnEvent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.stereotype.Component
-import tw.waterballsa.gaas.application.eventbus.EventBus
-import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.spring.configs.socketio.event.SocketIOChatEvent
 import tw.waterballsa.gaas.spring.configs.socketio.event.SocketIORoomEvent
@@ -20,43 +20,55 @@ import java.time.Instant
 @Component
 class SocketIOEventHandler(
     private val socketIOServer: SocketIOServer,
-    private val eventBus: EventBus,
-    protected val roomRepository: RoomRepository,
+    private val jwtDecoder: JwtDecoder,
     protected val userRepository: UserRepository,
 ) {
+    companion object{
+        private const val USER_PREFIX = "USER_"
+    }
+
 
     private val logger: Logger = LoggerFactory.getLogger(SocketIOEventHandler::class.java)
 
-
     @OnConnect
     fun onConnect(client: SocketIOClient){
-        val token = client.handshakeData.getSingleUrlParam("token")
-        logger.info("user connect, SessionId: {}, token: {}", client.sessionId, token)
+        val userId = client.handshakeData.getSingleUrlParam("token")
+            ?.toJwt()?.subject
+            ?.let { userRepository.findByIdentity(it) }
+            ?.id?.value
+
+        if(userId == null){
+            client.disconnect()
+        }else{
+            client.joinRoom("$USER_PREFIX$userId")
+            logger.info("user connect, SessionId: {}, UserId: {}", client.sessionId, userId)
+        }
     }
 
     @OnDisconnect
     fun onDisconnect(client: SocketIOClient){
-        val token = client.handshakeData.getSingleUrlParam("token")
-        logger.info("user disconnect, SessionId: {}, token: {}", client.sessionId, token)
+        val userId = client.userId()
         client.disconnect()
+        logger.info("user disconnect, SessionId: {}, UserId: {}", client.sessionId, userId)
     }
 
     @OnEvent(value = SocketIOEventName.JOIN_ROOM)
     fun onJoinRoom(client: SocketIOClient, event: SocketIORoomEvent, ackRequest: AckRequest){
+        val userId = client.userId()
         client.joinRoom(event.target)
-        logger.info("Client joined room: ${event.target}")
-        logger.info("id = " + event.user.id + " nickname " + event.user.nickname +  " targetRoom  " + event.target)
-        logger.info(" room size is : ${client.getCurrentRoomSize(event.target)}")
+        logger.info("user join room, SessionId: {}, UserId: {}, RoomId: {}", client.sessionId, userId, event.target)
     }
 
     @OnEvent(value = SocketIOEventName.LEAVE_ROOM)
     fun onLeaveRoom(client: SocketIOClient, event: SocketIORoomEvent, ackRequest: AckRequest){
-        logger.info(" LEAVE_ROOM Received message: ${event.target} from client: ${client.sessionId}")
+        val userId = client.userId()
         client.leaveRoom(event.target)
+        logger.info("user leave room, SessionId: {}, UserId: {}, RoomId: {}", client.sessionId, userId, event.target)
     }
 
     @OnEvent(value = SocketIOEventName.CHAT_MESSAGE)
     fun onChatMessage(client: SocketIOClient, event: SocketIOChatEvent, ackRequest: AckRequest){
+        val userId = client.userId()
         event.timestamp = Instant.now().toString()
         val room = if(event.isLobby()){
             socketIOServer.broadcastOperations
@@ -64,5 +76,20 @@ class SocketIOEventHandler(
             socketIOServer.getRoomOperations(event.target)
         }
         room.sendEvent(SocketIOEventName.CHAT_MESSAGE, event)
+        logger.info("user chat, SessionId: {}, UserId: {}, To: {}", client.sessionId, userId, event.target)
+    }
+
+
+    private fun SocketIOClient.userId(): String?{
+        return allRooms.firstOrNull { it.startsWith(USER_PREFIX) }
+            ?.substringAfter(USER_PREFIX)
+    }
+
+    private fun String.toJwt(): Jwt? {
+        return try {
+            jwtDecoder.decode(this)
+        } catch (e: Exception) {
+            null
+        }
     }
 }
