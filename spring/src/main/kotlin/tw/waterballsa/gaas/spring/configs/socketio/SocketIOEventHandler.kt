@@ -1,100 +1,95 @@
 package tw.waterballsa.gaas.spring.configs.socketio
 
+import com.corundumstudio.socketio.AckRequest
 import com.corundumstudio.socketio.SocketIOClient
 import com.corundumstudio.socketio.SocketIOServer
-import io.netty.handler.codec.http.HttpHeaderNames
+import com.corundumstudio.socketio.annotation.OnConnect
+import com.corundumstudio.socketio.annotation.OnDisconnect
+import com.corundumstudio.socketio.annotation.OnEvent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.stereotype.Component
-import tw.waterballsa.gaas.application.eventbus.EventBus
-import tw.waterballsa.gaas.application.repositories.RoomRepository
 import tw.waterballsa.gaas.application.repositories.UserRepository
-import tw.waterballsa.gaas.events.ChatData
-import tw.waterballsa.gaas.events.SocketioEvent
-import tw.waterballsa.gaas.events.enums.EventMessageType
+import tw.waterballsa.gaas.spring.configs.socketio.event.SocketIOChatEvent
+import tw.waterballsa.gaas.spring.configs.socketio.event.SocketIORoomEvent
+import java.time.Instant
 
 
 @Component
 class SocketIOEventHandler(
     private val socketIOServer: SocketIOServer,
-    private val eventBus: EventBus,
-    protected val roomRepository: RoomRepository,
+    private val jwtDecoder: JwtDecoder,
     protected val userRepository: UserRepository,
 ) {
-
-    private val logger: Logger = LoggerFactory.getLogger(SocketIOEventHandler::class.java)
-
-
-    init {
-        configureEventHandlers()
+    companion object{
+        private const val USER_PREFIX = "USER_"
     }
 
 
-    private final fun configureEventHandlers() {
+    private val logger: Logger = LoggerFactory.getLogger(SocketIOEventHandler::class.java)
 
-        socketIOServer.addConnectListener { client ->
-            val token =  client.handshakeData.httpHeaders.get(HttpHeaderNames.COOKIE)
-            val customHeader = client.handshakeData.getSingleUrlParam("Authorization")
+    @OnConnect
+    fun onConnect(client: SocketIOClient){
+        val userId = client.handshakeData.getSingleUrlParam("token")
+            ?.toJwt()?.subject
+            ?.let { userRepository.findByIdentity(it) }
+            ?.id?.value
 
-            if (client != null ) {
-                logger.info("有新用戶連結  , SessionId: {}", client.sessionId)
-                val board = socketIOServer.broadcastOperations
-                logger.info("board clientId {}", board.clients)
-            }
-        }
-
-        socketIOServer.addEventListener(EventMessageType.GAME_STARTED.eventName, SocketioEvent::class.java)
-        {  client: SocketIOClient, socketioEvent: SocketioEvent, _ ->
-
-            logger.info(" ... " )
-            client.sendEvent(EventMessageType.GAME_STARTED.eventName, socketioEvent.data)
-
-        }
-
-
-
-
-
-        socketIOServer.addEventListener(SocketIOEventName.CHAT_MESSAGE.eventName, SocketioEvent::class.java)
-            { client: SocketIOClient, socketioEvent: SocketioEvent, _ ->
-            // Handle the "chatMessage" event
-            logger.info(" CHAT_MESSAGE Received message: $socketioEvent from client: ${client.sessionId}")
-            client.handshakeData.getSingleUrlParam("")
-            // ECHO
-            client.sendEvent(SocketIOEventName.CHAT_MESSAGE.eventName, socketioEvent.data)
-
-            socketIOServer.broadcastOperations.sendEvent("test", socketioEvent.data)
-
-        }
-
-        socketIOServer.addEventListener(SocketIOEventName.JOIN_ROOM.eventName, ChatData::class.java) {
-                client: SocketIOClient, socketioEvent: ChatData, _ ->
-
-            client.joinRoom(socketioEvent.target)
-            logger.info("Client joined room: ${socketioEvent.target}")
-            logger.info("id = " + socketioEvent.user.id + " nickname " + socketioEvent.user.nickname +  " targetRoom  " + socketioEvent.target)
-            logger.info(" room size is : ${client.getCurrentRoomSize(socketioEvent.target)}")
-        }
-
-
-        socketIOServer.addEventListener(SocketIOEventName.LEAVE_ROOM.eventName, ChatData::class.java) {
-                client: SocketIOClient, socketioEvent: ChatData, _ ->
-            // ECHO
-            logger.info(" LEAVE_ROOM Received message: ${socketioEvent.target} from client: ${client.sessionId}")
-            client.leaveRoom(socketioEvent.target)
-        }
-
-
-        socketIOServer.addEventListener(SocketIOEventName.DISCONNECT.eventName, SocketioEvent::class.java) {
-                client: SocketIOClient, _: SocketioEvent, _ ->
-
+        if(userId == null){
             client.disconnect()
-            logger.info(" client is leaven room with key disconnect")
+        }else{
+            client.joinRoom("$USER_PREFIX$userId")
+            logger.info("user connect, SessionId: {}, UserId: {}", client.sessionId, userId)
         }
+    }
 
-        socketIOServer.addDisconnectListener {
+    @OnDisconnect
+    fun onDisconnect(client: SocketIOClient){
+        val userId = client.userId()
+        client.disconnect()
+        logger.info("user disconnect, SessionId: {}, UserId: {}", client.sessionId, userId)
+    }
 
-        logger.info("Server disconnected on the server side")
+    @OnEvent(value = SocketIOEventName.JOIN_ROOM)
+    fun onJoinRoom(client: SocketIOClient, event: SocketIORoomEvent, ackRequest: AckRequest){
+        val userId = client.userId()
+        client.joinRoom(event.target)
+        logger.info("user join room, SessionId: {}, UserId: {}, RoomId: {}", client.sessionId, userId, event.target)
+    }
+
+    @OnEvent(value = SocketIOEventName.LEAVE_ROOM)
+    fun onLeaveRoom(client: SocketIOClient, event: SocketIORoomEvent, ackRequest: AckRequest){
+        val userId = client.userId()
+        client.leaveRoom(event.target)
+        logger.info("user leave room, SessionId: {}, UserId: {}, RoomId: {}", client.sessionId, userId, event.target)
+    }
+
+    @OnEvent(value = SocketIOEventName.CHAT_MESSAGE)
+    fun onChatMessage(client: SocketIOClient, event: SocketIOChatEvent, ackRequest: AckRequest){
+        val userId = client.userId()
+        event.timestamp = Instant.now().toString()
+        val room = if(event.isLobby()){
+            socketIOServer.broadcastOperations
+        }else{
+            socketIOServer.getRoomOperations(event.target)
+        }
+        room.sendEvent(SocketIOEventName.CHAT_MESSAGE, event)
+        logger.info("user chat, SessionId: {}, UserId: {}, To: {}", client.sessionId, userId, event.target)
+    }
+
+
+    private fun SocketIOClient.userId(): String?{
+        return allRooms.firstOrNull { it.startsWith(USER_PREFIX) }
+            ?.substringAfter(USER_PREFIX)
+    }
+
+    private fun String.toJwt(): Jwt? {
+        return try {
+            jwtDecoder.decode(this)
+        } catch (e: Exception) {
+            null
         }
     }
 }
