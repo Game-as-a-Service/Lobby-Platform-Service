@@ -68,7 +68,7 @@ class StartGameUseCase(
             throw PlatformException(GAME_START_FAILED, "Room Id is null")
         }
         val gameServerHost = game.backEndUrl
-        val startGameRequest = StartGameRequest(roomId.toString(), players.map { it.toGamePlayer() })
+        val startGameRequest = StartGameRequest(roomId!!.value, players.map { it.toGamePlayer() })
         val startGameResponse = gameService.startGame(gameServerHost, jwtToken, startGameRequest)
 
         return StartedGameEvent(GAME_STARTED, Data(startGameResponse.url, roomId!!))

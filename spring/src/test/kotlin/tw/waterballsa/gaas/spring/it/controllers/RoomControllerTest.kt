@@ -781,7 +781,7 @@ class RoomControllerTest @Autowired constructor(
         mockMvc.perform(
             post("/rooms/${room.roomId!!.value}:startGame")
                 .withJwt(toJwt())
-                .withJson(StartGameRequest(room.players.map { it.toGamePlayer() }))
+                .withJson(StartGameRequest(room.roomId!!.value,room.players.map { it.toGamePlayer() }))
         )
 
     private fun Player.toGamePlayer(): StartGameRequest.GamePlayer =
