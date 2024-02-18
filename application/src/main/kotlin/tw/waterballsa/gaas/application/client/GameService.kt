@@ -5,6 +5,7 @@ interface GameService {
 }
 
 data class StartGameRequest(
+    val roomId: String,
     val players: List<GamePlayer>,
 ) {
     data class GamePlayer(
