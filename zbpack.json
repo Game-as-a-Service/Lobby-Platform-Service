@@ -1,0 +1,3 @@
+{
+    "javaArgs": "-Dserver.port=$PORT -jar spring/target/Lobby-Platform.jar"
+}
