@@ -64,7 +64,7 @@ class StartGameUseCase(
     }
 
     private fun Room.startGameByHost(jwtToken: String): StartedGameEvent {
-        if(roomId == null) {
+        if (roomId == null) {
             throw PlatformException(GAME_START_FAILED, "Room Id is null")
         }
         val gameServerHost = game.backEndUrl

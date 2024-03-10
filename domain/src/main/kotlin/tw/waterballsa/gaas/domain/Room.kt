@@ -7,6 +7,7 @@ import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_ALREADY_STARTED
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_NOT_STARTED
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_NOT_FOUND
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_NOT_HOST
+import tw.waterballsa.gaas.exceptions.enums.PlatformError.PLAYER_NOT_IN_ROOM_ERROR
 
 class Room(
     var roomId: Id? = null,
@@ -46,7 +47,13 @@ class Room(
         }
     }
 
-    fun endGame() {
+    fun endGame(player: Player) {
+        if (!hasPlayer(player.id)) {
+            throw PlatformException(
+                PLAYER_NOT_IN_ROOM_ERROR,
+                "Player(${player.id.value}) is not in the room(${roomId!!.value}).",
+            )
+        }
         if (status != PLAYING) {
             throw PlatformException(GAME_NOT_STARTED, "Game has not started yet")
         }

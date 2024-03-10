@@ -154,9 +154,10 @@ class RoomController(
     @PostMapping("/rooms/{roomId}:endGame")
     @ResponseStatus(NO_CONTENT)
     fun endGame(
+        @AuthenticationPrincipal jwt: Jwt,
         @PathVariable roomId: String,
     ) {
-        endGameUseCase.execute(EndGameUseCase.Request(roomId))
+        endGameUseCase.execute(EndGameUseCase.Request(roomId, jwt.identityProviderId))
     }
 
     class CreateRoomRequest(
