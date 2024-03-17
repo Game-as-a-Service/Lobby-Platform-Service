@@ -414,24 +414,37 @@ class RoomControllerTest @Autowired constructor(
     }
 
     @Test
-    fun givenHostAndPlayerBArePlayingInRoomC_WhenEndGame_ThenRoomCAndPlayersStatusAreChanged() {
+    fun givenHostAndPlayerBArePlayingInRoomC_WhenHostEndGame_ThenRoomCAndPlayersStatusAreChanged() {
         val userA = testUser
         val host = userA.toRoomPlayer()
         val playerB = defaultUser("2").createUser().toRoomPlayer()
 
         givenPlayersArePlayingInRoom(host, playerB)
-            .wheEndGame()
+            .whenEndGame(userA)
             .thenRoomAndPlayersStatusAreChanged()
     }
 
+
     @Test
-    fun givenHostAndPlayerBAreWaitingInRoomC_WhenEndGame_ThenShouldFailed() {
+    fun givenHostAAndPlayerBArePlayingInRoomC_WhenUserDEndGame_ThenShouldFailed() {
+        val userA = testUser
+        val host = userA.toRoomPlayer()
+        val playerB = defaultUser("2").createUser().toRoomPlayer()
+        val userD = defaultUser("3").createUser()
+
+        givenPlayersArePlayingInRoom(host, playerB)
+            .whenEndGame(userD)
+            .thenShouldFail("Player(${userD.id!!.value}) is not in the room(${testRoom.roomId!!.value}).")
+    }
+
+    @Test
+    fun givenHostAndPlayerBAreWaitingInRoomC_WhenHostEndGame_ThenShouldFailed() {
         val userA = testUser
         val host = userA.toRoomPlayer()
         val playerB = defaultUser("2").createUser().toRoomPlayer()
 
         givenHostAndPlayersJoinedTheRoom(host, playerB)
-            .wheEndGame()
+            .whenEndGame(userA)
             .thenShouldFail("Game has not started yet")
     }
 
@@ -548,9 +561,10 @@ class RoomControllerTest @Autowired constructor(
                 .withJwt(user.toJwt())
         )
 
-    private fun Room.wheEndGame(): ResultActions =
+    private fun Room.whenEndGame(user: User): ResultActions =
         mockMvc.perform(
             post("/rooms/${testRoom.roomId!!.value}:endGame")
+                .withJwt(user.toJwt())
         )
 
     private fun ResultActions.thenCreateRoomSuccessfully() {
@@ -781,7 +795,7 @@ class RoomControllerTest @Autowired constructor(
         mockMvc.perform(
             post("/rooms/${room.roomId!!.value}:startGame")
                 .withJwt(toJwt())
-                .withJson(StartGameRequest(room.roomId!!.value,room.players.map { it.toGamePlayer() }))
+                .withJson(StartGameRequest(room.roomId!!.value, room.players.map { it.toGamePlayer() }))
         )
 
     private fun Player.toGamePlayer(): StartGameRequest.GamePlayer =

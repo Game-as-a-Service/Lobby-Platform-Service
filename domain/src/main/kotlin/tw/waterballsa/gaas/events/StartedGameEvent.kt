@@ -5,7 +5,7 @@ import tw.waterballsa.gaas.events.enums.EventMessageType
 
 class StartedGameEvent(
     type: EventMessageType,
-    val data: Data
+    val data: Data,
 ) : RoomEvent(type) {
     data class Data(
         val gameUrl: String,

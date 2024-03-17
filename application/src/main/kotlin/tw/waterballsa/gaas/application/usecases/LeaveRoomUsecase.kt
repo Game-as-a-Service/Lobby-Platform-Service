@@ -27,8 +27,8 @@ class LeaveRoomUsecase(
                 else -> roomRepository.leaveRoom(room)
             }
 
-           room.leaveRoomEvent(player.id.value, player.nickname)
-               .also { eventBus.broadcast(it) }
+            room.leaveRoomEvent(player.id.value, player.nickname)
+                .also { eventBus.broadcast(it) }
         }
     }
 
