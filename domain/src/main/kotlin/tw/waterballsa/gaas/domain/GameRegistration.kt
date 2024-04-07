@@ -1,16 +1,19 @@
 package tw.waterballsa.gaas.domain
 
+import java.time.Instant
+
 class GameRegistration(
     val id: Id? = null,
-    val uniqueName: String,
-    val displayName: String,
-    val shortDescription: String,
-    val rule: String,
-    val imageUrl: String,
-    val minPlayers: Int,
-    val maxPlayers: Int,
-    val frontEndUrl: String,
-    val backEndUrl: String,
+    var uniqueName: String,
+    var displayName: String,
+    var shortDescription: String,
+    var rule: String,
+    var imageUrl: String,
+    var minPlayers: Int,
+    var maxPlayers: Int,
+    var frontEndUrl: String,
+    var backEndUrl: String,
+    val createdOn: Instant,
 ) {
     @JvmInline
     value class Id(val value: String)

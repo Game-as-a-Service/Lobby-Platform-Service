@@ -40,6 +40,7 @@ import tw.waterballsa.gaas.spring.models.TestGetRoomsRequest
 import tw.waterballsa.gaas.spring.models.TestJoinRoomRequest
 import tw.waterballsa.gaas.spring.utils.MockitoUtils.Companion.anyObject
 import tw.waterballsa.gaas.spring.utils.Users.Companion.defaultUser
+import java.time.Instant
 import java.util.UUID.randomUUID
 import kotlin.reflect.KClass
 
@@ -687,7 +688,8 @@ class RoomControllerTest @Autowired constructor(
             minPlayers = 2,
             maxPlayers = 4,
             frontEndUrl = "https://example.com/play/game01",
-            backEndUrl = "https://example.com/api/game01"
+            backEndUrl = "https://example.com/api/game01",
+            createdOn = Instant.parse("2024-03-01T14:00:00.00Z"),
         )
     )
 

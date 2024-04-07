@@ -198,6 +198,7 @@ class GameRegistrationControllerTest @Autowired constructor(
             assertThat(it.maxPlayers).isEqualTo(maxPlayers)
             assertThat(it.frontEndUrl).isEqualTo(frontEndUrl)
             assertThat(it.backEndUrl).isEqualTo(backEndUrl)
+            assertThat(it.createdOn).isEqualTo(createdOn)
         }
     }
 

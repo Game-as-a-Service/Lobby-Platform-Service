@@ -19,34 +19,49 @@ class UpdateGameRegistrationUseCase(
 
     fun execute(request: Request, presenter: Presenter) {
         with(request) {
-            validateGameExist()
-            validateUniqueNameDuplicated()
-            val gameRegistration = updateGameRegistration()
-
+            val gameRegistration = findGame(gameId)
+                .validateUniqueNameDuplicated(request)
+                .setValueByRequest(this)
+                .updateGame()
             val event = gameRegistration.toGameRegistrationUpdatedEvent()
             presenter.present(event)
             eventBus.broadcast(event)
         }
     }
 
-    private fun Request.validateGameExist() {
-        gameRegistrationRepository.findById(gameId)
+    private fun findGame(gameId: GameRegistration.Id): GameRegistration {
+        return gameRegistrationRepository.findById(gameId)
             ?: throw notFound(GAME_NOT_FOUND, GameRegistration::class).id(gameId)
     }
 
-    private fun Request.validateUniqueNameDuplicated() {
-        gameRegistrationRepository.findGameRegistrationByUniqueName(uniqueName)
-            ?.takeIf { it.id != gameId }
+    private fun GameRegistration.validateUniqueNameDuplicated(request: Request): GameRegistration {
+        gameRegistrationRepository.findGameRegistrationByUniqueName(request.uniqueName)
+            ?.takeIf { it.id != request.gameId }
             ?.let {
                 throw PlatformException(
                     GAME_EXISTS,
-                    "$uniqueName already exists",
+                    "${request.uniqueName} already exists",
                 )
             }
+        return this
     }
 
-    private fun Request.updateGameRegistration(): GameRegistration =
-        gameRegistrationRepository.updateGame(toGameRegistration())
+    private fun GameRegistration.setValueByRequest(request: Request): GameRegistration {
+        uniqueName = request.uniqueName
+        displayName = request.displayName
+        shortDescription = request.shortDescription
+        rule = request.rule
+        imageUrl = request.imageUrl
+        minPlayers = request.minPlayers
+        maxPlayers = request.maxPlayers
+        frontEndUrl = request.frontEndUrl
+        backEndUrl = request.backEndUrl
+        return this
+    }
+
+    private fun GameRegistration.updateGame(): GameRegistration {
+        return gameRegistrationRepository.updateGame(this)
+    }
 
     data class Request(
         val gameId: GameRegistration.Id,
@@ -59,20 +74,7 @@ class UpdateGameRegistrationUseCase(
         val maxPlayers: Int,
         val frontEndUrl: String,
         val backEndUrl: String,
-    ) {
-        fun toGameRegistration(): GameRegistration = GameRegistration(
-            gameId,
-            uniqueName,
-            displayName,
-            shortDescription,
-            rule,
-            imageUrl,
-            minPlayers,
-            maxPlayers,
-            frontEndUrl,
-            backEndUrl,
-        )
-    }
+    )
 }
 
 private fun GameRegistration.toGameRegistrationUpdatedEvent(): GameRegistrationUpdatedEvent =

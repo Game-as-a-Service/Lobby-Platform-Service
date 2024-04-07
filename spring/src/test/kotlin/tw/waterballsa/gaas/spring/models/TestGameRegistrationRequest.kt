@@ -1,6 +1,7 @@
 package tw.waterballsa.gaas.spring.models
 
 import tw.waterballsa.gaas.domain.GameRegistration
+import java.time.Instant
 
 class TestGameRegistrationRequest(
     val uniqueName: String,
@@ -23,6 +24,7 @@ class TestGameRegistrationRequest(
             minPlayers = minPlayers,
             maxPlayers = maxPlayers,
             frontEndUrl = frontEndUrl,
-            backEndUrl = backEndUrl
+            backEndUrl = backEndUrl,
+            createdOn = Instant.parse("2024-03-01T14:00:00.00Z"),
         )
 }
