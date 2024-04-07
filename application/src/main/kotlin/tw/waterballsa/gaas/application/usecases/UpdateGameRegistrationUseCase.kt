@@ -89,4 +89,5 @@ private fun GameRegistration.toGameRegistrationUpdatedEvent(): GameRegistrationU
         maxPlayers,
         frontEndUrl,
         backEndUrl,
+        createdOn,
     )

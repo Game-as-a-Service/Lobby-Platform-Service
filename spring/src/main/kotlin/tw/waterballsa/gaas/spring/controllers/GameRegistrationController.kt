@@ -129,7 +129,8 @@ class GetGameRegistrationPresenter : GetGameRegistrationsUsecase.Presenter {
             name = displayName,
             img = imageUrl,
             minPlayers = minPlayers,
-            maxPlayers = maxPlayers
+            maxPlayers = maxPlayers,
+            createdOn = createdOn,
         )
 
     data class GetGamesViewModel(
@@ -138,5 +139,6 @@ class GetGameRegistrationPresenter : GetGameRegistrationsUsecase.Presenter {
         val img: String,
         val minPlayers: Int,
         val maxPlayers: Int,
+        val createdOn: Instant,
     )
 }

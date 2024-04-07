@@ -1,8 +1,7 @@
 package tw.waterballsa.gaas.spring.it.controllers
 
 import com.fasterxml.jackson.core.type.TypeReference
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.fail
+import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -260,6 +259,7 @@ class GameRegistrationControllerTest @Autowired constructor(
             assertThat(it.imageUrl).isEqualTo(img)
             assertThat(it.minPlayers).isEqualTo(minPlayers)
             assertThat(it.maxPlayers).isEqualTo(maxPlayers)
+            assertThat(it.createdOn).isEqualTo(createdOn)
         }
     }
 
