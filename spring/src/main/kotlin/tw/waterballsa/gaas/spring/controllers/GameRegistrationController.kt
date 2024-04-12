@@ -14,6 +14,7 @@ import tw.waterballsa.gaas.spring.controllers.GetGameRegistrationPresenter.GetGa
 import tw.waterballsa.gaas.spring.controllers.presenter.UpdateGameRegistrationPresenter
 import tw.waterballsa.gaas.spring.controllers.viewmodel.UpdateGameRegistrationViewModel
 import tw.waterballsa.gaas.spring.extensions.getEvent
+import java.time.Instant
 
 @RestController
 @RequestMapping("/games")
@@ -95,7 +96,8 @@ class RegisterGamePresenter : Presenter {
             minPlayers,
             maxPlayers,
             frontEndUrl,
-            backEndUrl
+            backEndUrl,
+            createdOn,
         )
 
     data class RegisterGameViewModel(
@@ -108,7 +110,8 @@ class RegisterGamePresenter : Presenter {
         val minPlayers: Int,
         val maxPlayers: Int,
         val frontEndUrl: String,
-        val backEndUrl: String
+        val backEndUrl: String,
+        val createdOn: Instant,
     )
 }
 
@@ -126,7 +129,8 @@ class GetGameRegistrationPresenter : GetGameRegistrationsUsecase.Presenter {
             name = displayName,
             img = imageUrl,
             minPlayers = minPlayers,
-            maxPlayers = maxPlayers
+            maxPlayers = maxPlayers,
+            createdOn = createdOn,
         )
 
     data class GetGamesViewModel(
@@ -135,5 +139,6 @@ class GetGameRegistrationPresenter : GetGameRegistrationsUsecase.Presenter {
         val img: String,
         val minPlayers: Int,
         val maxPlayers: Int,
+        val createdOn: Instant,
     )
 }

@@ -26,7 +26,8 @@ class UpdateGameRegistrationPresenter : Presenter {
             minPlayers,
             maxPlayers,
             frontEndUrl,
-            backEndUrl
+            backEndUrl,
+            createdOn,
         )
 
 }

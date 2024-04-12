@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
 import tw.waterballsa.gaas.domain.GameRegistration
+import java.time.Instant
 
 @Document
 class GameRegistrationData(
@@ -20,6 +21,7 @@ class GameRegistrationData(
     var maxPlayers: Int?,
     var frontEndUrl: String?,
     var backEndUrl: String?,
+    val createdOn: Instant?,
 ) {
     @DBRef
     var logs: MutableList<GameDevelopmentLog> = mutableListOf()
@@ -35,7 +37,8 @@ class GameRegistrationData(
             minPlayers!!,
             maxPlayers!!,
             frontEndUrl!!,
-            backEndUrl!!
+            backEndUrl!!,
+            createdOn!!
         )
 }
 
@@ -50,5 +53,6 @@ fun GameRegistration.toData(): GameRegistrationData =
         minPlayers = minPlayers,
         maxPlayers = maxPlayers,
         frontEndUrl = frontEndUrl,
-        backEndUrl = backEndUrl
+        backEndUrl = backEndUrl,
+        createdOn = createdOn,
     )

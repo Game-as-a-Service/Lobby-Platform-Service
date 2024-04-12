@@ -7,6 +7,8 @@ import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.events.RegisteredGameEvent
 import tw.waterballsa.gaas.exceptions.PlatformException
 import tw.waterballsa.gaas.exceptions.enums.PlatformError.GAME_EXISTS
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import javax.inject.Named
 
 @Named
@@ -56,6 +58,7 @@ private fun RegisterGameUsecase.Request.toGameRegistration(): GameRegistration =
         maxPlayers = maxPlayers,
         frontEndUrl = frontEndUrl,
         backEndUrl = backEndUrl,
+        createdOn = Instant.now().truncatedTo(ChronoUnit.DAYS),
     )
 
 private fun GameRegistration.toRegisteredGameEvent(): RegisteredGameEvent =
@@ -70,4 +73,5 @@ private fun GameRegistration.toRegisteredGameEvent(): RegisteredGameEvent =
         maxPlayers,
         frontEndUrl,
         backEndUrl,
+        createdOn,
     )

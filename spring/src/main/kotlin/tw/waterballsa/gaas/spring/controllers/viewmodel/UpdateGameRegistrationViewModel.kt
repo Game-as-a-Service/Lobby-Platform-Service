@@ -1,6 +1,7 @@
 package tw.waterballsa.gaas.spring.controllers.viewmodel
 
 import tw.waterballsa.gaas.domain.GameRegistration
+import java.time.Instant
 
 data class UpdateGameRegistrationViewModel(
     val id: GameRegistration.Id,
@@ -13,4 +14,5 @@ data class UpdateGameRegistrationViewModel(
     val maxPlayers: Int,
     val frontEndUrl: String,
     val backEndUrl: String,
+    val createdOn: Instant,
 )
