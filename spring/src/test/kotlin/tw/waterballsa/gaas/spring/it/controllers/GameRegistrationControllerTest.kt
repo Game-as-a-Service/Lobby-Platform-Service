@@ -89,6 +89,22 @@ class GameRegistrationControllerTest @Autowired constructor(
     }
 
     @Test
+    fun givenBig2IsNewerThanUno_WhenThenUserViewsGameListByCreateOn_ThenBig2RankInFront() {
+        val unoRequest = createGameRegistrationRequest("uno-java", "UNO Java")
+        val big2Request = createGameRegistrationRequest("big2-Java", "Big2 Java")
+        registerGameSuccessfully(unoRequest)
+        registerGameSuccessfully(big2Request)
+
+        mockMvc.perform(get("/games?sort_by=createdOn"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$").isArray)
+            .andExpect(jsonPath("$.size()").value(2))
+            .validateSpecificElement(0, big2Request)
+            .validateSpecificElement(1, unoRequest)
+            .getBody(object : TypeReference<List<GetGamesViewModel>>() {})
+    }
+
+    @Test
     fun givenBig2HasRegistered_whenUpdateGameRegistrationWithWrongId_thenShouldReturnGameRegistrationNotFound() {
         givenGameHasRegistered("big2", "Big2")
         whenUpdateGameRegistration(
