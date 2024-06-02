@@ -35,9 +35,11 @@ class GameRegistrationController(
     }
 
     @GetMapping
-    fun findGameRegistrations(): List<GetGamesViewModel> {
+    fun findGameRegistrations(
+        @RequestParam(value = "sort_by", required = false) sortBy: String?,
+    ): List<GetGamesViewModel> {
         val presenter = GetGameRegistrationPresenter()
-        getGameRegistrationsUsecase.execute(presenter)
+        getGameRegistrationsUsecase.execute(GetGameRegistrationsUsecase.Request(sortBy), presenter)
         return presenter.viewModel
     }
 

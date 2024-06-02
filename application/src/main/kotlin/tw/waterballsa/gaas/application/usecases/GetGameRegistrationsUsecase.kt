@@ -8,11 +8,15 @@ import javax.inject.Named
 class GetGameRegistrationsUsecase(
     private val gameRegistrationRepository: GameRegistrationRepository,
 ) {
-    fun execute(presenter: Presenter) {
-        presenter.renderGameRegistrations(gameRegistrationRepository.findGameRegistrations())
+    fun execute(request: Request, presenter: Presenter) {
+        presenter.renderGameRegistrations(gameRegistrationRepository.findGameRegistrations(request.sortBy))
     }
 
     interface Presenter {
         fun renderGameRegistrations(gameRegistrations: Collection<GameRegistration>)
     }
+
+    data class Request(
+        val sortBy: String?,
+    )
 }

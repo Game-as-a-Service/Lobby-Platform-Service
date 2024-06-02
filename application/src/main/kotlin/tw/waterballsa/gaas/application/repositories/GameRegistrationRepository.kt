@@ -9,7 +9,7 @@ interface GameRegistrationRepository {
     fun deleteAll()
     fun getNumberOfTotalGameRegistrations(): Long
     fun existsByUniqueName(uniqueName: String): Boolean
-    fun findGameRegistrations(): List<GameRegistration>
+    fun findGameRegistrations(sortBy: String? = null): List<GameRegistration>
     fun findById(id: Id): GameRegistration?
     fun updateGame(gameRegistration: GameRegistration): GameRegistration
 }
