@@ -2,6 +2,7 @@ package tw.waterballsa.gaas.spring.repositories
 
 import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Order
+import org.springframework.data.mongodb.core.query.Update
 import org.springframework.stereotype.Component
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.domain.GameRegistration
@@ -43,7 +44,9 @@ class SpringGameRegistrationRepository(
         gameRegistrationDAO.save(gameRegistration.toData()).toDomain()
 
     enum class SortBy(val value: String, val orders: List<Order>) {
-        CREATED_ON("createdOn", listOf(Order.desc("createdOn"), Order.desc("_id")));
+        CREATED_ON("createdOn", listOf(Order.desc("createdOn"), Order.desc("_id"))),
+        TIMES_PLAYED("timesPlayed", listOf(Order.desc("timesPlayed"), Order.desc("_id")))
+        ;
 
         companion object {
             private val map = SortBy.values().associateBy { it.value }
