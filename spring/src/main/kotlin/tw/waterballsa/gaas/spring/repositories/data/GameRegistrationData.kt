@@ -22,6 +22,7 @@ class GameRegistrationData(
     var frontEndUrl: String?,
     var backEndUrl: String?,
     val createdOn: Instant?,
+    var timesPlayed: Long? = null,
 ) {
     @DBRef
     var logs: MutableList<GameDevelopmentLog> = mutableListOf()
