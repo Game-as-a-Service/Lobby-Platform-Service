@@ -12,7 +12,13 @@ class StartedGameEvent(
         val gameUrl: String,
         val roomId: Room.Id,
         val gameId: GameRegistration.Id,
-    )
+        val players: List<Player>,
+    ) {
+        data class Player(
+            val id: String,
+            val nickname: String,
+        )
+    }
 
     override fun getEventData(): Any = data
 

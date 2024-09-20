@@ -16,5 +16,6 @@ class GetUserPresenter : GetUserUseCase.Presenter {
             id = id!!.value,
             email = email,
             nickname = nickname,
+            lastPlayedGameId = lastPlayedGameId,
         )
 }
