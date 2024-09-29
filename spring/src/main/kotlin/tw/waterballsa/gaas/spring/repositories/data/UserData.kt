@@ -11,6 +11,8 @@ class UserData(
     val email: String = "",
     val nickname: String = "",
     val identities: List<String> = emptyList(),
+    val lastPlayedGameId: String? = null,
+    val playedGamesIds: Set<String>? = null,
 ) {
 
     fun toDomain(): User =
@@ -18,7 +20,9 @@ class UserData(
             User.Id(id!!),
             email,
             nickname,
-            identities.toMutableList()
+            identities.toMutableList(),
+            lastPlayedGameId,
+            playedGamesIds,
         )
 }
 
@@ -27,5 +31,7 @@ fun User.toData(): UserData =
         id = id?.value,
         email = email,
         nickname = nickname,
-        identities = identities
+        identities = identities,
+        lastPlayedGameId = lastPlayedGameId,
+        playedGamesIds = playedGamesIds,
     )

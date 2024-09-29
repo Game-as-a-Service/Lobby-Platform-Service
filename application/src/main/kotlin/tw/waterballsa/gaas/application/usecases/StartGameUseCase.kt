@@ -71,7 +71,20 @@ class StartGameUseCase(
         val startGameRequest = StartGameRequest(roomId!!.value, players.map { it.toGamePlayer() })
         val startGameResponse = gameService.startGame(gameServerHost, jwtToken, startGameRequest)
 
-        return StartedGameEvent(GAME_STARTED, Data(startGameResponse.url, roomId!!, game.id!!))
+        return StartedGameEvent(
+            GAME_STARTED,
+            Data(
+                startGameResponse.url,
+                roomId!!,
+                game.id!!,
+                players.map {
+                    Data.Player(
+                        it.id.value,
+                        it.nickname,
+                    )
+                },
+            ),
+        )
     }
 
     private fun Room.Player.toGamePlayer(): StartGameRequest.GamePlayer =
