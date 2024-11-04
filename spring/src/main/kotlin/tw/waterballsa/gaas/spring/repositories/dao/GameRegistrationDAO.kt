@@ -14,4 +14,8 @@ interface GameRegistrationDAO : MongoRepository<GameRegistrationData, String> {
     @Query("{ '_id' : ?0 }")
     @Update("{ '\$inc' : { 'timesPlayed' : ?1 } }")
     fun incrementTimesPlayedById(id: String, increment: Long = 1)
+
+    @Query("{ '_id' : ?0 }")
+    @Update("{ '\$inc' : { 'totalRating' : ?1, 'numberOfComments' : ?2 } }")
+    fun incrementTotalRatingAndNumberOfCommentsById(id: String, totalRating: Long, numberOfComments: Long)
 }

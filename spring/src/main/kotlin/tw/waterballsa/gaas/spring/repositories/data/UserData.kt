@@ -2,6 +2,7 @@ package tw.waterballsa.gaas.spring.repositories.data
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
+import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.User
 
 @Document
@@ -21,8 +22,8 @@ class UserData(
             email,
             nickname,
             identities.toMutableList(),
-            lastPlayedGameId,
-            playedGamesIds,
+            lastPlayedGameId?.let { GameRegistration.Id(it) },
+            playedGamesIds?.map { GameRegistration.Id(it) }?.toSet(),
         )
 }
 
@@ -32,6 +33,6 @@ fun User.toData(): UserData =
         email = email,
         nickname = nickname,
         identities = identities,
-        lastPlayedGameId = lastPlayedGameId,
-        playedGamesIds = playedGamesIds,
+        lastPlayedGameId = lastPlayedGameId?.value,
+        playedGamesIds = playedGamesIds?.map { it.value }?.toSet(),
     )
