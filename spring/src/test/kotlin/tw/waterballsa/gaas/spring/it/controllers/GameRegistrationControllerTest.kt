@@ -10,8 +10,14 @@ import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.domain.GameRegistration
+import tw.waterballsa.gaas.domain.Room
+import tw.waterballsa.gaas.domain.User
+import tw.waterballsa.gaas.events.CommentGameEvent
+import tw.waterballsa.gaas.events.StartedGameEvent
+import tw.waterballsa.gaas.events.enums.EventMessageType
 import tw.waterballsa.gaas.spring.controllers.GetGameRegistrationPresenter.*
 import tw.waterballsa.gaas.spring.controllers.RegisterGamePresenter.RegisterGameViewModel
 import tw.waterballsa.gaas.spring.controllers.viewmodel.UpdateGameRegistrationViewModel
@@ -22,6 +28,7 @@ import java.util.UUID.randomUUID
 @AutoConfigureMockMvc(addFilters = false)
 class GameRegistrationControllerTest @Autowired constructor(
     val gameRegistrationRepository: GameRegistrationRepository,
+    val eventBus: EventBus,
 ) : AbstractSpringBootTest() {
 
     @BeforeEach
@@ -105,21 +112,62 @@ class GameRegistrationControllerTest @Autowired constructor(
     }
 
     @Test
+    fun givenBig2TimesPlayedIsGreaterThanUnoTimesPlayed_WhenThenUserViewsGameListByTimesPlayed_ThenBig2RankInFront() {
+        val unoRequest = createGameRegistrationRequest("uno-java", "UNO Java")
+        val big2Request = createGameRegistrationRequest("big2-Java", "Big2 Java")
+        registerGameSuccessfully(unoRequest)
+        val big2 = registerGameSuccessfully(big2Request)
+        eventBus.broadcast(
+            StartedGameEvent(
+                EventMessageType.GAME_STARTED,
+                StartedGameEvent.Data("", Room.Id(""), big2.id, emptyList())
+            )
+        )
+        mockMvc.perform(get("/games?sort_by=timesPlayed"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$").isArray)
+            .andExpect(jsonPath("$.size()").value(2))
+            .validateSpecificElement(0, big2Request)
+            .validateSpecificElement(1, unoRequest)
+            .getBody(object : TypeReference<List<GetGamesViewModel>>() {})
+    }
+
+    @Test
+    fun givenBig2RatingIsGreaterThanUnoRating_WhenThenUserViewsGameListByRating_ThenBig2RankInFront() {
+        val unoRequest = createGameRegistrationRequest("uno-java", "UNO Java")
+        val big2Request = createGameRegistrationRequest("big2-Java", "Big2 Java")
+        registerGameSuccessfully(unoRequest)
+        val big2 = registerGameSuccessfully(big2Request)
+
+        eventBus.broadcast(CommentGameEvent(big2.id, User.Id(""), 5, 1))
+
+        mockMvc.perform(get("/games?sort_by=rating"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$").isArray)
+            .andExpect(jsonPath("$.size()").value(2))
+            .validateSpecificElement(0, big2Request)
+            .validateSpecificElement(1, unoRequest)
+            .getBody(object : TypeReference<List<GetGamesViewModel>>() {})
+    }
+
+
+    @Test
     fun givenBig2HasRegistered_whenUpdateGameRegistrationWithWrongId_thenShouldReturnGameRegistrationNotFound() {
         givenGameHasRegistered("big2", "Big2")
         whenUpdateGameRegistration(
             "not-exist-game-id",
             TestGameRegistrationRequest(
-            "big2",
-            "updated big2",
-            "updated big2 description",
-            "updated big2 rules",
-            "updated big2 image url",
-            3,
-            8,
-            "updated big2 frontend url",
-            "updated big2 backend url",
-            ))
+                "big2",
+                "updated big2",
+                "updated big2 description",
+                "updated big2 rules",
+                "updated big2 image url",
+                3,
+                8,
+                "updated big2 frontend url",
+                "updated big2 backend url",
+            )
+        )
             .thenShouldReturnGameRegistrationNotFound()
     }
 
@@ -140,7 +188,8 @@ class GameRegistrationControllerTest @Autowired constructor(
                 8,
                 "updated big2 frontend url",
                 "updated big2 backend url",
-            ))
+            )
+        )
             .thenShouldReturnGameAlreadyExists()
     }
 
@@ -284,9 +333,13 @@ class GameRegistrationControllerTest @Autowired constructor(
         return registerGameSuccessfully(createGameRegistrationRequest).id
     }
 
-    private fun whenUpdateGameRegistration(gameId: String, updateGameRegistrationRequest: TestGameRegistrationRequest): ResultActions {
-        return mockMvc.perform(put("/games/$gameId")
-            .withJson(updateGameRegistrationRequest)
+    private fun whenUpdateGameRegistration(
+        gameId: String,
+        updateGameRegistrationRequest: TestGameRegistrationRequest
+    ): ResultActions {
+        return mockMvc.perform(
+            put("/games/$gameId")
+                .withJson(updateGameRegistrationRequest)
         )
     }
 

@@ -2,7 +2,8 @@ package tw.waterballsa.gaas.spring.repositories
 
 import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Order
-import org.springframework.data.mongodb.core.query.Update
+import org.springframework.data.mongodb.core.MongoTemplate
+import org.springframework.data.mongodb.core.aggregation.Aggregation.*
 import org.springframework.stereotype.Component
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.domain.GameRegistration
@@ -14,7 +15,8 @@ import tw.waterballsa.gaas.spring.repositories.data.toData
 
 @Component
 class SpringGameRegistrationRepository(
-    private val gameRegistrationDAO: GameRegistrationDAO
+    private val gameRegistrationDAO: GameRegistrationDAO,
+    private val mongoTemplate: MongoTemplate,
 ) : GameRegistrationRepository {
     override fun registerGame(gameRegistration: GameRegistration): GameRegistration =
         gameRegistrationDAO.save(gameRegistration.toData()).toDomain()
@@ -31,10 +33,21 @@ class SpringGameRegistrationRepository(
     override fun existsByUniqueName(uniqueName: String): Boolean = gameRegistrationDAO.existsByUniqueName(uniqueName)
 
     override fun findGameRegistrations(sortBy: String?): List<GameRegistration> {
-        return SortBy.from(sortBy)
-            ?.let { Sort.by(it.orders) }
-            ?.run { gameRegistrationDAO.findAll(this).map { it.toDomain() } }
-            ?: gameRegistrationDAO.findAll().map { it.toDomain() }
+        val agg =
+            SortBy.from(sortBy)?.let {
+                newAggregation(
+                    addFields()
+                        .addField("rating").withValueOfExpression("totalRating / numberOfComments")
+                        .build(),
+                    sort(Sort.by(it.orders))
+                )
+            } ?: newAggregation(
+                addFields()
+                    .addField("rating").withValueOfExpression("totalRating / numberOfComments")
+                    .build(),
+            )
+        return mongoTemplate.aggregate(agg, "gameRegistrationData", GameRegistrationData::class.java)
+            .mappedResults.map { it.toDomain() }
     }
 
     override fun findById(id: Id): GameRegistration? =
@@ -45,7 +58,8 @@ class SpringGameRegistrationRepository(
 
     enum class SortBy(val value: String, val orders: List<Order>) {
         CREATED_ON("createdOn", listOf(Order.desc("createdOn"), Order.desc("_id"))),
-        TIMES_PLAYED("timesPlayed", listOf(Order.desc("timesPlayed"), Order.desc("_id")))
+        TIMES_PLAYED("timesPlayed", listOf(Order.desc("timesPlayed"), Order.desc("_id"))),
+        RATING("rating", listOf(Order.desc("ratio"), Order.desc("_id")))
         ;
 
         companion object {
