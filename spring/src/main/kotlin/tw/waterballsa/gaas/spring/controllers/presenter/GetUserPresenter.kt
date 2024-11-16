@@ -16,6 +16,7 @@ class GetUserPresenter : GetUserUseCase.Presenter {
             id = id!!.value,
             email = email,
             nickname = nickname,
-            lastPlayedGameId = lastPlayedGameId,
+            lastPlayedGameId = lastPlayedGameId?.value,
+            playedGamesIds = playedGamesIds?.map { it.value }?.toSet(),
         )
 }

@@ -23,6 +23,8 @@ class GameRegistrationData(
     var backEndUrl: String?,
     val createdOn: Instant?,
     var timesPlayed: Long? = null,
+    var totalRating: Long? = null,
+    var numberOfComments: Long? = null,
 ) {
     @DBRef
     var logs: MutableList<GameDevelopmentLog> = mutableListOf()
@@ -39,7 +41,9 @@ class GameRegistrationData(
             maxPlayers!!,
             frontEndUrl!!,
             backEndUrl!!,
-            createdOn!!
+            createdOn!!,
+            totalRating,
+            numberOfComments,
         )
 }
 

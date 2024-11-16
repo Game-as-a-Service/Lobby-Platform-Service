@@ -5,4 +5,5 @@ data class GetUserViewModel(
     val email: String,
     val nickname: String,
     val lastPlayedGameId: String?,
+    val playedGamesIds: Set<String>?,
 )

@@ -8,8 +8,8 @@ class User(
     val email: String = "",
     var nickname: String = "",
     val identities: MutableList<String> = mutableListOf(),
-    val lastPlayedGameId: String? = null,
-    val playedGamesIds: Set<String>? = null,
+    val lastPlayedGameId: GameRegistration.Id? = null,
+    val playedGamesIds: Set<GameRegistration.Id>? = null,
 ) {
     @JvmInline
     value class Id(val value: String)

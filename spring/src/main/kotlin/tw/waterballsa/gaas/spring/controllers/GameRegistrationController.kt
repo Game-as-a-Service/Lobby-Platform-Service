@@ -133,6 +133,8 @@ class GetGameRegistrationPresenter : GetGameRegistrationsUsecase.Presenter {
             minPlayers = minPlayers,
             maxPlayers = maxPlayers,
             createdOn = createdOn,
+            rating = rating(),
+            numberOfComments = numberOfComments ?: 0L
         )
 
     data class GetGamesViewModel(
@@ -142,5 +144,7 @@ class GetGameRegistrationPresenter : GetGameRegistrationsUsecase.Presenter {
         val minPlayers: Int,
         val maxPlayers: Int,
         val createdOn: Instant,
+        val rating: Double,
+        val numberOfComments: Long,
     )
 }
