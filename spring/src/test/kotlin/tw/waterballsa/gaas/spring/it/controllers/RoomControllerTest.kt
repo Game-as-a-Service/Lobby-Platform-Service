@@ -144,7 +144,7 @@ class RoomControllerTest @Autowired constructor(
         val userA = testUser
         val userB = defaultUser("2").createUser()
         val userC = defaultUser("3").createUser()
-        val request = TestGetRoomsRequest("WAITING", 0, 10)
+        val request = TestGetRoomsRequest("WAITING", null, null, 0, 10)
 
         givenWaitingRooms(userB, userC)
         request.whenUserAVisitLobby(userA)
@@ -462,7 +462,7 @@ class RoomControllerTest @Autowired constructor(
         users.forEach(::givenTheHostCreatePublicRoom)
 
     private fun ResultActions.thenShouldHaveRooms(request: TestGetRoomsRequest) {
-        val rooms = roomRepository.findByStatus(request.toStatus(), request.toPagination())
+        val rooms = roomRepository.findByQuery(request.toQuery(), request.toPageable())
         andExpect(status().isOk)
             .andExpect(jsonPath("$.rooms").isArray)
             .andExpect(jsonPath("$.rooms.length()").value(rooms.data.size))

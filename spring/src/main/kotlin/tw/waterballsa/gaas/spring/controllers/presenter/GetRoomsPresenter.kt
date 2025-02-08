@@ -17,7 +17,7 @@ class GetRoomsPresenter : GetRoomsUseCase.GetRoomsPresenter {
     private fun Pagination<Room>.toViewModel(): GetRoomsViewModel =
         GetRoomsViewModel(
             rooms = data.map { it.toRoomsViewModel() },
-            page = toPage(data.size)
+            page = toPage()
         )
 }
 
@@ -39,9 +39,9 @@ private fun GameRegistration.toGetRoomsView(): GetRoomsViewModel.RoomViewModel.G
 private fun Room.Player.toGetRoomsView(): GetRoomsViewModel.RoomViewModel.Player =
     GetRoomsViewModel.RoomViewModel.Player(id.value, nickname)
 
-private fun Pagination<Room>.toPage(size: Int): GetRoomsViewModel.Page =
+private fun Pagination<Room>.toPage(): GetRoomsViewModel.Page =
     GetRoomsViewModel.Page(
         page = page,
         offset = offset,
-        total = size
+        total = total
     )

@@ -1,8 +1,6 @@
 package tw.waterballsa.gaas.application.model
 
-class Pagination<T>(
+class Pageable(
     val page: Int,
     val offset: Int,
-    val total: Int,
-    val data: List<T> = emptyList(),
 )
