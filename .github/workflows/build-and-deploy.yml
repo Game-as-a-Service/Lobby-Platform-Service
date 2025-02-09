@@ -31,7 +31,7 @@ jobs:
       # Maven Verify
       - name: Maven Verify
         run: mvn -B verify -DJAR_FILENAME=${{ env.JAR_FILENAME }}
-      
+
       # Dump GitHub Context
       - name: Dump GitHub Context
         env:
@@ -44,7 +44,7 @@ jobs:
       # Publish Artifact
       - name: Upload Artifact
         if: github.event_name == 'push' && github.ref_name == 'main'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: |
@@ -66,7 +66,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ASSUME_ROLE }}
           role-session-name: github-runner-build-and-deploy
           aws-region: us-east-1
-      
+
       # Login to Amazon ECR Public
       - name: Login to Amazon ECR Public
         id: login-ecr-public
@@ -76,7 +76,7 @@ jobs:
 
       # Download Artifact
       - name: Download Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: .
@@ -114,4 +114,3 @@ jobs:
             pwd
             sudo systemctl restart ${{ env.SYSTEMD_SERVICE_NAME }}
 
-  
