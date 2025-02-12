@@ -1,6 +1,10 @@
 name: Build and Deploy to AWS
 
-on: [ push, workflow_dispatch ]
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
 
 env:
   JAR_FILENAME: Lobby-Platform
@@ -40,77 +44,3 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "$GITHUB_CONTEXT" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-
-      # Publish Artifact
-      - name: Upload Artifact
-        if: github.event_name == 'push' && github.ref_name == 'main'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: |
-            spring/target/${{ env.JAR_FILENAME }}.jar
-            docker/Dockerfile
-
-  docker-push:
-    name: Docker Push
-    runs-on: ubuntu-latest
-    needs: build
-    environment: production
-    if: github.event_name == 'push' && github.ref_name == 'main'
-
-    steps:
-      # Configure AWS credentials
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE }}
-          role-session-name: github-runner-build-and-deploy
-          aws-region: us-east-1
-
-      # Login to Amazon ECR Public
-      - name: Login to Amazon ECR Public
-        id: login-ecr-public
-        uses: aws-actions/amazon-ecr-login@v1
-        with:
-          registry-type: public
-
-      # Download Artifact
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: .
-
-      # Docker build & push to AWS ECR Public
-      - name: Docker build & push
-        run: |
-          docker build \
-            --build-arg JAR_FILENAME=spring/target/${{ env.JAR_FILENAME }}.jar \
-            -t ${{ vars.AWS_ECR_URI }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:latest \
-            -t ${{ vars.AWS_ECR_URI }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ github.sha }} \
-            -f docker/Dockerfile \
-            .
-          docker push ${{ vars.AWS_ECR_URI }}/${{ vars.AWS_ECR_REPOSITORY_NAME }} --all-tags
-
-  deploy:
-    name: Deploy to AWS EC2
-    needs: docker-push
-    runs-on: ubuntu-latest
-    environment: production
-    if: github.event_name == 'push' && github.ref_name == 'main'
-
-    steps:
-      # Restart systemd service
-      - name: Run Application
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ vars.EC2_HOST }}
-          username: ${{ vars.EC2_USERNAME }}
-          port: ${{ vars.EC2_PORT }}
-          key: ${{ secrets.EC2_KEY }}
-          script: |
-            uname -a
-            whoami
-            pwd
-            sudo systemctl restart ${{ env.SYSTEMD_SERVICE_NAME }}
-
