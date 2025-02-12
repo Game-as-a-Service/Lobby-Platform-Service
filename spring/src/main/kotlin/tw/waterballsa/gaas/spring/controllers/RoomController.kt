@@ -55,10 +55,12 @@ class RoomController(
     @GetMapping("/rooms")
     fun getRooms(
         @RequestParam status: String,
+        @RequestParam public: Boolean?,
+        @RequestParam keyword: String?,
         @RequestParam page: Int,
         @RequestParam perPage: Int
     ): GetRoomsViewModel {
-        val request = GetRoomsRequest(status, page, perPage)
+        val request =  GetRoomsRequest(status, public, keyword, page, perPage)
         val presenter = GetRoomsPresenter()
         getRoomsUseCase.execute(request.toRequest(), presenter)
         return presenter.viewModel
@@ -200,6 +202,8 @@ class RoomController(
             message = "The status must be either WAITING or PLAYING."
         )
         val status: String,
+        val public: Boolean?,
+        val keyword: String?,
         @field:Positive(message = "The page must be a positive number.")
         val page: Int,
         @field:Positive(message = "The perPage must be a positive number.")
@@ -208,6 +212,8 @@ class RoomController(
         fun toRequest(): GetRoomsUseCase.Request =
             GetRoomsUseCase.Request(
                 status = Room.Status.valueOf(status),
+                public = public,
+                keyword = keyword,
                 page = page,
                 offset = perPage
             )

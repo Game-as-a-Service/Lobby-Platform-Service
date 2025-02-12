@@ -1,7 +1,9 @@
 package tw.waterballsa.gaas.application.usecases
 
+import tw.waterballsa.gaas.application.model.Pageable
 import tw.waterballsa.gaas.application.model.Pagination
 import tw.waterballsa.gaas.application.repositories.RoomRepository
+import tw.waterballsa.gaas.application.repositories.query.RoomQuery
 import tw.waterballsa.gaas.domain.Room
 import javax.inject.Named
 
@@ -11,11 +13,13 @@ class GetRoomsUseCase(
 ) {
 
     fun execute(request: Request, presenter: GetRoomsPresenter) =
-        roomRepository.findByStatus(request.status, request.toPagination())
+        roomRepository.findByQuery(request.toRoomQuery(), request.toPageable())
             .also { presenter.present(it) }
 
     class Request(
         val status: Room.Status,
+        val public: Boolean?,
+        val keyword: String?,
         val page: Int,
         val offset: Int,
     )
@@ -25,5 +29,8 @@ class GetRoomsUseCase(
     }
 }
 
-private fun GetRoomsUseCase.Request.toPagination(): Pagination<Any> =
-    Pagination(page, offset)
+private fun GetRoomsUseCase.Request.toRoomQuery(): RoomQuery =
+    RoomQuery(status, public, keyword)
+
+private fun GetRoomsUseCase.Request.toPageable(): Pageable =
+    Pageable(page, offset)
