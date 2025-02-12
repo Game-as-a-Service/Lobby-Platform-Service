@@ -38,4 +38,5 @@ springdoc:
     tags-sorter: alpha
 
 server:
+  use-forward-headers: true
   forward-headers-strategy: native
