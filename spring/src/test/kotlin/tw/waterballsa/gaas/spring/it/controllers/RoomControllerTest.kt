@@ -801,7 +801,7 @@ class RoomControllerTest @Autowired constructor(
         )
 
     private fun Player.toGamePlayer(): StartGameRequest.GamePlayer =
-        StartGameRequest.GamePlayer(id.value, nickname)
+        StartGameRequest.GamePlayer(id.value, nickname, nickname)
 
     private fun ResultActions.thenGameShouldBeStarted(room: Room) {
         andExpect(status().isOk)

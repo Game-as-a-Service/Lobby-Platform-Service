@@ -88,5 +88,5 @@ class StartGameUseCase(
     }
 
     private fun Room.Player.toGamePlayer(): StartGameRequest.GamePlayer =
-        StartGameRequest.GamePlayer(id.value, nickname)
+        StartGameRequest.GamePlayer(id.value, nickname, nickname)
 }

@@ -10,7 +10,9 @@ data class StartGameRequest(
 ) {
     data class GamePlayer(
         val id: String,
+        // typo for downward compatibility
         val nickName: String,
+        val nickname: String,
     )
 }
 
