@@ -14,6 +14,7 @@ import org.slf4j.Logger
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.spring.configs.socketio.event.SocketIOHealthCheckResponse
+import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
 class SocketIOEventHandlerTest {
@@ -48,7 +49,7 @@ class SocketIOEventHandlerTest {
     fun `should respond with health check data when ack is requested`() {
         // Given
         `when`(ackRequest.isAckRequested).thenReturn(true)
-        `when`(client.sessionId).thenReturn("test-session-id")
+        `when`(client.sessionId).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000001"))
 
         // When
         handler.onHealthCheck(client, ackRequest)
@@ -67,7 +68,7 @@ class SocketIOEventHandlerTest {
     fun `should send event with health check data when ack is not requested`() {
         // Given
         `when`(ackRequest.isAckRequested).thenReturn(false)
-        `when`(client.sessionId).thenReturn("test-session-id")
+        `when`(client.sessionId).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000001"))
 
         // When
         handler.onHealthCheck(client, ackRequest)

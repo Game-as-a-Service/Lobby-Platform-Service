@@ -10,16 +10,20 @@ import java.time.Instant
 class WebSocketHealthCheckController(
     private val socketIOServer: SocketIOServer
 ) {
-    @GetMapping("/websocket/health")
+    @GetMapping("/health/websocket")
     fun healthCheck(): ResponseEntity<WebSocketHealthStatus> {
-        val isRunning = socketIOServer.isStarted && !socketIOServer.isShuttingDown
+        val isRunning = try {
+            socketIOServer.allClients
+            true
+        } catch (e: Exception) {
+            false
+        }
         
         return ResponseEntity.ok(WebSocketHealthStatus(
             status = if (isRunning) "UP" else "DOWN",
             timestamp = Instant.now().toString(),
             service = "Lobby Platform WebSocket Service",
-            clients = socketIOServer.allClients.size,
-            rooms = socketIOServer.allRooms.size
+            clients = if (isRunning) socketIOServer.allClients.size else 0
         ))
     }
 }
@@ -28,6 +32,5 @@ data class WebSocketHealthStatus(
     val status: String,
     val timestamp: String,
     val service: String,
-    val clients: Int,
-    val rooms: Int
+    val clients: Int
 )
