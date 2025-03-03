@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.stereotype.Component
 import tw.waterballsa.gaas.application.repositories.UserRepository
 import tw.waterballsa.gaas.spring.configs.socketio.event.SocketIOChatEvent
+import tw.waterballsa.gaas.spring.configs.socketio.event.SocketIOHealthCheckResponse
 import tw.waterballsa.gaas.spring.configs.socketio.event.SocketIORoomEvent
 import java.time.Instant
 
@@ -77,6 +78,20 @@ class SocketIOEventHandler(
         }
         room.sendEvent(SocketIOEventName.CHAT_MESSAGE, event)
         logger.info("user chat, SessionId: {}, UserId: {}, To: {}", client.sessionId, userId, event.target)
+    }
+    
+    @OnEvent(value = SocketIOEventName.HEALTH_CHECK)
+    fun onHealthCheck(client: SocketIOClient, ackRequest: AckRequest) {
+        logger.info("Health check request received, SessionId: {}", client.sessionId)
+        val response = SocketIOHealthCheckResponse()
+        
+        if (ackRequest.isAckRequested) {
+            ackRequest.sendAckData(response)
+            logger.info("Health check response sent, SessionId: {}", client.sessionId)
+        } else {
+            client.sendEvent(SocketIOEventName.HEALTH_CHECK, response)
+            logger.info("Health check response sent via event, SessionId: {}", client.sessionId)
+        }
     }
 
 
