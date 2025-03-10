@@ -13,8 +13,8 @@ class WebSocketHealthCheckController(
     @GetMapping("/health/websocket")
     fun healthCheck(): ResponseEntity<WebSocketHealthStatus> {
         val isRunning = try {
-            socketIOServer.allClients
-            true
+            val namespaces = socketIOServer.allNamespaces
+            namespaces.isNotEmpty() && socketIOServer.configuration != null
         } catch (e: Exception) {
             false
         }
