@@ -32,7 +32,7 @@ class SecurityConfig(
             .csrf().disable()
             .authorizeHttpRequests()
             .antMatchers("/login", "/authenticate").permitAll()
-            .antMatchers("/health", "/walking-skeleton").permitAll()
+            .antMatchers("/health/**", "/walking-skeleton").permitAll()
             .antMatchers("/swagger-ui/**", "/favicon.ico").permitAll()
             .regexMatchers("/rooms/.*:endGame").permitAll()
             .anyRequest().authenticated()
