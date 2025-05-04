@@ -10,8 +10,9 @@ import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.GameRegistration.Id
 import tw.waterballsa.gaas.events.DomainEvent
 import tw.waterballsa.gaas.events.RegisteredGameEvent
-import tw.waterballsa.gaas.spring.controllers.GetGameRegistrationPresenter.GetGamesViewModel
+import tw.waterballsa.gaas.spring.controllers.presenter.RenderGameRegistrationPresenter
 import tw.waterballsa.gaas.spring.controllers.presenter.UpdateGameRegistrationPresenter
+import tw.waterballsa.gaas.spring.controllers.viewmodel.GameRegistrationViewModel
 import tw.waterballsa.gaas.spring.controllers.viewmodel.UpdateGameRegistrationViewModel
 import tw.waterballsa.gaas.spring.extensions.getEvent
 import java.time.Instant
@@ -37,8 +38,8 @@ class GameRegistrationController(
     @GetMapping
     fun findGameRegistrations(
         @RequestParam(value = "sort_by", required = false) sortBy: String?,
-    ): List<GetGamesViewModel> {
-        val presenter = GetGameRegistrationPresenter()
+    ): List<GameRegistrationViewModel> {
+        val presenter = RenderGameRegistrationPresenter()
         getGameRegistrationsUsecase.execute(GetGameRegistrationsUsecase.Request(sortBy), presenter)
         return presenter.viewModel
     }
@@ -114,37 +115,5 @@ class RegisterGamePresenter : Presenter {
         val frontEndUrl: String,
         val backEndUrl: String,
         val createdOn: Instant,
-    )
-}
-
-class GetGameRegistrationPresenter : GetGameRegistrationsUsecase.Presenter {
-    var viewModel = emptyList<GetGamesViewModel>()
-        private set
-
-    override fun renderGameRegistrations(gameRegistrations: Collection<GameRegistration>) {
-        viewModel = gameRegistrations.map { it.toViewModel() }
-    }
-
-    private fun GameRegistration.toViewModel(): GetGamesViewModel =
-        GetGamesViewModel(
-            id = id!!,
-            name = displayName,
-            img = imageUrl,
-            minPlayers = minPlayers,
-            maxPlayers = maxPlayers,
-            createdOn = createdOn,
-            rating = rating(),
-            numberOfComments = numberOfComments ?: 0L
-        )
-
-    data class GetGamesViewModel(
-        val id: Id,
-        val name: String,
-        val img: String,
-        val minPlayers: Int,
-        val maxPlayers: Int,
-        val createdOn: Instant,
-        val rating: Double,
-        val numberOfComments: Long,
     )
 }

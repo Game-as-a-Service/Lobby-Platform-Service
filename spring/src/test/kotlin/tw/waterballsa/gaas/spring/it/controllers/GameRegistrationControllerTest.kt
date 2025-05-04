@@ -1,7 +1,8 @@
 package tw.waterballsa.gaas.spring.it.controllers
 
 import com.fasterxml.jackson.core.type.TypeReference
-import org.assertj.core.api.Assertions.*
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -9,7 +10,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tw.waterballsa.gaas.application.eventbus.EventBus
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.domain.GameRegistration
@@ -18,8 +20,8 @@ import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.events.CommentGameEvent
 import tw.waterballsa.gaas.events.StartedGameEvent
 import tw.waterballsa.gaas.events.enums.EventMessageType
-import tw.waterballsa.gaas.spring.controllers.GetGameRegistrationPresenter.*
 import tw.waterballsa.gaas.spring.controllers.RegisterGamePresenter.RegisterGameViewModel
+import tw.waterballsa.gaas.spring.controllers.viewmodel.GameRegistrationViewModel
 import tw.waterballsa.gaas.spring.controllers.viewmodel.UpdateGameRegistrationViewModel
 import tw.waterballsa.gaas.spring.it.AbstractSpringBootTest
 import tw.waterballsa.gaas.spring.models.TestGameRegistrationRequest
@@ -89,7 +91,7 @@ class GameRegistrationControllerTest @Autowired constructor(
             .andExpect(jsonPath("$.size()").value(2))
             .validateSpecificElement(0, big2Request)
             .validateSpecificElement(1, unoRequest)
-            .getBody(object : TypeReference<List<GetGamesViewModel>>() {})
+            .getBody(object : TypeReference<List<GameRegistrationViewModel>>() {})
 
         val gameRegistrations = gameRegistrationRepository.findGameRegistrations()
         getGamesViewModels.forEachIndexed { i, model -> model.validateWithGameRegistration(gameRegistrations[i]) }
@@ -108,7 +110,7 @@ class GameRegistrationControllerTest @Autowired constructor(
             .andExpect(jsonPath("$.size()").value(2))
             .validateSpecificElement(0, big2Request)
             .validateSpecificElement(1, unoRequest)
-            .getBody(object : TypeReference<List<GetGamesViewModel>>() {})
+            .getBody(object : TypeReference<List<GameRegistrationViewModel>>() {})
     }
 
     @Test
@@ -129,7 +131,7 @@ class GameRegistrationControllerTest @Autowired constructor(
             .andExpect(jsonPath("$.size()").value(2))
             .validateSpecificElement(0, big2Request)
             .validateSpecificElement(1, unoRequest)
-            .getBody(object : TypeReference<List<GetGamesViewModel>>() {})
+            .getBody(object : TypeReference<List<GameRegistrationViewModel>>() {})
     }
 
     @Test
@@ -147,7 +149,7 @@ class GameRegistrationControllerTest @Autowired constructor(
             .andExpect(jsonPath("$.size()").value(2))
             .validateSpecificElement(0, big2Request)
             .validateSpecificElement(1, unoRequest)
-            .getBody(object : TypeReference<List<GetGamesViewModel>>() {})
+            .getBody(object : TypeReference<List<GameRegistrationViewModel>>() {})
     }
 
 
@@ -317,7 +319,7 @@ class GameRegistrationControllerTest @Autowired constructor(
                 .andExpect(jsonPath("$[$index].maxPlayers").value(maxPlayers))
         }
 
-    private fun GetGamesViewModel.validateWithGameRegistration(gameRegistration: GameRegistration) {
+    private fun GameRegistrationViewModel.validateWithGameRegistration(gameRegistration: GameRegistration) {
         gameRegistration.let {
             assertThat(it.id).isEqualTo(id)
             assertThat(it.displayName).isEqualTo(name)
