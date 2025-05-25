@@ -4,10 +4,13 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Order
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation.*
+import org.springframework.data.mongodb.core.aggregation.ConvertOperators
+import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.stereotype.Component
 import tw.waterballsa.gaas.application.repositories.GameRegistrationRepository
 import tw.waterballsa.gaas.domain.GameRegistration
 import tw.waterballsa.gaas.domain.GameRegistration.Id
+import tw.waterballsa.gaas.domain.User
 import tw.waterballsa.gaas.spring.extensions.mapOrNull
 import tw.waterballsa.gaas.spring.repositories.dao.GameRegistrationDAO
 import tw.waterballsa.gaas.spring.repositories.data.GameRegistrationData
@@ -55,6 +58,30 @@ class SpringGameRegistrationRepository(
 
     override fun updateGame(gameRegistration: GameRegistration): GameRegistration =
         gameRegistrationDAO.save(gameRegistration.toData()).toDomain()
+
+    override fun findCollectGameRegistrations(userId: User.Id): List<GameRegistration> {
+        val aggregation = newAggregation(
+            match(Criteria.where("userId").`is`(userId.value)),
+            sort(Sort.Direction.DESC, "collectTime"),
+            addFields()
+                .addField("gameObjectId").withValue(ConvertOperators.ToObjectId.toObjectId("\$gameId"))
+                .build(),
+            lookup(
+                "gameRegistrationData",
+                "gameObjectId",
+                "_id",
+                "gameRegistration"
+            ),
+            unwind("gameRegistration"),
+            replaceRoot("gameRegistration"),
+        )
+
+        return mongoTemplate.aggregate(
+            aggregation,
+            "gameCollectionData",
+            GameRegistrationData::class.java
+        ).map { it.toDomain() }
+    }
 
     enum class SortBy(val value: String, val orders: List<Order>) {
         CREATED_ON("createdOn", listOf(Order.desc("createdOn"), Order.desc("_id"))),
