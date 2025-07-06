@@ -18,4 +18,5 @@ interface RoomRepository {
     fun hasPlayerJoinedRoom(playerId: User.Id): Boolean
     fun findWaitingPublicRoomsByGame(game: GameRegistration): List<Room>
     fun findByQuery(query: RoomQuery, pageable: Pageable): Pagination<Room>
+    fun findUserCurrentRoom(playerId: User.Id): Room?
 }

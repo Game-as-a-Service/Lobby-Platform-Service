@@ -36,17 +36,13 @@ class SpringRoomRepository(
 
     override fun findById(roomId: Id): Room? = roomDAO.findById(roomId.value).mapOrNull { it.toDomain() }
 
-    override fun deleteAll() {
-        roomDAO.deleteAll()
-    }
+    override fun deleteAll() = roomDAO.deleteAll()
 
     override fun existsByHostId(hostId: User.Id): Boolean = roomDAO.existsByHostId(hostId.value)
 
     override fun update(room: Room): Room = roomDAO.save(room.toData()).toDomain(room.players)
 
-    override fun closeRoom(room: Room) {
-        roomDAO.deleteById(room.roomId!!.value)
-    }
+    override fun closeRoom(room: Room) = roomDAO.deleteById(room.roomId!!.value)
 
     override fun leaveRoom(room: Room) {
         roomDAO.save(room.toData())
@@ -106,6 +102,10 @@ class SpringRoomRepository(
 
 
         return Pagination(pageable.page, pageable.offset, count, data)
+    }
+
+    override fun findUserCurrentRoom(playerId: User.Id): Room? {
+        return roomDAO.findOneByPlayersIdIn(listOf(playerId.value))?.toDomain()
     }
 
     private fun RoomData.toDomain(): Room =
