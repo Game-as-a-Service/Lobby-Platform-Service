@@ -58,7 +58,6 @@ class Room(
             throw PlatformException(GAME_NOT_STARTED, "Game has not started yet")
         }
         status = WAITING
-        cancelReadyForNonHostPlayers()
     }
 
     fun hasPlayer(playerId: Player.Id): Boolean =
@@ -100,14 +99,6 @@ class Room(
     }
 
     private fun findPlayer(playerId: Player.Id): Player? = players.find { it.id == playerId }
-
-    private fun cancelReadyForNonHostPlayers() {
-        players.forEach { player ->
-            if (!isHost(player.id)) {
-                player.cancelReady()
-            }
-        }
-    }
 
     @JvmInline
     value class Id(val value: String)
