@@ -422,7 +422,7 @@ class RoomControllerTest @Autowired constructor(
 
         givenPlayersArePlayingInRoom(host, playerB)
             .whenEndGame(userA)
-            .thenRoomAndPlayersStatusAreChanged()
+            .thenRoomStatusAreChanged()
     }
 
 
@@ -813,7 +813,7 @@ class RoomControllerTest @Autowired constructor(
             .andExpect(jsonPath("$.message").value(message))
     }
 
-    private fun ResultActions.thenRoomAndPlayersStatusAreChanged() {
+    private fun ResultActions.thenRoomStatusAreChanged() {
         andExpect(status().isNoContent)
         val room = roomRepository.findById(testRoom.roomId!!)!!
         room.let {
@@ -822,7 +822,7 @@ class RoomControllerTest @Autowired constructor(
             assertTrue(it.host.readiness)
             it.players.forEach { player ->
                 if (!it.isHost(player.id)) {
-                    assertFalse(player.readiness)
+                    assertTrue(player.readiness)
                 }
             }
         }
