@@ -70,7 +70,7 @@ class StartGameUseCase(
         val gameServerHost = game.backEndUrl
         val startGameRequest = StartGameRequest(roomId!!.value, players.map { it.toGamePlayer() })
         val startGameResponse = gameService.startGame(gameServerHost, jwtToken, startGameRequest)
-
+        gameUrl = startGameResponse.url
         return StartedGameEvent(
             GAME_STARTED,
             Data(

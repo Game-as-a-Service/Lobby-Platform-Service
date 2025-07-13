@@ -19,21 +19,23 @@ class RoomData(
     val players: List<PlayerData>,
     var maxPlayers: Int,
     var minPlayers: Int,
-    var password: String?
+    var password: String?,
+    var gameUrl: String?,
 ) {
 
 
-    fun toDomain(players: MutableList<Room.Player>): Room =
+    fun toDomain(): Room =
         Room(
-            Room.Id(id!!),
-            game.toDomain(),
-            host.toDomain(),
-            players,
-            maxPlayers,
-            minPlayers,
-            name,
+            roomId = Room.Id(id!!),
+            game = game.toDomain(),
+            host = host.toDomain(),
+            players = players.map(PlayerData::toDomain).toMutableList(),
+            maxPlayers = maxPlayers,
+            minPlayers = minPlayers,
+            name = name,
+            password = password,
             status = status,
-            password = password
+            gameUrl = gameUrl,
         )
 
     data class PlayerData(
@@ -56,7 +58,8 @@ fun Room.toData(): RoomData =
         players = players.map { it.toData() },
         maxPlayers = maxPlayers,
         minPlayers = minPlayers,
-        password = password
+        password = password,
+        gameUrl = gameUrl,
     )
 
 fun Room.Player.toData(): RoomData.PlayerData = RoomData.PlayerData(id.value, nickname, readiness)

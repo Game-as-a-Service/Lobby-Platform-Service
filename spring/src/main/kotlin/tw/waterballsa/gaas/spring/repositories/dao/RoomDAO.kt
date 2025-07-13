@@ -14,5 +14,6 @@ interface RoomDAO : MongoRepository<RoomData, String> {
     fun findByStatus(status: Room.Status, pageable: Pageable): Page<RoomData>
     fun existsByPlayersIdIn(playerIds: Collection<String>): Boolean
     fun findAllByStatusAndGameAndPasswordNull(status: Room.Status, game: GameRegistrationData): List<RoomData>
+    fun findOneByPlayersIdIn(playerIds: Collection<String>): RoomData?
 }
 
