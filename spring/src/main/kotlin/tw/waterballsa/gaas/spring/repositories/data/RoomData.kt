@@ -19,7 +19,8 @@ class RoomData(
     val players: List<PlayerData>,
     var maxPlayers: Int,
     var minPlayers: Int,
-    var password: String?
+    var password: String?,
+    var gameUrl: String?,
 ) {
 
 
@@ -33,7 +34,8 @@ class RoomData(
             minPlayers,
             name,
             status = status,
-            password = password
+            password = password,
+            gameUrl = gameUrl,
         )
 
     data class PlayerData(
@@ -56,7 +58,8 @@ fun Room.toData(): RoomData =
         players = players.map { it.toData() },
         maxPlayers = maxPlayers,
         minPlayers = minPlayers,
-        password = password
+        password = password,
+        gameUrl = gameUrl,
     )
 
 fun Room.Player.toData(): RoomData.PlayerData = RoomData.PlayerData(id.value, nickname, readiness)

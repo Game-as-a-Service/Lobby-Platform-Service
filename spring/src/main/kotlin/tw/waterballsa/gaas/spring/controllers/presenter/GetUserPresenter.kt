@@ -20,6 +20,6 @@ class GetUserPresenter : GetUserUseCase.Presenter {
             lastPlayedGameId = lastPlayedGameId?.value,
             playedGamesIds = playedGamesIds?.map { it.value }?.toSet(),
             currentGameRoomId = currentRoom?.roomId?.value,
-            currentGameUrl = currentRoom?.let { "${it.game.frontEndUrl}/games/${it.roomId?.value}" },
+            currentGameUrl = currentRoom?.gameUrl,
         )
 }

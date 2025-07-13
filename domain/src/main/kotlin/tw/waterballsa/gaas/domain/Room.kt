@@ -19,6 +19,7 @@ class Room(
     val name: String,
     val password: String? = null,
     var status: Status = WAITING,
+    var gameUrl: String? = null,
 ) {
     val isLocked: Boolean
         get() = !password.isNullOrEmpty()
@@ -58,6 +59,7 @@ class Room(
             throw PlatformException(GAME_NOT_STARTED, "Game has not started yet")
         }
         status = WAITING
+        gameUrl = null
     }
 
     fun hasPlayer(playerId: Player.Id): Boolean =
