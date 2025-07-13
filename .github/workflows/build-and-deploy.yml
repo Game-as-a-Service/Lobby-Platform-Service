@@ -34,7 +34,7 @@ jobs:
 
       # Maven Verify
       - name: Maven Verify
-        run: mvn -B verify -DJAR_FILENAME=${{ env.JAR_FILENAME }}
+        run: ./mvnw -B verify -DJAR_FILENAME=${{ env.JAR_FILENAME }}
 
       # Dump GitHub Context
       - name: Dump GitHub Context
