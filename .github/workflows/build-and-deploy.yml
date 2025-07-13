@@ -23,14 +23,17 @@ jobs:
     steps:
       # Checkout the repo
       - name: git checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       # Setup JDK 17
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'corretto'
+
+      - name: Maven Version
+        run: mvn -v
 
       # Maven Verify
       - name: Maven Verify
