@@ -14,11 +14,10 @@
     <name>spring</name>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin-reflect.version>1.8.20</kotlin-reflect.version>
-        <jackson-module-kotlin.version>2.14.2</jackson-module-kotlin.version>
-        <spring-openapi.version>1.6.15</spring-openapi.version>
         <java.version>17</java.version>
+        <kotlin.version>1.8.20</kotlin.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spring-openapi.version>1.6.15</spring-openapi.version>
         <netty-socketio.version>2.0.3</netty-socketio.version>
     </properties>
 
@@ -68,13 +67,11 @@
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
-            <version>${jackson-module-kotlin.version}</version>
         </dependency>
         <!-- Kotlin 依賴 -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
-            <version>${kotlin-reflect.version}</version>
         </dependency>
         <dependency>
             <groupId>de.flapdoodle.embed</groupId>
@@ -114,7 +111,7 @@
             <plugin>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <groupId>org.jetbrains.kotlin</groupId>
-                <version>1.8.20</version>
+                <version>${kotlin.version}</version>
                 <configuration>
                     <compilerPlugins>
                         <plugin>spring</plugin>
@@ -141,7 +138,7 @@
                     <dependency>
                         <groupId>org.jetbrains.kotlin</groupId>
                         <artifactId>kotlin-maven-allopen</artifactId>
-                        <version>1.8.20</version>
+                        <version>${kotlin.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
