@@ -24,17 +24,17 @@ class RoomData(
 ) {
 
 
-    fun toDomain(players: MutableList<Room.Player>): Room =
+    fun toDomain(): Room =
         Room(
-            Room.Id(id!!),
-            game.toDomain(),
-            host.toDomain(),
-            players,
-            maxPlayers,
-            minPlayers,
-            name,
-            status = status,
+            roomId = Room.Id(id!!),
+            game = game.toDomain(),
+            host = host.toDomain(),
+            players = players.map(PlayerData::toDomain).toMutableList(),
+            maxPlayers = maxPlayers,
+            minPlayers = minPlayers,
+            name = name,
             password = password,
+            status = status,
             gameUrl = gameUrl,
         )
 
