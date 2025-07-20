@@ -19,6 +19,7 @@ class Room(
     val name: String,
     val password: String? = null,
     var status: Status = WAITING,
+    var gameUrl: String? = null,
 ) {
     val isLocked: Boolean
         get() = !password.isNullOrEmpty()
@@ -58,7 +59,7 @@ class Room(
             throw PlatformException(GAME_NOT_STARTED, "Game has not started yet")
         }
         status = WAITING
-        cancelReadyForNonHostPlayers()
+        gameUrl = null
     }
 
     fun hasPlayer(playerId: Player.Id): Boolean =
@@ -100,14 +101,6 @@ class Room(
     }
 
     private fun findPlayer(playerId: Player.Id): Player? = players.find { it.id == playerId }
-
-    private fun cancelReadyForNonHostPlayers() {
-        players.forEach { player ->
-            if (!isHost(player.id)) {
-                player.cancelReady()
-            }
-        }
-    }
 
     @JvmInline
     value class Id(val value: String)

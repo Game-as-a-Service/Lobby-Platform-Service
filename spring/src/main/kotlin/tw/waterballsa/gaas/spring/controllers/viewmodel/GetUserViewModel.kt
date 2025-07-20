@@ -6,4 +6,6 @@ data class GetUserViewModel(
     val nickname: String,
     val lastPlayedGameId: String?,
     val playedGamesIds: Set<String>?,
+    val currentGameRoomId: String?,
+    val currentGameUrl: String?,
 )
