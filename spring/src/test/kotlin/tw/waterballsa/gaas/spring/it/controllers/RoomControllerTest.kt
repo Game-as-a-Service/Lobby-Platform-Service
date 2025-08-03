@@ -1,5 +1,6 @@
 package tw.waterballsa.gaas.spring.it.controllers
 
+import com.fasterxml.jackson.core.type.TypeReference
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -569,7 +570,7 @@ class RoomControllerTest @Autowired constructor(
         )
 
     private fun ResultActions.thenCreateRoomSuccessfully() {
-        val roomView = getBody(CreateRoomViewModel::class.java)
+        val roomView = getBody(object : TypeReference<CreateRoomViewModel>() {})
         val room = roomRepository.findById(roomView.id)!!
         room.let {
             andExpect(status().isCreated)

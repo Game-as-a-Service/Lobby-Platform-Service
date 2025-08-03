@@ -1,5 +1,6 @@
 package tw.waterballsa.gaas.spring.it.controllers
 
+import com.fasterxml.jackson.core.type.TypeReference
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -133,7 +134,7 @@ class UserControllerTest @Autowired constructor(
 
     private fun ResultActions.thenUserNicknameShouldBeChanged(nickname: String) {
         val user = andExpect(status().isOk)
-            .getBody(UpdateUserViewModel::class.java)
+            .getBody(object : TypeReference<UpdateUserViewModel>() {})
 
         userRepository.findById(user.id)
             .also { assertThat(it).isNotNull }

@@ -245,7 +245,7 @@ class GameRegistrationControllerTest @Autowired constructor(
                 .andExpect(jsonPath("$.maxPlayers").value(maxPlayers))
                 .andExpect(jsonPath("$.frontEndUrl").value(frontEndUrl))
                 .andExpect(jsonPath("$.backEndUrl").value(backEndUrl))
-                .getBody(RegisterGameViewModel::class.java)
+                .getBody(object : TypeReference<RegisterGameViewModel>() {})
         }
     }
 
