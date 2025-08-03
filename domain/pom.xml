@@ -10,23 +10,20 @@
         <version>${revision}</version>
     </parent>
 
-    <name>domain</name>
+    <name>Lobby-Platform-Domain</name>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
+    <!-- Domain 層：純粹的業務邏輯，無外部依賴 -->
     <dependencies>
-        <!-- domain module 依賴 -->
+        <!-- 繼承父 POM 的全域依賴即可 -->
     </dependencies>
 
     <build>
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
         <plugins>
+            <!-- 使用父 POM 的 pluginManagement 配置 -->
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.version}</version>
                 <dependencies>
                     <dependency>
                         <groupId>org.jetbrains.kotlin</groupId>

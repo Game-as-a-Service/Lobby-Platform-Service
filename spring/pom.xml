@@ -5,28 +5,24 @@
     <version>${revision}</version>
 
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.10</version>
-        <relativePath/>
+        <groupId>tw.waterballsa.gaas</groupId>
+        <artifactId>Lobby-Platform-Root</artifactId>
+        <version>${revision}</version>
     </parent>
 
-    <name>spring</name>
+    <name>Lobby-Platform-Spring</name>
 
+    <!-- Spring Boot 模組：基礎設施層，提供 Web API、資料庫、SocketIO 等功能 -->
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin-reflect.version>1.8.20</kotlin-reflect.version>
-        <jackson-module-kotlin.version>2.14.2</jackson-module-kotlin.version>
-        <spring-openapi.version>1.6.15</spring-openapi.version>
         <java.version>17</java.version>
-        <netty-socketio.version>2.0.3</netty-socketio.version>
+        <!-- 其他屬性已在父 POM 中定義 -->
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>tw.waterballsa.gaas</groupId>
             <artifactId>Lobby-Platform-Application</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${revision}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -68,13 +64,13 @@
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
-            <version>${jackson-module-kotlin.version}</version>
+            <!-- 版本由 dependencyManagement 管理 -->
         </dependency>
         <!-- Kotlin 依賴 -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
-            <version>${kotlin-reflect.version}</version>
+            <!-- 版本由 dependencyManagement 管理 -->
         </dependency>
         <dependency>
             <groupId>de.flapdoodle.embed</groupId>
@@ -84,12 +80,12 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-ui</artifactId>
-            <version>${spring-openapi.version}</version>
+            <!-- 版本由 dependencyManagement 管理 -->
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-kotlin</artifactId>
-            <version>${spring-openapi.version}</version>
+            <!-- 版本由 dependencyManagement 管理 -->
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -98,7 +94,7 @@
         <dependency>
             <groupId>com.corundumstudio.socketio</groupId>
             <artifactId>netty-socketio</artifactId>
-            <version>${netty-socketio.version}</version>
+            <!-- 版本由 dependencyManagement 管理 -->
         </dependency>
     </dependencies>
 
@@ -107,41 +103,25 @@
         <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
         <finalName>${jar.filename}</finalName>
         <plugins>
+            <!-- Spring Boot 打包插件 -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!-- Kotlin 編譯插件，使用父 POM 配置 -->
             <plugin>
-                <artifactId>kotlin-maven-plugin</artifactId>
                 <groupId>org.jetbrains.kotlin</groupId>
-                <version>1.8.20</version>
+                <artifactId>kotlin-maven-plugin</artifactId>
                 <configuration>
                     <compilerPlugins>
                         <plugin>spring</plugin>
                     </compilerPlugins>
-                    <jvmTarget>17</jvmTarget>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>test-compile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>test-compile</goal>
-                        </goals>
-                    </execution>
-                </executions>
                 <dependencies>
                     <dependency>
                         <groupId>org.jetbrains.kotlin</groupId>
                         <artifactId>kotlin-maven-allopen</artifactId>
-                        <version>1.8.20</version>
+                        <version>${kotlin.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>

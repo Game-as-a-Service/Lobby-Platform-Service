@@ -10,28 +10,25 @@
         <version>${revision}</version>
     </parent>
 
-    <name>application</name>
+    <name>Lobby-Platform-Application</name>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
+    <!-- Application 層：應用服務和用例編排 -->
     <dependencies>
-        <!-- application module 依賴 -->
+        <!-- 依賴 Domain 模組 -->
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>tw.waterballsa.gaas</groupId>
             <artifactId>Lobby-Platform-Domain</artifactId>
-            <version>${project.version}</version>
+            <!-- 版本由 dependencyManagement 管理 -->
         </dependency>
     </dependencies>
 
     <build>
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
         <plugins>
+            <!-- 使用父 POM 的 pluginManagement 配置 -->
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.version}</version>
                 <dependencies>
                     <dependency>
                         <groupId>org.jetbrains.kotlin</groupId>

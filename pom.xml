@@ -25,6 +25,11 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javax.inject.version>1</javax.inject.version>
+        <!-- Spring Boot 相關版本 -->
+        <spring-boot.version>2.7.10</spring-boot.version>
+        <netty-socketio.version>2.0.3</netty-socketio.version>
+        <jackson-module-kotlin.version>2.14.2</jackson-module-kotlin.version>
+        <spring-openapi.version>1.6.15</spring-openapi.version>
     </properties>
 
     <!-- 全域的套件設定 -->
@@ -53,7 +58,106 @@
         </dependency>
     </dependencies>
 
+    <!-- 統一依賴版本管理 -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Boot BOM -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- 內部模組版本管理 -->
+            <dependency>
+                <groupId>tw.waterballsa.gaas</groupId>
+                <artifactId>Lobby-Platform-Domain</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>tw.waterballsa.gaas</groupId>
+                <artifactId>Lobby-Platform-Application</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <!-- 第三方依賴版本管理 -->
+            <dependency>
+                <groupId>com.corundumstudio.socketio</groupId>
+                <artifactId>netty-socketio</artifactId>
+                <version>${netty-socketio.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.module</groupId>
+                <artifactId>jackson-module-kotlin</artifactId>
+                <version>${jackson-module-kotlin.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-ui</artifactId>
+                <version>${spring-openapi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-kotlin</artifactId>
+                <version>${spring-openapi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-reflect</artifactId>
+                <version>${kotlin.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <build>
+        <!-- 統一插件管理 -->
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-maven-plugin</artifactId>
+                    <version>${kotlin.version}</version>
+                    <configuration>
+                        <jvmTarget>17</jvmTarget>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>compile</id>
+                            <goals>
+                                <goal>compile</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>test-compile</id>
+                            <goals>
+                                <goal>test-compile</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>com.github.gantsign.maven</groupId>
+                    <artifactId>ktlint-maven-plugin</artifactId>
+                    <version>1.16.0</version>
+                    <executions>
+                        <execution>
+                            <id>lint</id>
+                            <goals>
+                                <goal>format</goal>
+                                <goal>check</goal>
+                                <goal>ktlint</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        
         <plugins>
             <!-- 設定 Kotlin Maven Plugin -->
             <plugin>
