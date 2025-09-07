@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import tw.waterballsa.gaas.application.usecases.CreateUserUseCase
+import java.time.Duration
 
 
 @EnableWebSecurity
@@ -67,7 +68,7 @@ class SecurityConfig(
     ): OAuth2AuthorizedClientManager {
         val authorizedClientProvider = OAuth2AuthorizedClientProviderBuilder.builder()
             .authorizationCode()
-            .refreshToken()
+            .refreshToken{ it.clockSkew(Duration.ofMinutes(60)) }
             .clientCredentials()
             .password()
             .build()
