@@ -7,8 +7,8 @@ on:
       - main
 
 jobs:
-  build:
-    name: Build and Test
-    uses: ./.github/workflows/reusable-build.yml
+  ci:
+    name: CI
+    uses: ./.github/workflows/template-ci-build.yml
     with:
       push-image: false
