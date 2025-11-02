@@ -1,0 +1,14 @@
+name: PR Build
+run-name: "PR - Build #${{ github.run_number }}"
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and Test
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      push-image: false
