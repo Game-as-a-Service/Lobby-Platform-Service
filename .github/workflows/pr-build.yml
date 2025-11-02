@@ -1,0 +1,14 @@
+name: PR Build
+run-name: "PR - Build #${{ github.run_number }}"
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/template-ci-build.yml
+    with:
+      push-image: false
